@@ -19,8 +19,8 @@ namespace EvaluationEngine
 		{
 			return string.Format("{0}({1})", Symbol, contents);
 		}
-
-		public sealed override string ToString(TContext context)
+		
+		public override string ToString(TContext context)
 		{
 			return ToStringInternal(Evaluate(context));
 		}

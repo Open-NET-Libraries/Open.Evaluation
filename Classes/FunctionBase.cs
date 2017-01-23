@@ -6,15 +6,15 @@ namespace EvaluationEngine
 		: OperationBase<TContext, TResult>, IFunction<TContext, TResult>
 	{
 
-		protected FunctionBase(string symbol, IEvaluate<TContext, TResult> contents) : base(symbol)
+		protected FunctionBase(string symbol, IEvaluate<TContext, TResult> evaluation) : base(symbol)
 		{
-			if (contents == null)
+			if (evaluation == null)
 				throw new ArgumentNullException("contents");
 
-			Contents = contents;
+			Evaluation = evaluation;
 		}
 
-		public IEvaluate<TContext, TResult> Contents
+		public IEvaluate<TContext, TResult> Evaluation
 		{
 			get;
 			private set;
@@ -22,12 +22,12 @@ namespace EvaluationEngine
 
 		public override TResult Evaluate(TContext context)
 		{
-			return Contents.Evaluate(context);
+			return Evaluation.Evaluate(context);
 		}
 
 		protected override string ToStringRepresentationInternal()
 		{
-			return ToStringInternal(Contents.ToStringRepresentation());
+			return ToStringInternal(Evaluation.ToStringRepresentation());
 		}
 
 	}

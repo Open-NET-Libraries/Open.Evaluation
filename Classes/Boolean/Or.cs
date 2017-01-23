@@ -25,6 +25,15 @@ namespace EvaluationEngine.BooleanOperators
 			return false;
 		}
 
+
+	}
+
+	public static class Or
+	{
+		public static Or<TContext> Using<TContext>(IEnumerable<IEvaluate<TContext, bool>> evaluations)
+		{
+			return new Or<TContext>(evaluations);
+		}
 	}
 
 

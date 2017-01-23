@@ -13,16 +13,22 @@ namespace EvaluationEngine.BooleanOperators
 		{
 			return !base.Evaluate(context);
 		}
-
 	}
 
 	public static class Not
 	{
-		public static Not<TContext> Inverse<TContext>(this IEvaluate<TContext, bool> evaluation)
+		public static Not<TContext> Using<TContext>(IEvaluate<TContext, bool> evaluation)
 		{
 			return new Not<TContext>(evaluation);
 		}
 	}
 
+	public static class NotExtensions
+	{
+		public static Not<TContext> Not<TContext>(this IEvaluate<TContext, bool> evaluation)
+		{
+			return new Not<TContext>(evaluation);
+		}
+	}
 
 }
