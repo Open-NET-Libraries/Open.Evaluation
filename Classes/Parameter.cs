@@ -7,7 +7,7 @@ namespace EvaluationEngine
 		: EvaluationBase<TContext, TResult>, IParameter<TContext, TResult>, IClonable<Parameter<TContext, TResult>>
 	{
 
-		public Parameter(ushort id, Func<TContext, ushort, TResult> evaluator)
+		public Parameter(ushort id, Func<TContext, ushort, TResult> evaluator) : base()
 		{
 			if (evaluator == null)
 				throw new ArgumentNullException("evaluator");
@@ -24,7 +24,7 @@ namespace EvaluationEngine
 			}
 		}
 
-		public override string ToStringRepresentation()
+		protected override string ToStringRepresentationInternal()
 		{
 			return "{" + ID + "}";
 		}

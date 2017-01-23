@@ -1,10 +1,10 @@
 namespace EvaluationEngine
 {
-    public sealed class Constant<TResult>
+	public sealed class Constant<TResult>
 		: EvaluationBase<object, TResult>, IConstant<TResult>, IClonable<Constant<TResult>>
 	{
 
-		public Constant(TResult value)
+		public Constant(TResult value) : base()
 		{
 			Value = value;
 		}
@@ -15,7 +15,7 @@ namespace EvaluationEngine
 			private set;
 		}
 
-		public override string ToStringRepresentation()
+		protected override string ToStringRepresentationInternal()
 		{
 			return string.Empty + Value;
 		}
@@ -25,14 +25,14 @@ namespace EvaluationEngine
 			return new Constant<TResult>(Value);
 		}
 
-        public override TResult Evaluate(object context)
-        {
-            return Value;
-        }
+		public override TResult Evaluate(object context)
+		{
+			return Value;
+		}
 
-        public override string ToString(object context)
-        {
-            return ToStringRepresentation();
-        }
-    }
+		public override string ToString(object context)
+		{
+			return ToStringRepresentation();
+		}
+	}
 }

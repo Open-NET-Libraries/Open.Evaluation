@@ -2,32 +2,32 @@ using System;
 
 namespace EvaluationEngine
 {
-    public abstract class FunctionBase<TContext, TResult>
-		: EvaluationBase<TContext, TResult>, IFunction<TContext, TResult>
+	public abstract class FunctionBase<TContext, TResult>
+		: OperationBase<TContext, TResult>, IFunction<TContext, TResult>
 	{
 
-		protected FunctionBase(string symbol, Func<TContext, TResult> evaluator)
+		protected FunctionBase(string symbol, IEvaluate<TContext, TResult> contents) : base(symbol)
 		{
-			if (symbol == null)
-				throw new ArgumentNullException("symbol");
-			if (evaluator == null)
-				throw new ArgumentNullException("evaluator");
-			Symbol = symbol;
-			_evaluator = evaluator;
+			if (contents == null)
+				throw new ArgumentNullException("contents");
+
+			Contents = contents;
 		}
 
-		Func<TContext, TResult> _evaluator;
-
-		public string Symbol { get; private set; }
+		public IEvaluate<TContext, TResult> Contents
+		{
+			get;
+			private set;
+		}
 
 		public override TResult Evaluate(TContext context)
 		{
-			return _evaluator(context);
+			return Contents.Evaluate(context);
 		}
 
-		public override string ToString(TContext context)
+		protected override string ToStringRepresentationInternal()
 		{
-			return Symbol + "(" + Evaluate(context) + ")";
+			return ToStringInternal(Contents.ToStringRepresentation());
 		}
 
 	}

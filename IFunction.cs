@@ -1,8 +1,7 @@
 namespace EvaluationEngine
 {
 	public interface IFunction<in TContext, out TResult>
-		: IEvaluation
+		: IEvaluate<TContext, TResult>, ISymbolized
 	{
-		string Symbol { get; }
 	}
 }
