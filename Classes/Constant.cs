@@ -1,0 +1,38 @@
+namespace EvaluationEngine
+{
+    public sealed class Constant<TResult>
+		: EvaluationBase<object, TResult>, IConstant<TResult>, IClonable<Constant<TResult>>
+	{
+
+		public Constant(TResult value)
+		{
+			Value = value;
+		}
+
+		public TResult Value
+		{
+			get;
+			private set;
+		}
+
+		public override string ToStringRepresentation()
+		{
+			return string.Empty + Value;
+		}
+
+		public Constant<TResult> Clone()
+		{
+			return new Constant<TResult>(Value);
+		}
+
+        public override TResult Evaluate(object context)
+        {
+            return Value;
+        }
+
+        public override string ToString(object context)
+        {
+            return ToStringRepresentation();
+        }
+    }
+}
