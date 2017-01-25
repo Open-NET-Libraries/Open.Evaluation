@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
     public abstract class OperatorBase<TChild, TContext, TResult>
 		: OperationBase<TContext, TResult>, IOperator<TChild, TContext, TResult>

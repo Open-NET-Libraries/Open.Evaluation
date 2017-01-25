@@ -1,6 +1,6 @@
 using System;
 
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public abstract class FunctionBase<TContext, TResult>
 		: OperationBase<TContext, TResult>, IFunction<TContext, TResult>

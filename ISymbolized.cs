@@ -1,4 +1,4 @@
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public interface ISymbolized
 	{

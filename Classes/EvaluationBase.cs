@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public abstract class EvaluationBase<TContext, TResult> : IEvaluate<TContext, TResult>
 	{

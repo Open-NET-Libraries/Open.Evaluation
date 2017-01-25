@@ -1,6 +1,6 @@
 using System;
 
-namespace EvaluationEngine.ArithmeticOperators
+namespace EvaluationFramework.ArithmeticOperators
 {
 	public class Exponent<TContext, TResult, TPower> : FunctionBase<TContext, TResult>
 		where TResult : struct, IComparable

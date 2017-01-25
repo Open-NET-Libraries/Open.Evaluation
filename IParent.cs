@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public interface IParent<TChild>
 	{

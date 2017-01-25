@@ -1,4 +1,4 @@
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public sealed class Constant<TResult>
 		: EvaluationBase<object, TResult>, IConstant<TResult>, IClonable<Constant<TResult>>

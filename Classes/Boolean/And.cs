@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace EvaluationEngine.BooleanOperators
+namespace EvaluationFramework.BooleanOperators
 {
 	public class And<TContext> : OperatorBase<IEvaluate<TContext, bool>, TContext, bool>
 	{

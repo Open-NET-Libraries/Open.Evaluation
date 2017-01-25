@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public class Parameter<TContext, TResult>
 		: EvaluationBase<TContext, TResult>, IParameter<TContext, TResult>, IClonable<Parameter<TContext, TResult>>

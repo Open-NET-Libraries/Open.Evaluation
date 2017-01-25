@@ -1,4 +1,4 @@
-namespace EvaluationEngine.BooleanOperators
+namespace EvaluationFramework.BooleanOperators
 {
 	public class Conditional<TContext> : FunctionBase<TContext, bool>
 	{

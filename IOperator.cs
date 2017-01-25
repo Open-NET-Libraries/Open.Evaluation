@@ -1,4 +1,4 @@
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public interface IOperator<TChild, in TContext, out TResult>
 		: IFunction<TContext, TResult>, IEvaluationNode<TChild, TContext, TResult>, ISymbolized

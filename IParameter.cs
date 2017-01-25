@@ -1,4 +1,4 @@
-namespace EvaluationEngine
+namespace EvaluationFramework
 {
 	public interface IParameter<TContext, TResult> : IEvaluate<TContext, TResult>
 	{

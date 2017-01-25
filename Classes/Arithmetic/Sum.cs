@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace EvaluationEngine.ArithmeticOperators
+namespace EvaluationFramework.ArithmeticOperators
 {
 	public class Sum<TContext, TResult> : OperatorBase<IEvaluate<TContext, TResult>, TContext, TResult>
 		where TResult : struct, IComparable
