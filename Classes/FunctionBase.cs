@@ -1,26 +1,35 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 
-namespace EvaluationFramework
+namespace Open.Evaluation
 {
-	public abstract class FunctionBase<TContext, TResult>
-		: OperationBase<TContext, TResult>, IFunction<TContext, TResult>
+	public abstract class FunctionBase<TResult>
+		: OperatorBase<IEvaluate, TResult>, IFunction<TResult>
+		where TResult : IComparable
 	{
 
-		protected FunctionBase(string symbol, IEvaluate<TContext, TResult> evaluation) : base(symbol)
+		protected FunctionBase(char symbol, string symbolString, IEvaluate<TResult> evaluation) : base(symbol, symbolString)
 		{
 			if (evaluation == null)
 				throw new ArgumentNullException("contents");
 
 			Evaluation = evaluation;
+			
+			// Provide a standard means for discovery.
+			ChildrenInternal.Add(evaluation);
 		}
 
-		public IEvaluate<TContext, TResult> Evaluation
+		public IEvaluate<TResult> Evaluation
 		{
 			get;
 			private set;
 		}
 
-		public override TResult Evaluate(TContext context)
+		protected override TResult EvaluateInternal(object context)
 		{
 			return Evaluation.Evaluate(context);
 		}

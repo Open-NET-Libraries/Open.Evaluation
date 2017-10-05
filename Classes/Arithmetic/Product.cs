@@ -1,19 +1,25 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
-namespace EvaluationFramework.ArithmeticOperators
+namespace Open.Evaluation.ArithmeticOperators
 {
-	public class Product<TContext, TResult> : OperatorBase<IEvaluate<TContext, TResult>, TContext, TResult>
+	public class Product<TResult> : OperatorBase<IEvaluate<TResult>, TResult>
 		where TResult : struct, IComparable
 	{
-		public const string SYMBOL = " + ";
-		public Product(IEnumerable<IEvaluate<TContext, TResult>> children = null)
-			: base(SYMBOL, children)
+		public Product(IEnumerable<IEvaluate<TResult>> children = null)
+			: base(Product.SYMBOL, Product.SEPARATOR, children)
 		{
 
 		}
 
-		public override TResult Evaluate(TContext context)
+		protected override TResult EvaluateInternal(object context)
 		{
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve product of empty set.");
@@ -27,63 +33,153 @@ namespace EvaluationFramework.ArithmeticOperators
 			return result;
 		}
 
+		public override IEvaluate<TResult> Reduction()
+		{
+			// Phase 1: Flatten products of products.
+			var children = ChildrenInternal.Flatten<Product<TResult>, TResult>().ToList();
+
+			// Phase 2: Can we collapse?
+			switch (children.Count)
+			{
+				case 0:
+					throw new InvalidOperationException("Cannot reduce product of empty set.");
+				case 1:
+					return children[0];
+			}
+
+			// Phase 3&4: Sum compatible exponents together.
+			foreach (var exponents in children.OfType<Exponent<TResult>>()
+				.GroupBy(g => g.Evaluation.ToStringRepresentation())
+				.Where(g => g.Count() > 1))
+			{
+				var e1 = exponents.First();
+				var power = new Sum<TResult>(exponents.Select(t => t.Power));
+				foreach (var e in exponents)
+					children.Remove(e);
+
+				children.Add(new Exponent<TResult>(e1.Evaluation,power.AsReduced()));
+			}
+
+			// Phase 5: Combine constants.
+			var constants = children.ExtractConstants();
+			if (constants.Length != 0)
+				children.Add(constants.Length == 1 ? constants[0] : constants.Product());
+
+			// Phase 6: Check if collapsable?
+			if (children.Count == 1)
+				return children[0];
+
+			// Lastly: Sort and return if different.
+			children.Sort(Compare);
+			var result = new Product<TResult>(children);
+
+			return result.ToStringRepresentation() == result.ToStringRepresentation() ? null : result;
+		}
+
+		public IEvaluate<TResult> ReductionWithMutlipleExtracted(out Constant<TResult> multiple)
+		{
+			multiple = null;
+			var reduced = this.AsReduced();
+			var product = reduced as Product<TResult>;
+			if(product!=null)
+			{
+				var children = product.ChildrenInternal.ToList();
+				var constants = product.ChildrenInternal.OfType<Constant<TResult>>().ToArray();
+				Debug.Assert(constants.Length <= 1, "Reduction should have collapsed constants.");
+				if (constants.Length == 0)
+					return product;
+				multiple = constants.Single();
+				children.Remove(multiple);
+				return new Product<TResult>(children);
+			}
+			return reduced;			
+		}
 	}
 
-	public static class Product
+	public class Product : Product<double>
 	{
-		public static Product<TContext, TResult> Of<TContext, TResult>(params IEvaluate<TContext, TResult>[] evaluations)
+		public const char SYMBOL = '*';
+		public const string SEPARATOR = " * ";
+
+		public Product(IEnumerable<IEvaluate<double>> children = null) : base(children)
+		{
+		}
+
+		public static Product<TResult> Of<TResult>(params IEvaluate<TResult>[] evaluations)
 		where TResult : struct, IComparable
 		{
-			return new Product<TContext, TResult>(evaluations);
+			return new Product<TResult>(evaluations);
 		}
 	}
 
 	public static class ProductExtensions
 	{
-		public static Product<TContext, float> Product<TContext>(this IEnumerable<IEvaluate<TContext, float>> evaluations)
+		public static Constant<TResult> Product<TResult>(this IEnumerable<Constant<TResult>> constants)
+			where TResult : struct, IComparable
 		{
-			return new Product<TContext, float>(evaluations);
-		}
+			var list = constants as IList<Constant<TResult>> ?? constants.ToList();
+			switch (list.Count)
+			{
+				case 0:
+					return new Constant<TResult>(default(TResult));
+				case 1:
+					return list[0];
+			}
 
-		public static Product<TContext, double> Product<TContext>(this IEnumerable<IEvaluate<TContext, double>> evaluations)
-		{
-			return new Product<TContext, double>(evaluations);
-		}
+			dynamic result = 1;
+			foreach (var c in constants)
+			{
+				result *= c.Value;
+			}
 
-		public static Product<TContext, decimal> Product<TContext>(this IEnumerable<IEvaluate<TContext, decimal>> evaluations)
-		{
-			return new Product<TContext, decimal>(evaluations);
-		}
-
-		public static Product<TContext, short> Product<TContext>(this IEnumerable<IEvaluate<TContext, short>> evaluations)
-		{
-			return new Product<TContext, short>(evaluations);
-		}
-
-		public static Product<TContext, ushort> Product<TContext>(this IEnumerable<IEvaluate<TContext, ushort>> evaluations)
-		{
-			return new Product<TContext, ushort>(evaluations);
+			return new Constant<TResult>(result);
 		}
 
 
-		public static Product<TContext, int> Product<TContext>(this IEnumerable<IEvaluate<TContext, int>> evaluations)
+		public static Product<float> Product<TContext>(this IEnumerable<IEvaluate<float>> evaluations)
 		{
-			return new Product<TContext, int>(evaluations);
+			return new Product<float>(evaluations);
 		}
 
-		public static Product<TContext, uint> Product<TContext>(this IEnumerable<IEvaluate<TContext, uint>> evaluations)
+		public static Product<double> Product<TContext>(this IEnumerable<IEvaluate<double>> evaluations)
 		{
-			return new Product<TContext, uint>(evaluations);
+			return new Product<double>(evaluations);
 		}
 
-		public static Product<TContext, long> Product<TContext>(this IEnumerable<IEvaluate<TContext, long>> evaluations)
+		public static Product<decimal> Product<TContext>(this IEnumerable<IEvaluate<decimal>> evaluations)
 		{
-			return new Product<TContext, long>(evaluations);
+			return new Product<decimal>(evaluations);
 		}
 
-		public static Product<TContext, ulong> Product<TContext>(this IEnumerable<IEvaluate<TContext, ulong>> evaluations)
+		public static Product<short> Product<TContext>(this IEnumerable<IEvaluate<short>> evaluations)
 		{
-			return new Product<TContext, ulong>(evaluations);
+			return new Product<short>(evaluations);
+		}
+
+		public static Product<ushort> Product<TContext>(this IEnumerable<IEvaluate<ushort>> evaluations)
+		{
+			return new Product<ushort>(evaluations);
+		}
+
+
+		public static Product<int> Product<TContext>(this IEnumerable<IEvaluate<int>> evaluations)
+		{
+			return new Product<int>(evaluations);
+		}
+
+		public static Product<uint> Product<TContext>(this IEnumerable<IEvaluate<uint>> evaluations)
+		{
+			return new Product<uint>(evaluations);
+		}
+
+		public static Product<long> Product<TContext>(this IEnumerable<IEvaluate<long>> evaluations)
+		{
+			return new Product<long>(evaluations);
+		}
+
+		public static Product<ulong> Product<TContext>(this IEnumerable<IEvaluate<ulong>> evaluations)
+		{
+			return new Product<ulong>(evaluations);
 		}
 
 	}

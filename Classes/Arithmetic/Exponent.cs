@@ -1,21 +1,26 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 
-namespace EvaluationFramework.ArithmeticOperators
+namespace Open.Evaluation.ArithmeticOperators
 {
-	public class Exponent<TContext, TResult, TPower> : FunctionBase<TContext, TResult>
+    public class Exponent<TResult, TPower> : FunctionBase<TResult>
 		where TResult : struct, IComparable
 		where TPower : struct, IComparable
 	{
-		public const string SYMBOL = "^";
 		public Exponent(
-			IEvaluate<TContext, TResult> evaluation,
-			IEvaluate<TContext, TPower> power)
-			: base(SYMBOL, evaluation)
+			IEvaluate<TResult> evaluation,
+			IEvaluate<TPower> power)
+			: base(Exponent.SYMBOL, Exponent.SEPARATOR, evaluation)
 		{
 			Power = power;
+			ChildrenInternal.Add(power);
 		}
 
-		public IEvaluate<TContext, TPower> Power
+		public IEvaluate<TPower> Power
 		{
 			get;
 			private set;
@@ -25,33 +30,75 @@ namespace EvaluationFramework.ArithmeticOperators
 		{
 			return (double)value;
 		}
-		public override TResult Evaluate(TContext context)
+		protected override TResult EvaluateInternal(object context)
 		{
 			var evaluation = ConvertToDouble(base.Evaluate(context));
 			var power = ConvertToDouble(Power.Evaluate(context));
 
 			return (TResult)(dynamic)Math.Pow(evaluation, power);
 		}
+
+		protected override string ToStringRepresentationInternal()
+		{
+			return ToStringInternal(Evaluation.ToStringRepresentation(), Power.ToStringRepresentation());
+		}
+
+		public override IEvaluate<TResult> Reduction()
+		{
+			var pow = Power.AsReduced();
+			var cPow = pow as Constant<TResult>;
+			if (cPow != null)
+			{
+				dynamic p = cPow.Value;
+				if (p == 0) return new Constant<TResult>((dynamic)1);
+				if (p == 1) return Evaluation.AsReduced();
+			}
+
+			var result = new Exponent<TResult, TPower>(Evaluation.AsReduced(), pow);
+			return result.ToStringRepresentation() == result.ToStringRepresentation() ? null : result;
+		}
+
+		protected string ToStringInternal(object contents, object power)
+		{
+			return string.Format("({0}^{1})", contents, power);
+		}
+
 	}
 
-	public class Exponent<TContext> : Exponent<TContext, double, double>
+	public class Exponent<TResult> : Exponent<TResult, TResult>
+		where TResult : struct, IComparable
 	{
 		public Exponent(
-			IEvaluate<TContext, double> evaluation,
-			IEvaluate<TContext, double> power) : base(evaluation, power)
+			IEvaluate<TResult> evaluation,
+			IEvaluate<TResult> power) : base(evaluation, power)
+		{
+		}
+	}
+
+
+	public class Exponent : Exponent<double>
+	{
+		public const char SYMBOL = '^';
+		public const string SEPARATOR = "^";
+
+		public Exponent(IEvaluate<double> evaluation, IEvaluate<double> power) : base(evaluation, power)
+		{
+		}
+
+		public Exponent(IEvaluate<double> evaluation, double power) : base(evaluation, new Constant<double>(power))
 		{
 		}
 	}
 
 	// Can handle better precision operations that are only positive integers.
 	// Because any fractional or negative exponents can introduce precision error. 
-	public class IntegerExponent<TContext, TResult, TPower> : Exponent<TContext, TResult, TPower>
+	public class IntegerExponent<TResult, TPower> : Exponent<TResult, TPower>
 		where TResult : struct, IComparable
 		where TPower : struct, IComparable
 	{
 		public IntegerExponent(
-			IEvaluate<TContext, TResult> evaluation,
-			IEvaluate<TContext, TPower> power) : base(evaluation, power)
+			IEvaluate<TResult> evaluation,
+			IEvaluate<TPower> power) : base(evaluation, power)
 		{
 			if (!IsIntergerType(typeof(TPower), out IsSignedPowerType))
 				throw new InvalidOperationException("Incompatible power type for IntegerExponent.");
@@ -82,7 +129,7 @@ namespace EvaluationFramework.ArithmeticOperators
 		// Why is this good?  Because it avoids precision errors that would occur with the default double precision math.
 		// It also avoids any type conversion.  Integers stay integers, floats stay floats and decimals stay decimals.
 		// This makes a lot of sense when considering how common a number to the power of a positive integer is.
-		public override TResult Evaluate(TContext context)
+		protected override TResult EvaluateInternal(object context)
 		{
 			dynamic value = Evaluation.Evaluate(context);
 			if (value == 0 || value == 1) return value;

@@ -1,13 +1,20 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 using System.Collections.Generic;
 
-namespace EvaluationFramework.BooleanOperators
+namespace Open.Evaluation.BooleanOperators
 {
-	public abstract class CountingBase<TContext> : OperatorBase<IEvaluate<TContext, bool>, TContext, bool>
+	public abstract class CountingBase : OperatorBase<IEvaluate<bool>, bool>
 	{
-		public const string SYMBOL = ", ";
-		protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<TContext, bool>> children = null)
-			: base(SYMBOL, children)
+		public const char SYMBOL = ',';
+		public const string SEPARATOR = ", ";
+
+		protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<bool>> children = null)
+			: base(SYMBOL, SEPARATOR, children)
 		{
 			if (prefix == null)
 				throw new ArgumentNullException("prefix");
@@ -15,6 +22,8 @@ namespace EvaluationFramework.BooleanOperators
 				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 0.");
 			Prefix = prefix;
 			Count = count;
+
+			ReorderChildren();
 		}
 
 		protected readonly string Prefix;

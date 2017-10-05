@@ -1,39 +1,38 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 using System.Collections.Generic;
 
-namespace EvaluationFramework.BooleanOperators
+namespace Open.Evaluation.BooleanOperators
 {
-	public class Or<TContext> : OperatorBase<IEvaluate<TContext, bool>, TContext, bool>
+	public class Or : OperatorBase<IEvaluate<bool>, bool>
 	{
-		public const string SYMBOL = " | ";
-		public Or(IEnumerable<IEvaluate<TContext, bool>> children = null)
-			: base(SYMBOL, children)
-		{
+		public const char SYMBOL = '|';
+		public const string SEPARATOR = " | ";
 
+		public Or(IEnumerable<IEvaluate<bool>> children = null)
+			: base(SYMBOL, SEPARATOR, children)
+		{
+			ReorderChildren();
 		}
 
-		public override bool Evaluate(TContext context)
+		protected override bool EvaluateInternal(object context)
 		{
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve boolean of empty set.");
 
 			foreach (var result in ChildResults(context))
 			{
-				if (result) return true;
+				if ((bool)result) return true;
 			}
 
 			return false;
 		}
 
 
-	}
-
-	public static class Or
-	{
-		public static Or<TContext> Using<TContext>(IEnumerable<IEvaluate<TContext, bool>> evaluations)
-		{
-			return new Or<TContext>(evaluations);
-		}
 	}
 
 

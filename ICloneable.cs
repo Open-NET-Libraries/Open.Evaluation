@@ -5,9 +5,13 @@
 
 namespace Open.Evaluation
 {
-	public interface ISymbolized
-	{
-		char Symbol { get; }
-		string SymbolString { get; }
-	}
+    public interface ICloneable
+    {
+        object Clone();
+    }
+
+    public interface ICloneable<out T> : ICloneable
+    {
+        new T Clone();
+    }
 }

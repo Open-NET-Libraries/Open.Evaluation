@@ -1,7 +1,15 @@
-namespace EvaluationFramework
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
+using System;
+
+namespace Open.Evaluation
 {
-	public sealed class Constant<TResult>
-		: EvaluationBase<object, TResult>, IConstant<TResult>, IClonable<Constant<TResult>>
+    public class Constant<TResult>
+		: EvaluationBase<TResult>, IConstant<TResult>, ICloneable
+		where TResult : IComparable
 	{
 
 		public Constant(TResult value) : base()
@@ -25,14 +33,45 @@ namespace EvaluationFramework
 			return new Constant<TResult>(Value);
 		}
 
-		public override TResult Evaluate(object context)
+
+		object ICloneable.Clone()
+		{
+			return this.Clone();
+		}
+
+		protected override TResult EvaluateInternal(object context)
 		{
 			return Value;
 		}
 
-		public override string ToString(object context)
+		protected override string ToStringInternal(object context)
 		{
 			return ToStringRepresentation();
 		}
+
+		public static Constant<TResult> operator +(Constant<TResult> a, Constant<TResult> b)
+		{
+			dynamic value = 0;
+			value += a.Value;
+			value += b.Value;
+			return new Constant<TResult>(value);
+		}
+
+		public static Constant<TResult> operator *(Constant<TResult> a, Constant<TResult> b)
+		{
+			dynamic value = 1;
+			value *= a.Value;
+			value *= b.Value;
+			return new Constant<TResult>(value);
+		}
+
 	}
+
+	public sealed class Constant : Constant<double>
+	{
+		public Constant(double value) : base(value)
+		{
+		}
+	}
+
 }

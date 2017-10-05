@@ -1,29 +1,46 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 
-namespace EvaluationFramework
+namespace Open.Evaluation
 {
-	public abstract class OperationBase<TContext, TResult>
-		: EvaluationBase<TContext, TResult>, IFunction<TContext, TResult>, ISymbolized
+	public abstract class OperationBase<TResult>
+		: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<TResult>
 	{
 
-		protected OperationBase(string symbol) : base()
+		protected OperationBase(char symbol, string symbolString) : base()
 		{
-			if (symbol == null)
-				throw new ArgumentNullException("symbol");
+			if (symbolString == null)
+				throw new ArgumentNullException("symbolString");
+
 			Symbol = symbol;
+			SymbolString = symbolString;
 		}
 
-		public string Symbol { get; private set; }
+		public char Symbol { get; private set; }
+		public string SymbolString { get; private set; }
 
-		protected virtual string ToStringInternal(object contents)
+		protected override string ToStringInternal(object contents)
 		{
-			return string.Format("{0}({1})", Symbol, contents);
+			return string.Format("{0}({1})", SymbolString, contents);
 		}
-		
-		public override string ToString(TContext context)
+
+		public IEvaluate<TResult> AsReduced()
 		{
-			return ToStringInternal(Evaluate(context));
+			var r = Reduction();
+			if (r != null && r.ToStringRepresentation() == this.ToStringRepresentation()) r = this;
+			return r ?? this;
 		}
+
+		// Override this if reduction is possible.  Return null if you can't reduce.
+		public virtual IEvaluate<TResult> Reduction()
+		{
+			return null;
+		}
+
 
 	}
 

@@ -1,34 +1,26 @@
-namespace EvaluationFramework.BooleanOperators
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
+namespace Open.Evaluation.BooleanOperators
 {
-	public class Not<TContext> : FunctionBase<TContext, bool>
+	public class Not : FunctionBase<bool>
 	{
-		public const string SYMBOL = "!";
-		public Not(IEvaluate<TContext, bool> contents)
-			: base(SYMBOL, contents)
+		public const char SYMBOL = '!';
+		public const string SYMBOL_STRING = "!";
+
+		public Not(IEvaluate<bool> contents)
+			: base(Not.SYMBOL, Not.SYMBOL_STRING, contents)
 		{
 
 		}
 
-		public override bool Evaluate(TContext context)
+		protected override bool EvaluateInternal(object context)
 		{
 			return !base.Evaluate(context);
 		}
-	}
 
-	public static class Not
-	{
-		public static Not<TContext> Using<TContext>(IEvaluate<TContext, bool> evaluation)
-		{
-			return new Not<TContext>(evaluation);
-		}
 	}
-
-	public static class NotExtensions
-	{
-		public static Not<TContext> Not<TContext>(this IEvaluate<TContext, bool> evaluation)
-		{
-			return new Not<TContext>(evaluation);
-		}
-	}
-
+	
 }

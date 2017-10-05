@@ -1,60 +1,64 @@
+/*!
+ * @author electricessence / https://github.com/electricessence/
+ * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
+ */
+
 using System;
 using System.Collections.Generic;
 
-namespace EvaluationFramework
+namespace Open.Evaluation
 {
-	public class Parameter<TContext, TResult>
-		: EvaluationBase<TContext, TResult>, IParameter<TContext, TResult>, IClonable<Parameter<TContext, TResult>>
-	{
+    public class Parameter<TResult>
+        : EvaluationBase<TResult>, IParameter<TResult>
+        where TResult : IComparable
+    {
 
-		public Parameter(ushort id, Func<TContext, ushort, TResult> evaluator) : base()
-		{
-			if (evaluator == null)
-				throw new ArgumentNullException("evaluator");
-			_evaluator = evaluator;
-		}
+        public Parameter(ushort id, Func<object, ushort, TResult> evaluator) : base()
+        {
+            if (evaluator == null)
+                throw new ArgumentNullException("evaluator");
+            ID = id;
+            _evaluator = evaluator;
+        }
 
-		Func<TContext, ushort, TResult> _evaluator;
+        Func<object, ushort, TResult> _evaluator;
 
-		public ushort ID
-		{
-			get
-			{
-				throw new NotImplementedException();
-			}
-		}
+        public ushort ID
+        {
+            get;
+            private set;
+        }
 
-		protected override string ToStringRepresentationInternal()
-		{
-			return "{" + ID + "}";
-		}
+        protected override string ToStringRepresentationInternal()
+        {
+            return "{" + ID + "}";
+        }
 
-		public Parameter<TContext, TResult> Clone()
-		{
-			return new Parameter<TContext, TResult>(ID, _evaluator);
-		}
+        protected override TResult EvaluateInternal(object context)
+        {
+            return _evaluator(context, ID);
+        }
 
-		public override TResult Evaluate(TContext context)
-		{
-			return _evaluator(context, ID);
-		}
+        protected override string ToStringInternal(object context)
+        {
+            return string.Empty + Evaluate(context);
+        }
+    }
 
-		public override string ToString(TContext context)
-		{
-			return string.Empty + Evaluate(context);
-		}
+    public class Parameter : Parameter<double>
+    {
+        public Parameter(ushort id) : base(id, GetParamValueFrom)
+        {
+        }
 
-	}
+        static double GetParamValueFrom(object source, ushort id)
+        {
+            var list = source as IReadOnlyList<double>;
+            if (list != null) return list[id];
+            var array = source as double[];
+            if (array != null) return list[id];
+            throw new ArgumentException("Unknown context type.");
+        }
+    }
 
-	public class Parameter<TResult> : Parameter<IReadOnlyList<TResult>, TResult>
-	{
-		public Parameter(ushort id) : base(id, GetParamValueFrom)
-		{
-		}
-
-		static TResult GetParamValueFrom(IReadOnlyList<TResult> source, ushort id)
-		{
-			return source[id];
-		}
-	}
 }
