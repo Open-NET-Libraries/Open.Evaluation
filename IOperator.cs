@@ -11,7 +11,7 @@ namespace Open.Evaluation
 		: IFunction<TResult>, IParent<TChild>
 		where TChild : class, IEvaluate
 		where TResult : IComparable
-	{ 
+	{
 
 	}
 }

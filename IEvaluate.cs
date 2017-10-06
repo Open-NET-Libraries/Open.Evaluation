@@ -14,17 +14,17 @@ namespace Open.Evaluation
 		string ToStringRepresentation();
 	}
 
-    public interface IEvaluate<out TResult> : IEvaluate
-    {
-        new TResult Evaluate(object context);
-    }
+	public interface IEvaluate<out TResult> : IEvaluate
+	{
+		new TResult Evaluate(object context);
+	}
 
-    public interface IEvaluate<in TContext, out TResult> : IEvaluate<TResult>
-    {
-        TResult Evaluate(TContext context);
+	public interface IEvaluate<in TContext, out TResult> : IEvaluate<TResult>
+	{
+		TResult Evaluate(TContext context);
 
-        string ToString(TContext context);
-    }
+		string ToString(TContext context);
+	}
 
-	
+
 }

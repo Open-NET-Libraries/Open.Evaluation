@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Open.Evaluation
 {
-    public interface IParent
+	public interface IParent
 	{
 		IReadOnlyList<object> Children { get; }
 	}
@@ -41,12 +41,12 @@ namespace Open.Evaluation
 			/// <returns>The copy of the tree/branch.</returns>
 			public Node<T> Clone(Node<T> parent = null)
 			{
-                var clone = new Node<T>()
-                {
-                    Value = this.Value,
-                    Parent = parent
-                };
-                foreach (var child in this)
+				var clone = new Node<T>()
+				{
+					Value = this.Value,
+					Parent = parent
+				};
+				foreach (var child in this)
 					clone.AddLast(child.Clone(clone));
 
 				return clone;
@@ -136,7 +136,7 @@ namespace Open.Evaluation
 				if (count != parent.Children.Count)
 					return true;
 
-				for(var i = 0;i<count;i++)
+				for (var i = 0; i < count; i++)
 				{
 					if (nChildren[i] != parent.Children[i])
 						return true;

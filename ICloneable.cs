@@ -5,13 +5,13 @@
 
 namespace Open.Evaluation
 {
-    public interface ICloneable
-    {
-        object Clone();
-    }
+	public interface ICloneable
+	{
+		object Clone();
+	}
 
-    public interface ICloneable<out T> : ICloneable
-    {
-        new T Clone();
-    }
+	public interface ICloneable<out T> : ICloneable
+	{
+		new T Clone();
+	}
 }
