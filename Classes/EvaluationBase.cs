@@ -28,7 +28,9 @@ namespace Open.Evaluation
 		{
 			Interlocked.Exchange(
 				ref _toStringRepresentation,
-				new Lazy<string>(ToStringRepresentationInternal, LazyThreadSafetyMode.ExecutionAndPublication)
+				new Lazy<string>(
+					ToStringRepresentationInternal,
+					LazyThreadSafetyMode.ExecutionAndPublication)
 			);
 		}
 
