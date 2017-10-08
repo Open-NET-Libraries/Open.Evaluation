@@ -29,9 +29,14 @@ namespace Open.Evaluation
             private set;
         }
 
+		public static string ToStringRepresentation(ushort id)
+		{
+			return "{" + id + "}";
+		}
+
         protected override string ToStringRepresentationInternal()
         {
-            return "{" + ID + "}";
+            return ToStringRepresentation(ID);
         }
 
         protected override TResult EvaluateInternal(object context)
@@ -53,12 +58,29 @@ namespace Open.Evaluation
 
         static double GetParamValueFrom(object source, ushort id)
         {
-            var list = source as IReadOnlyList<double>;
-            if (list != null) return list[id];
-            var array = source as double[];
-            if (array != null) return list[id];
-            throw new ArgumentException("Unknown context type.");
+			if (source is double[] array) return array[id];
+			if (source is IReadOnlyList<double> list) return list[id];
+			throw new ArgumentException("Unknown context type.");
         }
     }
+
+	public static class ParameterExtensions
+	{
+		public static T GetParameter<T>(this Catalog catalog, ushort id, Func<ushort, T> factory)
+			where T : IParameter
+		{
+			return catalog.Register(Parameter.ToStringRepresentation(id), k => factory(id));
+		}
+
+		public static Parameter GetParameter(this Catalog catalog, ushort id, Func<ushort, Parameter> factory)
+		{
+			return GetParameter<Parameter>(catalog, id, factory);
+		}
+
+		public static Parameter GetParameter(this Catalog catalog, ushort id)
+		{
+			return GetParameter(catalog, id, i => new Parameter(id));
+		}
+	}
 
 }

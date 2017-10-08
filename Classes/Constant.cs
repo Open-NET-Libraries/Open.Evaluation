@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Cloneable;
 using System;
 
 namespace Open.Evaluation
@@ -22,6 +23,8 @@ namespace Open.Evaluation
 			get;
 			private set;
 		}
+
+		IComparable IConstant.Value => Value;
 
 		protected override string ToStringRepresentationInternal()
 		{
@@ -71,6 +74,26 @@ namespace Open.Evaluation
 	{
 		public Constant(double value) : base(value)
 		{
+		}
+	}
+
+	public static class ConstantExtensions
+	{
+		public static T GetConstant<T, TValue>(this Catalog catalog, TValue value, Func<TValue, T> factory)
+			where TValue : IComparable
+			where T : IConstant<TValue>
+		{
+			return catalog.Register(value.ToString(), k => factory(value));
+		}
+
+		public static Constant GetConstant(this Catalog catalog, double value, Func<double, Constant> factory)
+		{
+			return GetConstant<Constant, double>(catalog, value, factory);
+		}
+
+		public static Constant GetConstant(this Catalog catalog, double value)
+		{
+			return GetConstant(catalog, value, i => new Constant(value));
 		}
 	}
 

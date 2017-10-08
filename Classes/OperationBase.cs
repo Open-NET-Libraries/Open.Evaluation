@@ -13,11 +13,8 @@ namespace Open.Evaluation
 
 		protected OperationBase(char symbol, string symbolString) : base()
 		{
-			if (symbolString == null)
-				throw new ArgumentNullException("symbolString");
-
+			SymbolString = symbolString ?? throw new ArgumentNullException("symbolString");
 			Symbol = symbol;
-			SymbolString = symbolString;
 		}
 
 		public char Symbol { get; private set; }

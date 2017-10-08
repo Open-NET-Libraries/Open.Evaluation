@@ -14,10 +14,7 @@ namespace Open.Evaluation
 
 		protected FunctionBase(char symbol, string symbolString, IEvaluate<TResult> evaluation) : base(symbol, symbolString)
 		{
-			if (evaluation == null)
-				throw new ArgumentNullException("contents");
-
-			Evaluation = evaluation;
+			Evaluation = evaluation ?? throw new ArgumentNullException("contents");
 			
 			// Provide a standard means for discovery.
 			ChildrenInternal.Add(evaluation);

@@ -12,6 +12,7 @@ namespace Open.Evaluation
 	public static class Hierarchy
 	{
 		// WARNING: Care must be taken not to have duplicate nodes anywhere in the tree but having duplicate values are allowed.
+		// The idea is to be as immutable as possible by no allowing the children to be aware of their parent so that a child can have multiple parents.
 
 		public class Node<T> : LinkedList<Node<T>>
 		{
@@ -103,10 +104,12 @@ namespace Open.Evaluation
 		public static Node<T> Get<T, TRoot>(TRoot root)
 			where TRoot : T
 		{
-			var current = new Node<T>();
-			current.Value = root;
-
 			var parent = root as IParent<T>;
+			var current = new Node<T>()
+			{
+				Value = root
+			};
+
 			foreach (var child in parent.Children)
 			{
 				var node = Get<T, T>(child);
@@ -118,17 +121,16 @@ namespace Open.Evaluation
 
 		public static bool AreChildrenMaligned(this Node<IEvaluate> target)
 		{
-			var parent = target.Value as IParent;
-			if (parent != null)
+			if (target.Value is IParent parent)
 			{
-				var nChildren = target.ToList();
-				var count = nChildren.Count;
+				var children = target.ToList();
+				var count = children.Count;
 				if (count != parent.Children.Count)
 					return true;
 
 				for (var i = 0; i < count; i++)
 				{
-					if (nChildren[i] != parent.Children[i])
+					if (children[i] != parent.Children[i])
 						return true;
 				}
 			}

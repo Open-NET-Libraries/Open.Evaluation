@@ -7,9 +7,14 @@ using System;
 
 namespace Open.Evaluation
 {
-	public interface IConstant<out TResult> : IEvaluate<TResult>
+	public interface IConstant : IEvaluate
+	{
+		IComparable Value { get; }
+	}
+
+	public interface IConstant<out TResult> : IEvaluate<TResult>, IConstant
 		where TResult : IComparable
 	{
-		TResult Value { get; }
+		new TResult Value { get; }
 	}
 }

@@ -5,8 +5,12 @@
 
 namespace Open.Evaluation
 {
-	public interface IParameter<TResult> : IEvaluate<TResult>
+	public interface IParameter : IEvaluate
 	{
 		ushort ID { get; }
+	}
+
+	public interface IParameter<TResult> : IEvaluate<TResult>, IParameter
+	{
 	}
 }
