@@ -3,18 +3,22 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Open.Evaluation
 {
 
+	/// <summary>
+	/// Used for mapping a tree of evaluations which do not have access to their parent nodes.
+	/// </summary>
 	public static class Hierarchy
 	{
+	
 		// WARNING: Care must be taken not to have duplicate nodes anywhere in the tree but having duplicate values are allowed.
-		// The idea is to be as immutable as possible by no allowing the children to be aware of their parent so that a child can have multiple parents.
 
-		public class Node<T> : LinkedList<Node<T>>
+		public class Node<T> : LinkedList<Node<T>>, IDisposable
 		{
 			public Node<T> Parent { get; set; }
 
@@ -98,9 +102,32 @@ namespace Open.Evaluation
 				}
 			}
 
+			public void Teardown(Action<Node<T>> recycledNodeHandler = null)
+			{
+				Value = default(T);
+				while(Count!=0)
+				{
+					var child = Last.Value;
+					RemoveLast();
+					child.Teardown(recycledNodeHandler);
+				}
+				recycledNodeHandler?.Invoke(this);
+			}
+
+			public void Dispose()
+			{
+				Teardown();
+			}
 		}
 
-
+		/// <summary>
+		/// Generates a full hierarchy if the root is an IParent and uses the root as the value of the hierarchy.
+		/// Essentially building a map of the tree.
+		/// </summary>
+		/// <typeparam name="T">Child type.</typeparam>
+		/// <typeparam name="TRoot">The type of the root.</typeparam>
+		/// <param name="root">The root instance.</param>
+		/// <returns>The full map of the root.</returns>
 		public static Node<T> Get<T, TRoot>(TRoot root)
 			where TRoot : T
 		{
@@ -112,30 +139,42 @@ namespace Open.Evaluation
 
 			foreach (var child in parent.Children)
 			{
-				var node = Get<T, T>(child);
+				var node = Get<T>(child);
 				node.Parent = current;
 				current.AddLast(node);
 			}
 			return current;
 		}
 
-		public static bool AreChildrenMaligned(this Node<IEvaluate> target)
+		public static Node<T> Get<T>(T root)
+		{
+			return Get<T, T>(root);
+		}
+
+		public static bool AreChildrenAligned(this Node<IEvaluate> target)
 		{
 			if (target.Value is IParent parent)
 			{
-				var children = target.ToList();
-				var count = children.Count;
+				// If the value contains children, return true only if they match.
+				var children = target.ToArray();
+				var count = children.Length;
 				if (count != parent.Children.Count)
-					return true;
+					return false;
 
 				for (var i = 0; i < count; i++)
 				{
 					if (children[i] != parent.Children[i])
-						return true;
+						return false;
 				}
 			}
+			else
+			{
+				// Value does not have children? Return true only if this has no children.
+				return target.Count == 0;
+			}
 
-			return false;
+			// Everything is the same..
+			return true;
 		}
 
 		public static void AlignValues(this Node<IEvaluate> target)
