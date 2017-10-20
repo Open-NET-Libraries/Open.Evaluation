@@ -59,10 +59,11 @@ namespace Open.Evaluation
 				if (this == toReplace)
 					return replacement.Clone(parent);
 
-				var clone = new Node<T>();
-				clone.Value = this.Value;
-				clone.Parent = parent;
-
+				var clone = new Node<T>()
+				{
+					Value = this.Value,
+					Parent = parent
+				};
 				foreach (var child in this)
 					clone.AddLast(child.CloneReplaced(toReplace, replacement, clone));
 
