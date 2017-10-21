@@ -20,7 +20,7 @@ namespace Open.Evaluation
 
 		public class Node<T> : LinkedList<Node<T>>, IDisposable
 		{
-			public Node<T> Parent { get; set; }
+			public Node<T> Parent { get; internal set; }
 
 			public T Value { get; set; }
 
@@ -33,43 +33,54 @@ namespace Open.Evaluation
 			/// Clones a node by recreating the tree and copying the values.
 			/// </summary>
 			/// <param name="parent">If a parent is specified it will use that node as its parent.  By default it ends up being detatched.</param>
+			/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
 			/// <returns>The copy of the tree/branch.</returns>
-			public Node<T> Clone(Node<T> parent = null)
+			public Node<T> Clone(
+				Node<T> parent = null,
+				Action<Node<T>, Node<T>> onNodeCloned = null)
 			{
 				var clone = new Node<T>()
 				{
 					Value = this.Value,
 					Parent = parent
 				};
+
 				foreach (var child in this)
 					clone.AddLast(child.Clone(clone));
+
+				onNodeCloned?.Invoke(this, clone);
 
 				return clone;
 			}
 
 			/// <summary>
-			/// Clones existing node and looks for replacement node to replace with a clone of the replacement.
+			/// Clones a node by recreating the tree and copying the values.
 			/// </summary>
-			/// <param name="toReplace">The node to search for and replace.</param>
-			/// <param name="replacement">The node to use as a replacement.</param>
-			/// <param name="parent">If a parent is specified it will use that node as its parent.  By default it ends up being detatched.</param>
+			/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
 			/// <returns>The copy of the tree/branch.</returns>
-			public Node<T> CloneReplaced(Node<T> toReplace, Node<T> replacement, Node<T> parent = null)
+			public Node<T> Clone(Action<Node<T>, Node<T>> onNodeCloned)
 			{
-				if (this == toReplace)
-					return replacement.Clone(parent);
-
-				var clone = new Node<T>()
-				{
-					Value = this.Value,
-					Parent = parent
-				};
-				foreach (var child in this)
-					clone.AddLast(child.CloneReplaced(toReplace, replacement, clone));
-
-				return clone;
+				return Clone(null, onNodeCloned);
 			}
 
+			/// <summary>
+			/// Create's a clone of the entire tree but only returns the clone of this node.
+			/// </summary>
+			/// <returns>A clone of this node as part of a newly cloned tree.</returns>
+			public Node<T> CloneTree()
+			{
+				Node<T> node = null;
+				Root.Clone((n, clone) =>
+				{
+					if (n == this) node = clone;
+				});
+				return node;
+			}
+
+			/// <summary>
+			/// Iterates through all of the descendants of this node starting breadth first.
+			/// </summary>
+			/// <returns>All the descendants of this node.</returns>
 			public IEnumerable<Node<T>> GetDescendants()
 			{
 				// Attempt to be more breadth first.
@@ -85,6 +96,7 @@ namespace Open.Evaluation
 					yield return descendant;
 			}
 
+			/// <returns>This and all of its descendants.</returns>
 			public IEnumerable<Node<T>> GetNodes()
 			{
 				yield return this;
@@ -92,6 +104,9 @@ namespace Open.Evaluation
 					yield return descendant;
 			}
 
+			/// <summary>
+			/// Finds the root node of this tree.
+			/// </summary>
 			public Node<T> Root
 			{
 				get
@@ -100,6 +115,17 @@ namespace Open.Evaluation
 					while (current.Parent != null)
 						current = current.Parent;
 					return current;
+				}
+			}
+
+
+			public void ValidateDescendants()
+			{
+				foreach (var child in this)
+				{
+					if (child.Parent != this)
+						throw new Exception("A node has a child that has its parent mapped to another node.");
+					child.ValidateDescendants();
 				}
 			}
 
@@ -119,6 +145,8 @@ namespace Open.Evaluation
 			{
 				Teardown();
 			}
+
+
 		}
 
 		/// <summary>
@@ -159,11 +187,14 @@ namespace Open.Evaluation
 				// If the value contains children, return true only if they match.
 				var children = target.ToArray();
 				var count = children.Length;
+
+                // The count should match...
 				if (count != parent.Children.Count)
 					return false;
 
 				for (var i = 0; i < count; i++)
 				{
+                    // Does the map of the children match the actual?
 					if (children[i] != parent.Children[i])
 						return false;
 				}
