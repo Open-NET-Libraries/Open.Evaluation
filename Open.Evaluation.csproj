@@ -13,6 +13,8 @@
 
   <ItemGroup>
     <PackageReference Include="Open.Cloneable" Version="1.0.0" />
+    <PackageReference Include="Open.Disposable" Version="1.0.4" />
+    <PackageReference Include="Open.Disposable.ObjectPools" Version="1.2.0" />
   </ItemGroup>
 
 </Project>
