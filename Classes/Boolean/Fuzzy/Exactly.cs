@@ -15,6 +15,11 @@ namespace Open.Evaluation.BooleanOperators
 		{
 		}
 
+		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		{
+			return new Exactly((int)param, children);
+		}
+
 		protected override bool EvaluateInternal(object context)
 		{
 			int count = 0;

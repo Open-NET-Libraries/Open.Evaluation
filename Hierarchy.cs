@@ -3,85 +3,153 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Open.Evaluation
+namespace Open.Evaluation.Hierarchy
 {
 
 	/// <summary>
 	/// Used for mapping a tree of evaluations which do not have access to their parent nodes.
 	/// </summary>
-	public static class Hierarchy
+	public class NodeFactory<T> : DisposableBase
 	{
-	
+		public NodeFactory()
+		{
+			Pool = new ConcurrentQueueObjectPool<Node>(
+				() => new Node(), PrepareForPool, ushort.MaxValue);
+		}
+
+		protected override void OnDispose(bool calledExplicitly)
+		{
+			if (calledExplicitly)
+			{
+				DisposeOf(ref Pool);
+			}
+		}
+
+		ConcurrentQueueObjectPool<Node> Pool;
+
+		public void Recycle(Node n)
+		{
+			Pool.Give(n);
+		}
+
+		void PrepareForPool(Node n)
+		{
+			n.Value = default(T);
+			n.Parent = null;
+			n.Teardown(c =>
+			{
+				// Avoid recursion.
+				if (c != n) Pool.Give(n);
+			});
+		}
+
 		// WARNING: Care must be taken not to have duplicate nodes anywhere in the tree but having duplicate values are allowed.
 
-		public class Node<T> : LinkedList<Node<T>>, IDisposable
+		/// <summary>
+		/// Clones a node by recreating the tree and copying the values.
+		/// </summary>
+		/// <param name="target">The node to replicate.</param>
+		/// <param name="parent">If a parent is specified it will use that node as its parent.  By default it ends up being detatched.</param>
+		/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
+		/// <returns>The copy of the tree/branch.</returns>
+		public Node Clone(
+			Node target,
+			Node parent = null,
+			Action<Node, Node> onNodeCloned = null)
 		{
-			public Node<T> Parent { get; internal set; }
+			var clone = Pool.Take();
+			clone.Value = target.Value;
+			clone.Parent = parent;
+
+			foreach (var child in target)
+				clone.AddLast(Clone(child, clone));
+
+			onNodeCloned?.Invoke(target, clone);
+
+			return clone;
+		}
+
+
+		/// <summary>
+		/// Clones a node by recreating the tree and copying the values.
+		/// </summary>
+		/// <param name="target">The node to replicate.</param>
+		/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
+		/// <returns>The copy of the tree/branch.</returns>
+		public Node Clone(Node target, Action<Node, Node> onNodeCloned)
+		{
+			return Clone(target, null, onNodeCloned);
+		}
+
+		/// <summary>
+		/// Create's a clone of the entire tree but only returns the clone of this node.
+		/// </summary>
+		/// <returns>A clone of this node as part of a newly cloned tree.</returns>
+		public Node CloneTree(Node target)
+		{
+			Node node = null;
+			Clone(target.Root, (n, clone) =>
+			{
+				if (n == target) node = clone;
+			});
+			return node;
+		}
+
+
+		/// <summary>
+		/// Generates a full hierarchy if the root is an IParent and uses the root as the value of the hierarchy.
+		/// Essentially building a map of the tree.
+		/// </summary>
+		/// <typeparam name="T">Child type.</typeparam>
+		/// <typeparam name="TRoot">The type of the root.</typeparam>
+		/// <param name="root">The root instance.</param>
+		/// <returns>The full map of the root.</returns>
+		public Node GetHierarchy<TRoot>(TRoot root)
+			where TRoot : T
+		{
+			var current = Pool.Take();
+			current.Value = root;
+
+			if( root is IParent<T> parent)
+			{
+				foreach (var child in parent.Children)
+				{
+					var node = GetHierarchy<T>(child);
+					node.Parent = current;
+					current.AddLast(node);
+				}
+			}
+
+			return current;
+		}
+
+		public Node GetHierarchy(T root)
+		{
+			return GetHierarchy<T>(root);
+		}
+
+		public class Node : LinkedList<Node>, IDisposable
+		{
+			public Node Parent { get; internal set; }
 
 			public T Value { get; set; }
 
-			public Node()
+			internal Node()
 			{
 
 			}
 
-			/// <summary>
-			/// Clones a node by recreating the tree and copying the values.
-			/// </summary>
-			/// <param name="parent">If a parent is specified it will use that node as its parent.  By default it ends up being detatched.</param>
-			/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
-			/// <returns>The copy of the tree/branch.</returns>
-			public Node<T> Clone(
-				Node<T> parent = null,
-				Action<Node<T>, Node<T>> onNodeCloned = null)
-			{
-				var clone = new Node<T>()
-				{
-					Value = this.Value,
-					Parent = parent
-				};
-
-				foreach (var child in this)
-					clone.AddLast(child.Clone(clone));
-
-				onNodeCloned?.Invoke(this, clone);
-
-				return clone;
-			}
-
-			/// <summary>
-			/// Clones a node by recreating the tree and copying the values.
-			/// </summary>
-			/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
-			/// <returns>The copy of the tree/branch.</returns>
-			public Node<T> Clone(Action<Node<T>, Node<T>> onNodeCloned)
-			{
-				return Clone(null, onNodeCloned);
-			}
-
-			/// <summary>
-			/// Create's a clone of the entire tree but only returns the clone of this node.
-			/// </summary>
-			/// <returns>A clone of this node as part of a newly cloned tree.</returns>
-			public Node<T> CloneTree()
-			{
-				Node<T> node = null;
-				Root.Clone((n, clone) =>
-				{
-					if (n == this) node = clone;
-				});
-				return node;
-			}
 
 			/// <summary>
 			/// Iterates through all of the descendants of this node starting breadth first.
 			/// </summary>
 			/// <returns>All the descendants of this node.</returns>
-			public IEnumerable<Node<T>> GetDescendants()
+			public IEnumerable<Node> GetDescendants()
 			{
 				// Attempt to be more breadth first.
 
@@ -97,7 +165,7 @@ namespace Open.Evaluation
 			}
 
 			/// <returns>This and all of its descendants.</returns>
-			public IEnumerable<Node<T>> GetNodes()
+			public IEnumerable<Node> GetNodes()
 			{
 				yield return this;
 				foreach (var descendant in GetDescendants())
@@ -107,7 +175,7 @@ namespace Open.Evaluation
 			/// <summary>
 			/// Finds the root node of this tree.
 			/// </summary>
-			public Node<T> Root
+			public Node Root
 			{
 				get
 				{
@@ -129,10 +197,10 @@ namespace Open.Evaluation
 				}
 			}
 
-			public void Teardown(Action<Node<T>> recycledNodeHandler = null)
+			public void Teardown(Action<Node> recycledNodeHandler = null)
 			{
 				Value = default(T);
-				while(Count!=0)
+				while (Count != 0)
 				{
 					var child = Last.Value;
 					RemoveLast();
@@ -148,87 +216,6 @@ namespace Open.Evaluation
 
 
 		}
-
-		/// <summary>
-		/// Generates a full hierarchy if the root is an IParent and uses the root as the value of the hierarchy.
-		/// Essentially building a map of the tree.
-		/// </summary>
-		/// <typeparam name="T">Child type.</typeparam>
-		/// <typeparam name="TRoot">The type of the root.</typeparam>
-		/// <param name="root">The root instance.</param>
-		/// <returns>The full map of the root.</returns>
-		public static Node<T> Get<T, TRoot>(TRoot root)
-			where TRoot : T
-		{
-			var parent = root as IParent<T>;
-			var current = new Node<T>()
-			{
-				Value = root
-			};
-
-			foreach (var child in parent.Children)
-			{
-				var node = Get<T>(child);
-				node.Parent = current;
-				current.AddLast(node);
-			}
-			return current;
-		}
-
-		public static Node<T> Get<T>(T root)
-		{
-			return Get<T, T>(root);
-		}
-
-		public static bool AreChildrenAligned(this Node<IEvaluate> target)
-		{
-			if (target.Value is IParent parent)
-			{
-				// If the value contains children, return true only if they match.
-				var children = target.ToArray();
-				var count = children.Length;
-
-                // The count should match...
-				if (count != parent.Children.Count)
-					return false;
-
-				for (var i = 0; i < count; i++)
-				{
-                    // Does the map of the children match the actual?
-					if (children[i] != parent.Children[i])
-						return false;
-				}
-			}
-			else
-			{
-				// Value does not have children? Return true only if this has no children.
-				return target.Count == 0;
-			}
-
-			// Everything is the same..
-			return true;
-		}
-
-		public static void AlignValues(this Node<IEvaluate> target)
-		{
-			//var parent = target.Value as IParent;
-			//if (parent != null)
-			//{
-			//	var nChildren = target.ToList();
-			//	var count = nChildren.Count;
-			//	if (count != parent.Children.Count)
-			//		return true;
-
-			//	for (var i = 0; i < count; i++)
-			//	{
-			//		if (nChildren[i] != parent.Children[i])
-			//			return true;
-			//	}
-			//}
-
-			//return false;
-		}
-
 
 	}
 }

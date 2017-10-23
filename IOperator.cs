@@ -8,7 +8,7 @@ using System;
 namespace Open.Evaluation
 {
 	public interface IOperator<out TChild, out TResult>
-		: IFunction<TResult>, IParent<TChild>
+		: IFunction<TResult>, IParent<TChild>, IReproducable
 		where TChild : class, IEvaluate
 		where TResult : IComparable
 	{

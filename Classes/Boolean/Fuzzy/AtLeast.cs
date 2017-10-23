@@ -18,6 +18,11 @@ namespace Open.Evaluation.BooleanOperators
 				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 1.");
 		}
 
+		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		{
+			return new AtLeast((int)param, children);
+		}
+
 		protected override bool EvaluateInternal(object context)
 		{
 			int count = 0;

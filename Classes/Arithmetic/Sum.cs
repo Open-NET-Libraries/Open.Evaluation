@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Open.Evaluation.ArithmeticOperators
@@ -96,6 +97,21 @@ namespace Open.Evaluation.ArithmeticOperators
 			return result.ToStringRepresentation() == result.ToStringRepresentation() ? null : result;
 		}
 
+		public Sum<TResult> ReplaceIndex(int index, IEvaluate<TResult> repacement)
+		{
+			if (index < 0) throw new ArgumentOutOfRangeException("replacement", repacement, "Must be at least zero.");
+
+			var newChildren = new List<IEvaluate<TResult>>(ChildrenInternal.Take(index)) { repacement };
+			foreach (var c in ChildrenInternal.Skip(index + 1)) newChildren.Add(c);
+
+			return new Sum<TResult>(newChildren);
+		}
+
+		public override OperatorBase<IEvaluate<TResult>, TResult> CreateNewFrom(object param, IEnumerable<IEvaluate<TResult>> children)
+		{
+			Debug.WriteLineIf(param != null, "A param object was provided to a Sum and will be lost. " + param);
+			return new Sum<TResult>(children);
+		}
 	}
 
 	public class Sum : Sum<double>
@@ -113,6 +129,12 @@ namespace Open.Evaluation.ArithmeticOperators
 		where TResult : struct, IComparable
 		{
 			return new Sum<TResult>(evaluations);
+		}
+
+		public override OperatorBase<IEvaluate<double>, double> CreateNewFrom(object param, IEnumerable<IEvaluate<double>> children)
+		{
+			Debug.WriteLineIf(param != null, "A param object was provided to a Sum and will be lost. " + param);
+			return new Sum(children);
 		}
 	}
 
@@ -164,7 +186,6 @@ namespace Open.Evaluation.ArithmeticOperators
 			return new Sum<ushort>(evaluations);
 		}
 
-
 		public static Sum<int> Sum<TContext>(this IEnumerable<IEvaluate<int>> evaluations)
 		{
 			return new Sum<int>(evaluations);
@@ -186,6 +207,5 @@ namespace Open.Evaluation.ArithmeticOperators
 		}
 
 	}
-
 
 }

@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Open.Evaluation.BooleanOperators
 {
@@ -17,6 +18,14 @@ namespace Open.Evaluation.BooleanOperators
 			: base(SYMBOL, SEPARATOR, children)
 		{
 			ReorderChildren();
+
+
+		}
+
+		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		{
+			Debug.WriteLineIf(param != null, "A param object was provided to a And and will be lost. " + param);
+			return new And(children);
 		}
 
 		protected override bool EvaluateInternal(object context)

@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Open.Evaluation.BooleanOperators
 {
@@ -32,6 +33,11 @@ namespace Open.Evaluation.BooleanOperators
 			return false;
 		}
 
+		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		{
+			Debug.WriteLineIf(param != null, "A param object was provided to a Or and will be lost. " + param);
+			return new Or(children);
+		}
 
 	}
 

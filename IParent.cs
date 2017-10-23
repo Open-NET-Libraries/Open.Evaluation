@@ -4,8 +4,6 @@
  */
 
 using System.Collections.Generic;
-using System.Linq;
-
 namespace Open.Evaluation
 {
 	public interface IParent
@@ -17,4 +15,5 @@ namespace Open.Evaluation
 	{
 		new IReadOnlyList<TChild> Children { get; }
 	}
+
 }

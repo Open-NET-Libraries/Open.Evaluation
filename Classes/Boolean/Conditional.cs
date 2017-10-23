@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Open.Evaluation.BooleanOperators
 {
@@ -60,6 +61,14 @@ namespace Open.Evaluation.BooleanOperators
 				IfFalse.Evaluate(context));
 		}
 
+		public override OperatorBase<IEvaluate, bool> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		{
+			return new Conditional<TResult>(
+				(IEvaluate<bool>)param,
+				(IEvaluate<TResult>)children.First(),
+				(IEvaluate<TResult>)children.Skip(1).Single()
+			);
+		}
 	}
 
 	public static class Conditional

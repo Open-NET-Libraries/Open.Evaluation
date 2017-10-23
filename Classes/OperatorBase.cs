@@ -6,6 +6,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Open.Evaluation
@@ -40,7 +41,7 @@ namespace Open.Evaluation
 		{
 			get
 			{
-				return this.Children;
+				return Children;
 			}
 		}
 
@@ -115,6 +116,22 @@ namespace Open.Evaluation
 
 		}
 
+		public abstract IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children);
+
+		public IEvaluate CreateNewFrom(IEnumerable<IEvaluate> children)
+		{
+			return CreateNewFrom(null, children);
+		}
+
+		public IEvaluate CreateNewFrom(object param, IEvaluate child)
+		{
+			return CreateNewFrom(param, Enumerable.Repeat(child,1));
+		}
+
+		public IEvaluate CreateNewFrom(IEvaluate child)
+		{
+			return CreateNewFrom(null, child);
+		}
 
 	}
 

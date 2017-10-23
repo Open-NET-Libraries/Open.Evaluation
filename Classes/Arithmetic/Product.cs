@@ -57,7 +57,7 @@ namespace Open.Evaluation.ArithmeticOperators
 				foreach (var e in exponents)
 					children.Remove(e);
 
-				children.Add(new Exponent<TResult>(e1.Evaluation,power.AsReduced()));
+				children.Add(new Exponent<TResult>(e1.Evaluation, power.AsReduced()));
 			}
 
 			// Phase 5: Combine constants.
@@ -81,7 +81,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			multiple = null;
 			var reduced = this.AsReduced();
 			var product = reduced as Product<TResult>;
-			if(product!=null)
+			if (product != null)
 			{
 				var children = product.ChildrenInternal.ToList();
 				var constants = product.ChildrenInternal.OfType<Constant<TResult>>().ToArray();
@@ -92,8 +92,15 @@ namespace Open.Evaluation.ArithmeticOperators
 				children.Remove(multiple);
 				return new Product<TResult>(children);
 			}
-			return reduced;			
+			return reduced;
 		}
+
+		public override OperatorBase<IEvaluate<TResult>, TResult> CreateNewFrom(object param, IEnumerable<IEvaluate<TResult>> children)
+		{
+			Debug.WriteLineIf(param != null, "A param object was provided to a Product and will be lost. " + param);
+			return new Product<TResult>(children);
+		}
+
 	}
 
 	public class Product : Product<double>
@@ -110,6 +117,13 @@ namespace Open.Evaluation.ArithmeticOperators
 		{
 			return new Product<TResult>(evaluations);
 		}
+
+		public override OperatorBase<IEvaluate<double>, double> CreateNewFrom(object param, IEnumerable<IEvaluate<double>> children)
+		{
+			Debug.WriteLineIf(param != null, "A param object was provided to a Product and will be lost. " + param);
+			return new Product(children);
+		}
+
 	}
 
 	public static class ProductExtensions
