@@ -7,6 +7,7 @@ using Open.Disposable;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
 
 namespace Open.Evaluation.Hierarchy
 {
@@ -16,6 +17,7 @@ namespace Open.Evaluation.Hierarchy
 	/// </summary>
 	public class NodeFactory<T> : DisposableBase
 	{
+		#region Creation, Recycling, and Disposal
 		public NodeFactory()
 		{
 			Pool = new ConcurrentQueueObjectPool<Node>(
@@ -34,6 +36,8 @@ namespace Open.Evaluation.Hierarchy
 
 		public void Recycle(Node n)
 		{
+			AssertIsAlive();
+
 			Pool.Give(n);
 		}
 
@@ -44,9 +48,10 @@ namespace Open.Evaluation.Hierarchy
 			n.Teardown(c =>
 			{
 				// Avoid recursion.
-				if (c != n) Pool.Give(n);
+				if (c != n) Pool?.Give(n);
 			});
 		}
+		#endregion
 
 		// WARNING: Care must be taken not to have duplicate nodes anywhere in the tree but having duplicate values are allowed.
 
@@ -62,12 +67,14 @@ namespace Open.Evaluation.Hierarchy
 			Node parent = null,
 			Action<Node, Node> onNodeCloned = null)
 		{
+			AssertIsAlive();
+
 			var clone = Pool.Take();
 			clone.Value = target.Value;
 			clone.Parent = parent;
 
 			foreach (var child in target)
-				clone.AddLast(Clone(child, clone));
+				clone.Children.AddLast(Clone(child, clone));
 
 			onNodeCloned?.Invoke(target, clone);
 
@@ -112,6 +119,8 @@ namespace Open.Evaluation.Hierarchy
 		public Node GetHierarchy<TRoot>(TRoot root)
 			where TRoot : T
 		{
+			AssertIsAlive();
+
 			var current = Pool.Take();
 			current.Value = root;
 
@@ -121,20 +130,30 @@ namespace Open.Evaluation.Hierarchy
 				{
 					var node = GetHierarchy<T>(child);
 					node.Parent = current;
-					current.AddLast(node);
+					current.Children.AddLast(node);
 				}
 			}
 
 			return current;
 		}
 
+		/// <summary>
+		/// Generates a full hierarchy if the root is an IParent and uses the root as the value of the hierarchy.
+		/// Essentially building a map of the tree.
+		/// </summary>
+		/// <typeparam name="T">The type of the root.</typeparam>
+		/// <param name="root">The root instance.</param>
+		/// <returns>The full map of the root.</returns>
 		public Node GetHierarchy(T root)
 		{
 			return GetHierarchy<T>(root);
 		}
 
-		public class Node : LinkedList<Node>, IDisposable
+		public class Node : IReadOnlyCollection<Node>
 		{
+			// Prefering a LinkedList over List because of the adding, removing, splicing that can happen when attemtping to manipulate a tree.
+			internal readonly LinkedList<Node> Children = new LinkedList<Node>();
+
 			public Node Parent { get; internal set; }
 
 			public T Value { get; set; }
@@ -143,7 +162,6 @@ namespace Open.Evaluation.Hierarchy
 			{
 
 			}
-
 
 			/// <summary>
 			/// Iterates through all of the descendants of this node starting breadth first.
@@ -186,35 +204,57 @@ namespace Open.Evaluation.Hierarchy
 				}
 			}
 
+			public int Count => Children.Count;
 
-			public void ValidateDescendants()
+			/// <summary>
+			/// Asserts that parent child relationships are correclty aligned and that there aren't dupilicate nodes in the tree.
+			/// </summary>
+			public void Validate()
 			{
-				foreach (var child in this)
+				// Ensure no duplicate nodes.
+				Validate( new HashSet<Node>() );
+			}
+
+			void Validate(HashSet<Node> registry)
+			{
+				foreach (var child in Children)
 				{
 					if (child.Parent != this)
 						throw new Exception("A node has a child that has its parent mapped to another node.");
-					child.ValidateDescendants();
+					if(!registry.Add(child))
+						throw new Exception("A node already exists in the tree and will cause infinite recusion.");
+
+					child.Validate(registry);
 				}
 			}
 
-			public void Teardown(Action<Node> recycledNodeHandler = null)
+			internal void Teardown(Action<Node> afterNodeRemovedHandler = null)
 			{
 				Value = default(T);
-				while (Count != 0)
+				while (Children.Count != 0)
 				{
-					var child = Last.Value;
-					RemoveLast();
-					child.Teardown(recycledNodeHandler);
+					Node child;
+					lock(Children) // Not really necessary but just in case there's an external call that occurs twice.  This will ensure nodes are capured correctly instead of potentially duplicated or missed.
+					{
+						var count = Children.Count;
+						if (count == 0) break;
+						child = Children.Last.Value;
+						Children.RemoveLast();
+					}
+					child.Teardown(afterNodeRemovedHandler);
 				}
-				recycledNodeHandler?.Invoke(this);
+				afterNodeRemovedHandler?.Invoke(this);
 			}
 
-			public void Dispose()
+			public IEnumerator<Node> GetEnumerator()
 			{
-				Teardown();
+				return Children.GetEnumerator();
 			}
 
-
+			IEnumerator IEnumerable.GetEnumerator()
+			{
+				return GetEnumerator();
+			}
 		}
 
 	}
