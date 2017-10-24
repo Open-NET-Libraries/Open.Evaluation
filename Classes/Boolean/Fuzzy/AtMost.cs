@@ -4,6 +4,7 @@
  */
 
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Open.Evaluation.BooleanOperators
 {
@@ -15,9 +16,9 @@ namespace Open.Evaluation.BooleanOperators
 		{
 		}
 
-		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
-			return new AtMost((int)param, children);
+			return new AtMost((int)param, children.Cast<IEvaluate<bool>>());
 		}
 
 

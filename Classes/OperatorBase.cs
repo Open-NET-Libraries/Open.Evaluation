@@ -32,11 +32,6 @@ namespace Open.Evaluation
 			private set;
 		}
 
-		public Hierarchy.Node<IEvaluate> GetHierarchy()
-		{
-			return Hierarchy.Get<IEvaluate, IEvaluate>(this);
-		}
-
 		IReadOnlyList<object> IParent.Children
 		{
 			get
@@ -44,6 +39,8 @@ namespace Open.Evaluation
 				return Children;
 			}
 		}
+
+		public virtual object ReproductionParam => null;
 
 		protected virtual void ReorderChildren()
 		{

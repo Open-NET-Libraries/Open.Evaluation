@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Open.Evaluation.BooleanOperators
 {
@@ -18,9 +19,9 @@ namespace Open.Evaluation.BooleanOperators
 				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 1.");
 		}
 
-		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
-			return new AtLeast((int)param, children);
+			return new AtLeast((int)param, children.Cast<IEvaluate<bool>>());
 		}
 
 		protected override bool EvaluateInternal(object context)

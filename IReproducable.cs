@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Open.Evaluation
 {
-    public interface IReproducable : IEvaluate, IParent<IEvaluate>
+    public interface IReproducable : IEvaluate
     {
 		object ReproductionParam { get; }
 

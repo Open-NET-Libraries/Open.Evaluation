@@ -107,10 +107,10 @@ namespace Open.Evaluation.ArithmeticOperators
 			return new Sum<TResult>(newChildren);
 		}
 
-		public override OperatorBase<IEvaluate<TResult>, TResult> CreateNewFrom(object param, IEnumerable<IEvaluate<TResult>> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			Debug.WriteLineIf(param != null, "A param object was provided to a Sum and will be lost. " + param);
-			return new Sum<TResult>(children);
+			return new Sum<TResult>(children.Cast<IEvaluate<TResult>>());
 		}
 	}
 
@@ -131,10 +131,10 @@ namespace Open.Evaluation.ArithmeticOperators
 			return new Sum<TResult>(evaluations);
 		}
 
-		public override OperatorBase<IEvaluate<double>, double> CreateNewFrom(object param, IEnumerable<IEvaluate<double>> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			Debug.WriteLineIf(param != null, "A param object was provided to a Sum and will be lost. " + param);
-			return new Sum(children);
+			return new Sum(children.Cast<IEvaluate<double>>());
 		}
 	}
 

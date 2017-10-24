@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Open.Evaluation.BooleanOperators
 {
@@ -22,10 +23,10 @@ namespace Open.Evaluation.BooleanOperators
 
 		}
 
-		public override OperatorBase<IEvaluate<bool>, bool> CreateNewFrom(object param, IEnumerable<IEvaluate<bool>> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			Debug.WriteLineIf(param != null, "A param object was provided to a And and will be lost. " + param);
-			return new And(children);
+			return new And(children.Cast<IEvaluate<bool>>());
 		}
 
 		protected override bool EvaluateInternal(object context)

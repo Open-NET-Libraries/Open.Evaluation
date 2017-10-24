@@ -8,7 +8,7 @@ namespace Open.Evaluation.Hierarchy
     public static class Extensions
     {
 
-		public static bool AreChildrenAligned(this NodeFactory<IEvaluate>.Node target)
+		public static bool AreChildrenAligned(this Node<IEvaluate> target)
 		{
 			if (target.Value is IParent parent)
 			{
@@ -37,26 +37,44 @@ namespace Open.Evaluation.Hierarchy
 			return true;
 		}
 
-		public static void AlignValues(this NodeFactory<IEvaluate>.Node target)
+		/// <summary>
+		/// For any evaluation node, correct the hierarchy to match.
+		/// </summary>
+		/// <param name="target">The node tree to correct.</param>
+		/// <returns>The updated tree.</returns>
+		public static Node<T> FixHierarchy<T>(
+			this Node<T>.Factory factory,
+			Node<T> target,
+			Catalog<T> catalog)
+			where T : IEvaluate
 		{
-			//var parent = target.Value as IParent;
-			//if (parent != null)
-			//{
-			//	var nChildren = target.ToList();
-			//	var count = nChildren.Count;
-			//	if (count != parent.Children.Count)
-			//		return true;
+			// Does this node's value contain children?
+			if (target.Value is IReproducable r)
+			{
+				// This recursion technique will operate on the leaves of the tree first.
+				var node = factory.Map(
+					(T)r.CreateNewFrom(
+						r.ReproductionParam,
+						// Using new children... Rebuild using new structure and check for registration.
+						target.Select(n => (IEvaluate)catalog.Register(factory.FixHierarchy(n, catalog).Value))
+					)
+				);
+				node.Parent = target.Parent;
+				return node;
+			}
+			// No children? Then clear any child notes.
+			else
+			{
+				if (target.Count != 0)
+					target.Children.Clear();
 
-			//	for (var i = 0; i < count; i++)
-			//	{
-			//		if (nChildren[i] != parent.Children[i])
-			//			return true;
-			//	}
-			//}
+				var old = target.Value;
+				var registered = catalog.Register(target.Value);
+				if (!old.Equals(registered))
+					target.Value = registered;
 
-			//return false;
+				return target;
+			}
 		}
-
-
 	}
 }

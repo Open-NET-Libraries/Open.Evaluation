@@ -61,7 +61,7 @@ namespace Open.Evaluation.BooleanOperators
 				IfFalse.Evaluate(context));
 		}
 
-		public override OperatorBase<IEvaluate, bool> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			return new Conditional<TResult>(
 				(IEvaluate<bool>)param,

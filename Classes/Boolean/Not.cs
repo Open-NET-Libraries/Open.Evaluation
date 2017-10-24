@@ -20,7 +20,7 @@ namespace Open.Evaluation.BooleanOperators
 
 		}
 
-		public override OperatorBase<IEvaluate, bool> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			Debug.WriteLineIf(param != null, "A param object was provided to a Not and will be lost. " + param);
 			return new Not((IEvaluate<bool>)children.Single());

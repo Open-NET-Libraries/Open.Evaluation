@@ -65,7 +65,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			return string.Format("({0}^{1})", contents, power);
 		}
 
-		public override OperatorBase<IEvaluate, TResult> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			return new Exponent<TResult, TPower>((IEvaluate<TResult>)children.Single(), (IEvaluate<TPower>)param);
 		}
@@ -80,7 +80,7 @@ namespace Open.Evaluation.ArithmeticOperators
 		{
 		}
 
-		public override OperatorBase<IEvaluate, TResult> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			return new Exponent<TResult>((IEvaluate<TResult>)children.Single(), (IEvaluate<TResult>)param);
 		}
@@ -100,7 +100,7 @@ namespace Open.Evaluation.ArithmeticOperators
 		{
 		}
 
-		public override OperatorBase<IEvaluate, double> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			return new Exponent((IEvaluate<double>)children.Single(), (IEvaluate<double>)param);
 		}
@@ -175,7 +175,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			}
 		}
 
-		public override OperatorBase<IEvaluate, TResult> CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
 		{
 			return new IntegerExponent<TResult, TPower>((IEvaluate<TResult>)children.Single(), (IEvaluate<TPower>)param);
 		}
