@@ -66,18 +66,19 @@ namespace Open.Evaluation
 
 	public static class ParameterExtensions
 	{
-		public static T GetParameter<T>(this Catalog catalog, ushort id, Func<ushort, T> factory)
-			where T : IParameter
+		public static TParameter GetParameter<TParameter,TResult>(
+			this Catalog<IEvaluate<TResult>> catalog, ushort id, Func<ushort, TParameter> factory)
+			where TParameter : IParameter<TResult>
 		{
 			return catalog.Register(Parameter.ToStringRepresentation(id), k => factory(id));
 		}
 
-		public static Parameter GetParameter(this Catalog catalog, ushort id, Func<ushort, Parameter> factory)
+		public static Parameter GetParameter(this Catalog<IEvaluate<double>> catalog, ushort id, Func<ushort, Parameter> factory)
 		{
-			return GetParameter<Parameter>(catalog, id, factory);
+			return GetParameter<Parameter, double>(catalog, id, factory);
 		}
 
-		public static Parameter GetParameter(this Catalog catalog, ushort id)
+		public static Parameter GetParameter(this Catalog<IEvaluate<double>> catalog, ushort id)
 		{
 			return GetParameter(catalog, id, i => new Parameter(id));
 		}
