@@ -8,7 +8,7 @@ using System;
 
 namespace Open.Evaluation
 {
-    public class Constant<TResult>
+	public class Constant<TResult>
 		: EvaluationBase<TResult>, IConstant<TResult>, ICloneable
 		where TResult : IComparable
 	{
@@ -39,7 +39,7 @@ namespace Open.Evaluation
 
 		object ICloneable.Clone()
 		{
-			return this.Clone();
+			return Clone();
 		}
 
 		protected override TResult EvaluateInternal(object context)
@@ -54,19 +54,34 @@ namespace Open.Evaluation
 
 		public static Constant<TResult> operator +(Constant<TResult> a, Constant<TResult> b)
 		{
-			dynamic value = 0;
-			value += a.Value;
-			value += b.Value;
-			return new Constant<TResult>(value);
+			return new Constant<TResult>((dynamic)a.Value + b.Value);
+		}
+
+		public static Constant<TResult> operator +(Constant<TResult> a, TResult b)
+		{
+			return new Constant<TResult>(a.Value + (dynamic)b);
+		}
+
+		public static Constant<TResult> operator +(TResult a, Constant<TResult> b)
+		{
+			return new Constant<TResult>((dynamic)a + b.Value);
 		}
 
 		public static Constant<TResult> operator *(Constant<TResult> a, Constant<TResult> b)
 		{
-			dynamic value = 1;
-			value *= a.Value;
-			value *= b.Value;
-			return new Constant<TResult>(value);
+			return new Constant<TResult>((dynamic)a.Value * b.Value);
 		}
+
+		public static Constant<TResult> operator *(Constant<TResult> a, TResult b)
+		{
+			return new Constant<TResult>(a.Value * (dynamic)b);
+		}
+
+		public static Constant<TResult> operator *(TResult a, Constant<TResult> b)
+		{
+			return new Constant<TResult>((dynamic)a * b.Value);
+		}
+
 
 	}
 
@@ -75,23 +90,24 @@ namespace Open.Evaluation
 		public Constant(double value) : base(value)
 		{
 		}
+
 	}
 
 	public static class ConstantExtensions
 	{
-		public static T GetConstant<T, TValue>(this Catalog catalog, TValue value, Func<TValue, T> factory)
+		public static T GetConstant<T, TValue>(this EvaluationCatalog<TValue> catalog, TValue value, Func<TValue, T> factory)
 			where TValue : IComparable
 			where T : IConstant<TValue>
 		{
 			return catalog.Register(value.ToString(), k => factory(value));
 		}
 
-		public static Constant GetConstant(this Catalog catalog, double value, Func<double, Constant> factory)
+		public static Constant GetConstant(this EvaluationCatalog<double> catalog, double value, Func<double, Constant> factory)
 		{
 			return GetConstant<Constant, double>(catalog, value, factory);
 		}
 
-		public static Constant GetConstant(this Catalog catalog, double value)
+		public static Constant GetConstant(this EvaluationCatalog<double> catalog, double value)
 		{
 			return GetConstant(catalog, value, i => new Constant(value));
 		}

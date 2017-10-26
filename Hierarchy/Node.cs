@@ -12,7 +12,7 @@ using System.Collections;
 namespace Open.Evaluation.Hierarchy
 {
 
-	public class Node<T> : IReadOnlyCollection<Node<T>>
+	public sealed class Node<T> : IReadOnlyCollection<Node<T>>
 	{
 		// Prefering a LinkedList over List because of the adding, removing, splicing that can happen when attemtping to manipulate a tree.
 		internal readonly LinkedList<Node<T>> Children = new LinkedList<Node<T>>();
@@ -213,7 +213,6 @@ namespace Open.Evaluation.Hierarchy
 				return node;
 			}
 
-
 			/// <summary>
 			/// Generates a full hierarchy if the root is an IParent and uses the root as the value of the hierarchy.
 			/// Essentially building a map of the tree.
@@ -223,7 +222,7 @@ namespace Open.Evaluation.Hierarchy
 			/// <param name="root">The root instance.</param>
 			/// <returns>The full map of the root.</returns>
 			public Node<T> Map<TRoot>(TRoot root)
-				where TRoot : T
+			where TRoot : T
 			{
 				AssertIsAlive();
 
@@ -255,7 +254,18 @@ namespace Open.Evaluation.Hierarchy
 				return Map<T>(root);
 			}
 
-
+			/// <summary>
+			/// Generates a full hierarchy if the root of the container is an IParent and uses the root as the value of the hierarchy.
+			/// Essentially building a map of the tree.
+			/// </summary>
+			/// <typeparam name="T">The type of the root.</typeparam>
+			/// <param name="container">The container of the root instance.</param>
+			/// <returns>The full map of the root.</returns>
+			public Node<T> Map<TRoot>(IHaveRoot<TRoot> container)
+				where TRoot : T
+			{
+				return Map(container.Root);
+			}
 
 		}
 

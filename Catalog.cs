@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Hierarchy;
+﻿using Open.Evaluation.ArithmeticOperators;
+using Open.Evaluation.Hierarchy;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -9,11 +10,7 @@ namespace Open.Evaluation
 	public class Catalog<T>
 		where T : IEvaluate
 	{
-		public Catalog()
-		{
-			Variations = new VariationCatalog(this);
-			Mutations = new MutationCatalog(this);
-		}
+		public Catalog() { }
 
 		readonly ConcurrentDictionary<string, T> Registry = new ConcurrentDictionary<string, T>();
 
@@ -47,34 +44,119 @@ namespace Open.Evaluation
 
 		public abstract class CatalogSubmodule
 		{
-			protected Catalog<T> Source;
+			internal readonly Catalog<T> Source;
+			internal readonly Node<T>.Factory Factory;
 
 			protected CatalogSubmodule(Catalog<T> source)
 			{
 				Source = source;
+				Factory = source.Factory;
 			}
 		}
 
+
+		/// <summary>
+		/// For any evaluation node, correct the hierarchy to match.
+		/// </summary>
+		/// <param name="target">The node tree to correct.</param>
+		/// <returns>The updated tree.</returns>
+		public Node<T> FixHierarchy(Node<T> target)
+		{
+			// Does this node's value contain children?
+			if (target.Value is IReproducable r)
+			{
+				// This recursion technique will operate on the leaves of the tree first.
+				var node = Factory.Map(
+					(T)r.CreateNewFrom(
+						r.ReproductionParam,
+						// Using new children... Rebuild using new structure and check for registration.
+						target.Select(n => (IEvaluate)Register(FixHierarchy(n).Value))
+					)
+				);
+				node.Parent = target.Parent;
+				return node;
+			}
+			// No children? Then clear any child notes.
+			else
+			{
+				if (target.Count != 0)
+					target.Children.Clear();
+
+				var old = target.Value;
+				var registered = Register(target.Value);
+				if (!old.Equals(registered))
+					target.Value = registered;
+
+				return target;
+			}
+		}
+
+		/// <summary>
+		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
+		/// </summary>
+		/// <param name="sourceNode">The node to clone.</param>
+		/// <param name="handler">the handler to pass the cloned node to.</param>
+		/// <returns>The resultant value corrected by .FixHierarchy()</returns>
+		public T ApplyClone(
+			Node<T> sourceNode,
+			Action<Node<T>> handler)
+		{
+			var newGene = Factory.CloneTree(sourceNode); // * new 1
+			handler(newGene);
+			var newRoot = FixHierarchy(newGene.Root); // * new 2
+			var value = newRoot.Value;
+			Factory.Recycle(newGene.Root); // * 1
+			Factory.Recycle(newRoot); // * 2
+			return value;
+		}
+	}
+
+	public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
+		where T : IComparable
+	{
+		public EvaluationCatalog()
+		{
+			Variations = new VariationCatalog(this);
+			Mutations = new MutationCatalog(this);
+		}
+
+		public readonly VariationCatalog Variations;
+		public readonly MutationCatalog Mutations;
+
+
 		public class VariationCatalog : CatalogSubmodule
 		{
-			internal VariationCatalog(Catalog<T> source) : base(source)
+			internal VariationCatalog(EvaluationCatalog<T> source) : base(source)
 			{
 
 			}
 
-
-			public Genome AddConstant(Genome source, int geneIndex)
+			/// <summary>
+			/// If possible, adds a constant to this (Sum) node's children.
+			/// If not possible, returns null.
+			/// </summary>
+			/// <param name="sourceNode">The node to attempt adding a constant to.</param>
+			/// <returns>A new node within a new tree containing the updated evaluation.</returns>
+			public IEvaluate<T> AddConstant(Node<IEvaluate<T>> sourceNode, T value)
 			{
-				var tree =
-				var gene = source.Genes[geneIndex] as Sum;
-				// Basically, as a helper, if we find a sum gene that doesn't have any constants, then ok, add '1'.
-				return gene != null && !gene.Children.OfType<Constant>().Any()
-					? ApplyClone(source, geneIndex, g => ((Sum)g).Add(new Constant(1)))
+				return sourceNode.Value is IParent<IEvaluate<T>>
+					? Source.ApplyClone(
+						sourceNode,
+						newNode => newNode.Children.AddLast(Factory.Map(new Constant<T>(value))))
 					: null;
 			}
 
-			public Genome IncreaseMultipleMagnitude(Genome source, int geneIndex)
+			public Node<IEvaluate<double>> AdjustMultiple(Node<IEvaluate<double>> sourceNode, double delta)
 			{
+				// Basically, as a helper, if we find a sum gene that doesn't have any constants, then ok, add '1'.
+				if (sourceNode.Value is Product<double> p)
+				{
+					var newNode = Factory.CloneTree(sourceNode);
+
+					newNode.Children.AddLast(Factory.Map(new Constant(1)));
+					var newRoot = Source.FixHierarchy(newNode.Root);
+				}
+
 				return ApplyClone(source, geneIndex, g =>
 				{
 					var absMultiple = Math.Abs(g.Modifier);
@@ -179,9 +261,10 @@ namespace Open.Evaluation
 			}
 		}
 
+
 		public class MutationCatalog : CatalogSubmodule
 		{
-			internal MutationCatalog(Catalog<T> source) : base(source)
+			internal MutationCatalog(EvaluationCatalog<T> source) : base(source)
 			{
 
 			}
@@ -333,14 +416,14 @@ namespace Open.Evaluation
 			}
 		}
 
-		public readonly VariationCatalog Variations;
-		public readonly MutationCatalog Mutations;
-
-	
 	}
 
-	public class Catalog : Catalog<IEvaluate<double>>
+	public class EvaluateDoubleCatalog : EvaluationCatalog<double>
 	{
+
+		public EvaluateDoubleCatalog()
+		{
+		}
 
 	}
 
@@ -348,55 +431,46 @@ namespace Open.Evaluation
 	{
 
 		/// <summary>
-		/// For any evaluation node, correct the hierarchy to match.
+		/// Applies a multiple to any node.
 		/// </summary>
-		/// <param name="target">The node tree to correct.</param>
-		/// <returns>The updated tree.</returns>
-		public static Node<T> FixHierarchy<T>(
-			this Catalog<T> catalog,
-			Node<T> target)
-			where T : IEvaluate
+		/// <param name="sourceNode">The node to multply by.</param>
+		/// <param name="multiple">The value to multiply by.</param>
+		/// <returns>The resultant root evaluation.</returns>
+		public static IEvaluate<double> MultiplyNode(
+			this EvaluationCatalog<double>.VariationCatalog catalog,
+			Node<IEvaluate<double>> sourceNode, double multiple)
 		{
-			// Does this node's value contain children?
-			if (target.Value is IReproducable r)
+			if (sourceNode == null)
+				throw new ArgumentNullException("sourceNode");
+
+			if (multiple == 1) // No change...
+				return sourceNode.Root.Value;
+
+			if (multiple == 0 || double.IsNaN(multiple)) // Neustralized.
+				return catalog.Source.ApplyClone(sourceNode, newNode =>
+				{
+					newNode.Value = new Constant(multiple);
+				});
+
+			if (sourceNode.Value is Product<double> p)
 			{
-				var factory = catalog.Factory;
-				// This recursion technique will operate on the leaves of the tree first.
-				var node = factory.Map(
-					(T)r.CreateNewFrom(
-						r.ReproductionParam,
-						// Using new children... Rebuild using new structure and check for registration.
-						target.Select(n => (IEvaluate)catalog.Register(catalog.FixHierarchy(n).Value))
-					)
-				);
-				node.Parent = target.Parent;
-				return node;
+				return p.Children.OfType<Constant<double>>().Any()
+					? catalog.Source.ApplyClone(sourceNode, newNode =>
+					{
+						var n = newNode.Children.First(s => s.Value is Constant<double>);
+						var c = (Constant<double>)n.Value;
+						n.Value = c * multiple;
+					})
+					: catalog.AddConstant(sourceNode, multiple);
 			}
-			// No children? Then clear any child notes.
 			else
 			{
-				if (target.Count != 0)
-					target.Children.Clear();
-
-				var old = target.Value;
-				var registered = catalog.Register(target.Value);
-				if (!old.Equals(registered))
-					target.Value = registered;
-
-				return target;
+				return catalog.Source.ApplyClone(sourceNode, newNode =>
+				{
+					var e = newNode.Value;
+					newNode.Value = new Product(new Constant(multiple), e);
+				});
 			}
-		}
-
-		public static T ApplyClone<T>(
-			this Catalog<T> catalog,
-			Node<T> sourceGene,
-			Action<Node<T>> handler)
-
-			where T : IEvaluate
-		{
-			var gene = catalog.Factory.CloneTree(sourceGene);
-			handler(gene);
-			return catalog.FixHierarchy(gene.Root).Value;
 		}
 	}
 }

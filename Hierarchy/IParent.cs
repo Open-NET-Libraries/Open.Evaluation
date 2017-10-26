@@ -4,7 +4,7 @@
  */
 
 using System.Collections.Generic;
-namespace Open.Evaluation
+namespace Open.Evaluation.Hierarchy
 {
 	public interface IParent
 	{

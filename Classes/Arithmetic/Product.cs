@@ -15,9 +15,11 @@ namespace Open.Evaluation.ArithmeticOperators
 	{
 		public Product(IEnumerable<IEvaluate<TResult>> children = null)
 			: base(Product.SYMBOL, Product.SEPARATOR, children)
-		{
+		{ }
 
-		}
+		public Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+			: this(Enumerable.Repeat(first,1).Concat(rest))
+		{ }
 
 		protected override TResult EvaluateInternal(object context)
 		{
@@ -111,6 +113,10 @@ namespace Open.Evaluation.ArithmeticOperators
 		public Product(IEnumerable<IEvaluate<double>> children = null) : base(children)
 		{
 		}
+
+		public Product(IEvaluate<double> first, params IEvaluate<double>[] rest)
+			: this(Enumerable.Repeat(first, 1).Concat(rest))
+		{ }
 
 		public static Product<TResult> Of<TResult>(params IEvaluate<TResult>[] evaluations)
 		where TResult : struct, IComparable
