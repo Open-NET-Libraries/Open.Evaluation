@@ -12,16 +12,96 @@ using System.Collections;
 namespace Open.Evaluation.Hierarchy
 {
 
-	public sealed class Node<T> : IReadOnlyCollection<Node<T>>
+	public sealed class Node<T> : ICollection<Node<T>>, IHaveRoot<Node<T>>, IParent<Node<T>>
 	{
-		// Prefering a LinkedList over List because of the adding, removing, splicing that can happen when attemtping to manipulate a tree.
-		internal readonly LinkedList<Node<T>> Children = new LinkedList<Node<T>>();
+		Node<T> _parent;
+		public Node<T> Parent => _parent;
 
-		public Node<T> Parent { get; internal set; }
+		readonly List<Node<T>> _children;
+		public IReadOnlyList<Node<T>> Children { get; private set; }
+		IReadOnlyList<object> IParent.Children => Children;
 
 		public T Value { get; set; }
 
-		Node() { }
+		Node()
+		{
+			_children = new List<Node<T>>();
+			Children = _children.AsReadOnly();
+		}
+		#region ICollection<Node<T>> Implementation
+		public bool IsReadOnly => false;
+
+		public bool Contains(Node<T> node)
+		{
+			return _children.Contains(node);
+		}
+
+		public bool Remove(Node<T> node)
+		{
+			if (_children.Remove(node))
+			{
+				node._parent = null; // Need to be very careful about retaining parent references as it may cause a 'leak' per-se.
+				return true;
+			}
+			return false;
+		}
+
+		public void Add(Node<T> node)
+		{
+			if (node._parent != null)
+			{
+				if (node._parent == this)
+					throw new InvalidOperationException("Adding a child node more than once.");
+				throw new InvalidOperationException("Adding a node that belongs to another parent.");
+			}
+			node._parent = this;
+			_children.Add(node);
+		}
+
+		public void Clear()
+		{
+			foreach (var c in _children)
+				c._parent = null;
+			_children.Clear();
+		}
+
+
+		public int Count => _children.Count;
+
+		public IEnumerator<Node<T>> GetEnumerator()
+		{
+			return _children.GetEnumerator();
+		}
+
+		IEnumerator IEnumerable.GetEnumerator()
+		{
+			return GetEnumerator();
+		}
+
+		public void CopyTo(Node<T>[] array, int arrayIndex)
+		{
+			_children.CopyTo(array, arrayIndex);
+		}
+		#endregion
+
+		public void Replace(Node<T> node, Node<T> replacement)
+		{
+			if (replacement._parent != null)
+				throw new InvalidOperationException("Replacement node belongs to another parent.");
+			var i = _children.IndexOf(node);
+			if (i == -1)
+				throw new InvalidOperationException("Node being replaced does not belong to this parent.");
+			_children[i] = replacement;
+			node._parent = null;
+			replacement._parent = this;
+		}
+
+		public void Detatch()
+		{
+			_parent?.Remove(this);
+			_parent = null;
+		}
+
 
 		/// <summary>
 		/// Iterates through all of the descendants of this node starting breadth first.
@@ -31,10 +111,10 @@ namespace Open.Evaluation.Hierarchy
 		{
 			// Attempt to be more breadth first.
 
-			foreach (var child in this)
+			foreach (var child in _children)
 				yield return child;
 
-			var grandchildren = this.SelectMany(c => c);
+			var grandchildren = _children.SelectMany(c => c);
 			foreach (var grandchild in grandchildren)
 				yield return grandchild;
 
@@ -58,64 +138,34 @@ namespace Open.Evaluation.Hierarchy
 			get
 			{
 				var current = this;
-				while (current.Parent != null)
-					current = current.Parent;
+				while (current._parent != null)
+					current = current._parent;
 				return current;
 			}
 		}
 
-		public int Count => Children.Count;
-
-		/// <summary>
-		/// Asserts that parent child relationships are correclty aligned and that there aren't dupilicate nodes in the tree.
-		/// </summary>
-		public void Validate()
-		{
-			// Ensure no duplicate nodes.
-			Validate(new HashSet<Node<T>>());
-		}
-
-		void Validate(HashSet<Node<T>> registry)
-		{
-			foreach (var child in Children)
-			{
-				if (child.Parent != this)
-					throw new Exception("A node has a child that has its parent mapped to another node.");
-				if (!registry.Add(child))
-					throw new Exception("A node already exists in the tree and will cause infinite recusion.");
-
-				child.Validate(registry);
-			}
-		}
-
-		internal void Teardown(Action<Node<T>> afterNodeRemovedHandler = null)
+		internal void Teardown(Factory factory = null)
 		{
 			Value = default(T);
-			while (Children.Count != 0)
+			Detatch(); // If no parent then this does nothing...
+			if (factory == null)
 			{
-				Node<T> child;
-				lock (Children) // Not really necessary but just in case there's an external call that occurs twice.  This will ensure nodes are capured correctly instead of potentially duplicated or missed.
+				foreach (var c in _children)
 				{
-					var count = Children.Count;
-					if (count == 0) break;
-					child = Children.Last.Value;
-					Children.RemoveLast();
+					c._parent = null; // Don't initiate a 'Detach' (which does a lookup) since we are clearing here;
+					c.Teardown();
 				}
-				child.Teardown(afterNodeRemovedHandler);
 			}
-			afterNodeRemovedHandler?.Invoke(this);
+			else
+			{
+				foreach (var c in _children)
+				{
+					c._parent = null; // Don't initiate a 'Detach' (which does a lookup) since we are clearing here;
+					factory.RecycleInternal(c);
+				}
+			}
+			_children.Clear();
 		}
-
-		public IEnumerator<Node<T>> GetEnumerator()
-		{
-			return Children.GetEnumerator();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator()
-		{
-			return GetEnumerator();
-		}
-
 
 
 		/// <summary>
@@ -144,18 +194,19 @@ namespace Open.Evaluation.Hierarchy
 			{
 				AssertIsAlive();
 
-				Pool.Give(n);
+				RecycleInternal(n);
+			}
+
+			internal void RecycleInternal(Node<T> n)
+			{
+				var p = Pool;
+				if (p == null) n.Teardown();
+				else p.Give(n);
 			}
 
 			void PrepareForPool(Node<T> n)
 			{
-				n.Value = default(T);
-				n.Parent = null;
-				n.Teardown(c =>
-				{
-					// Avoid recursion.
-					if (c != n) Pool?.Give(n);
-				});
+				n.Teardown(this);
 			}
 			#endregion
 
@@ -165,22 +216,22 @@ namespace Open.Evaluation.Hierarchy
 			/// Clones a node by recreating the tree and copying the values.
 			/// </summary>
 			/// <param name="target">The node to replicate.</param>
-			/// <param name="parent">If a parent is specified it will use that node as its parent.  By default it ends up being detatched.</param>
+			/// <param name="newParentForClone">If a parent is specified it will use that node as its parent.  By default it ends up being detatched.</param>
 			/// <param name="onNodeCloned">A function that recieves the old node and its clone.</param>
 			/// <returns>The copy of the tree/branch.</returns>
 			public Node<T> Clone(
 				Node<T> target,
-				Node<T> parent = null,
+				Node<T> newParentForClone = null,
 				Action<Node<T>, Node<T>> onNodeCloned = null)
 			{
 				AssertIsAlive();
 
 				var clone = Pool.Take();
 				clone.Value = target.Value;
-				clone.Parent = parent;
+				newParentForClone?.Add(clone);
 
-				foreach (var child in target)
-					clone.Children.AddLast(Clone(child, clone));
+				foreach (var child in target._children)
+					clone.Add(Clone(child, clone, onNodeCloned));
 
 				onNodeCloned?.Invoke(target, clone);
 
@@ -233,9 +284,7 @@ namespace Open.Evaluation.Hierarchy
 				{
 					foreach (var child in parent.Children)
 					{
-						var node = Map<T>(child);
-						node.Parent = current;
-						current.Children.AddLast(node);
+						current.Add(Map<T>(child));
 					}
 				}
 

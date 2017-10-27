@@ -73,14 +73,13 @@ namespace Open.Evaluation
 						target.Select(n => (IEvaluate)Register(FixHierarchy(n).Value))
 					)
 				);
-				node.Parent = target.Parent;
+				target.Parent?.Replace(target,node);
 				return node;
 			}
 			// No children? Then clear any child notes.
 			else
 			{
-				if (target.Count != 0)
-					target.Children.Clear();
+				target.Clear();
 
 				var old = target.Value;
 				var registered = Register(target.Value);
@@ -144,24 +143,6 @@ namespace Open.Evaluation
 						sourceNode,
 						newNode => newNode.Children.AddLast(Factory.Map(new Constant<T>(value))))
 					: null;
-			}
-
-			public Node<IEvaluate<double>> AdjustMultiple(Node<IEvaluate<double>> sourceNode, double delta)
-			{
-				// Basically, as a helper, if we find a sum gene that doesn't have any constants, then ok, add '1'.
-				if (sourceNode.Value is Product<double> p)
-				{
-					var newNode = Factory.CloneTree(sourceNode);
-
-					newNode.Children.AddLast(Factory.Map(new Constant(1)));
-					var newRoot = Source.FixHierarchy(newNode.Root);
-				}
-
-				return ApplyClone(source, geneIndex, g =>
-				{
-					var absMultiple = Math.Abs(g.Modifier);
-					g.Modifier += g.Modifier / absMultiple;
-				});
 			}
 
 			public Genome ReduceMultipleMagnitude(Genome source, int geneIndex)
@@ -472,5 +453,57 @@ namespace Open.Evaluation
 				});
 			}
 		}
+
+
+		/// <summary>
+		/// Applies a multiple to any node.
+		/// </summary>
+		/// <param name="sourceNode">The node to multply by.</param>
+		/// <param name="multiple">The value to multiply by.</param>
+		/// <returns>The resultant root evaluation.</returns>
+		public static IEvaluate<double> IncreaseMultiple(
+			this EvaluationCatalog<double>.VariationCatalog catalog,
+			Node<IEvaluate<double>> sourceNode, double delta = 1)
+		{
+			if (sourceNode == null)
+				throw new ArgumentNullException("sourceNode");
+
+			double multiple = 1;
+			if (sourceNode.Value is Product<double> p)
+			{
+
+			}
+
+				if (multiple == 1) // No change...
+				return sourceNode.Root.Value;
+
+			if (multiple == 0 || double.IsNaN(multiple)) // Neustralized.
+				return catalog.Source.ApplyClone(sourceNode, newNode =>
+				{
+					newNode.Value = new Constant(multiple);
+					newNode.TeardownChildren(c=>)
+				});
+
+			if (sourceNode.Value is Product<double> p)
+			{
+				return p.Children.OfType<Constant<double>>().Any()
+					? catalog.Source.ApplyClone(sourceNode, newNode =>
+					{
+						var n = newNode.Children.First(s => s.Value is Constant<double>);
+						var c = (Constant<double>)n.Value;
+						n.Value = c * multiple;
+					})
+					: catalog.AddConstant(sourceNode, multiple);
+			}
+			else
+			{
+				return catalog.Source.ApplyClone(sourceNode, newNode =>
+				{
+					var e = newNode.Value;
+					newNode.Value = new Product(new Constant(multiple), e);
+				});
+			}
+		}
+
 	}
 }
