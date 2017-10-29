@@ -16,11 +16,9 @@ namespace Open.Evaluation.BooleanOperators
 		protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<bool>> children = null)
 			: base(SYMBOL, SEPARATOR, children)
 		{
-			if (prefix == null)
-				throw new ArgumentNullException("prefix");
 			if (count < 0)
 				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 0.");
-			Prefix = prefix;
+			Prefix = prefix ?? throw new ArgumentNullException("prefix");
 			Count = count;
 
 			ReorderChildren();

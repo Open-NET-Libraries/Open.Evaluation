@@ -16,7 +16,6 @@
     <PackageReference Include="Open.Disposable" Version="1.0.4" />
     <PackageReference Include="Open.Disposable.ObjectPools" Version="1.2.0" />
     <PackageReference Include="Open.Hierarchy" Version="1.0.0" />
-    <PackageReference Include="Open.Numeric" Version="1.0.2" />
   </ItemGroup>
 
 </Project>

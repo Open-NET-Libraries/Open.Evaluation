@@ -1,8 +1,6 @@
 ﻿using Open.Evaluation.ArithmeticOperators;
 using Open.Evaluation.BooleanOperators;
-using Open.Numeric;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Open.Evaluation
 {
@@ -17,33 +15,10 @@ namespace Open.Evaluation
 			// Functions. Division is simply an 'inversion'.
 			public const char EXPONENT = Exponent.SYMBOL;
 
-			public static readonly IReadOnlyList<char> Operators = (new List<char> { ADD, MULTIPLY }).AsReadOnly();
-			public static readonly IReadOnlyList<char> Functions = (new List<char> { EXPONENT }).AsReadOnly();
-
-			public static char GetRandom(IEnumerable<char> excluded = null)
-			{
-				var ao = excluded == null
-					? Operators
-					: Operators.Where(o => !excluded.Contains(o)).ToArray();
-				return ao.RandomSelectOne();
-			}
-
-			public static char GetRandom(char excluded)
-			{
-				var ao = Operators.Where(o => o != excluded).ToArray();
-				return ao.RandomSelectOne();
-			}
-
-			public static char GetRandomFunction()
-			{
-				return Functions.RandomSelectOne();
-			}
-
-			public static char GetRandomFunction(char excluded)
-			{
-				var ao = Functions.Where(o => o != excluded).ToArray();
-				return ao.RandomSelectOne();
-			}
+			public static readonly IReadOnlyList<char> Operators
+				= (new List<char> { ADD, MULTIPLY });
+			public static readonly IReadOnlyList<char> Functions
+				= (new List<char> { EXPONENT });
 
 		}
 
@@ -57,35 +32,19 @@ namespace Open.Evaluation
 			public const char NOT = Not.SYMBOL;
 			public const char CONDITIONAL = Conditional.SYMBOL;
 
-			public static readonly IReadOnlyList<char> Operators = (new List<char> { AND, OR }).AsReadOnly();
-			public static readonly IReadOnlyList<char> Functions = (new List<char> { NOT, CONDITIONAL }).AsReadOnly();
+			// Fuzzy...
+			public const string AT_LEAST = AtLeast.PREFIX;
+			public const string AT_MOST = AtMost.PREFIX;
+			public const string EXACTLY = Exactly.PREFIX;
 
-			public static char GetRandom(IEnumerable<char> excluded = null)
-			{
-				var ao = excluded == null
-					? Operators
-					: Operators.Where(o => !excluded.Contains(o)).ToArray();
-				return ao.RandomSelectOne();
-			}
-
-			public static char GetRandom(char excluded)
-			{
-				var ao = Operators.Where(o => o != excluded).ToArray();
-				return ao.RandomSelectOne();
-			}
-
-			public static char GetRandomFunction()
-			{
-				return Functions.RandomSelectOne();
-			}
-
-			public static char GetRandomFunction(char excluded)
-			{
-				var ao = Functions.Where(o => o != excluded).ToArray();
-				return ao.RandomSelectOne();
-			}
-
+			public static readonly IReadOnlyList<char> Operators
+				= (new List<char> { AND, OR });
+			public static readonly IReadOnlyList<char> Functions
+				= (new List<char> { NOT, CONDITIONAL });
+			public static readonly IReadOnlyList<string> Counting
+				= (new List<string> { AT_LEAST, AT_MOST, EXACTLY });
 
 		}
+
 	}
 }
