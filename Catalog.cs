@@ -1,5 +1,5 @@
 ﻿using Open.Evaluation.ArithmeticOperators;
-using Open.Evaluation.Hierarchy;
+using Open.Hierarchy;
 using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
@@ -73,7 +73,7 @@ namespace Open.Evaluation
 						target.Select(n => (IEvaluate)Register(FixHierarchy(n).Value))
 					)
 				);
-				target.Parent?.Replace(target,node);
+				target.Parent?.Replace(target, node);
 				return node;
 			}
 			// No children? Then clear any child notes.
@@ -141,10 +141,11 @@ namespace Open.Evaluation
 				return sourceNode.Value is IParent<IEvaluate<T>>
 					? Source.ApplyClone(
 						sourceNode,
-						newNode => newNode.Children.AddLast(Factory.Map(new Constant<T>(value))))
+						newNode => newNode.Add(Factory.Map(new Constant<T>(value))))
 					: null;
 			}
 
+			/*
 			public Genome ReduceMultipleMagnitude(Genome source, int geneIndex)
 			{
 				return ApplyClone(source, geneIndex, g =>
@@ -240,6 +241,8 @@ namespace Open.Evaluation
 			{
 				return ApplyFunction(source, source.Genes.IndexOf(gene), fn);
 			}
+
+			*/
 		}
 
 
@@ -249,7 +252,7 @@ namespace Open.Evaluation
 			{
 
 			}
-
+			/*
 			public static Genome MutateSign(Genome source, IGene gene, int options = 3)
 			{
 				var isRoot = source.Root == gene;
@@ -395,6 +398,7 @@ namespace Open.Evaluation
 					newGenome.Replace(g, newFn);
 				});
 			}
+			*/
 		}
 
 	}
@@ -469,20 +473,22 @@ namespace Open.Evaluation
 				throw new ArgumentNullException("sourceNode");
 
 			double multiple = 1;
-			if (sourceNode.Value is Product<double> p)
+			if (sourceNode.Value is Product<double> px)
 			{
 
 			}
 
-				if (multiple == 1) // No change...
+			if (multiple == 1) // No change...
 				return sourceNode.Root.Value;
 
-			if (multiple == 0 || double.IsNaN(multiple)) // Neustralized.
+			if (multiple == 0 || double.IsNaN(multiple))
+			{
 				return catalog.Source.ApplyClone(sourceNode, newNode =>
 				{
 					newNode.Value = new Constant(multiple);
-					newNode.TeardownChildren(c=>)
+					newNode.RecycleChildren(catalog.Factory);
 				});
+			}
 
 			if (sourceNode.Value is Product<double> p)
 			{

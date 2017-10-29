@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace Open.Evaluation
 {
-    public interface IReproducable : IEvaluate
+	public interface IReproducable : IEvaluate
     {
 		object ReproductionParam { get; }
 

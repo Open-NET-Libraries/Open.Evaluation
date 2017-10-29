@@ -2,7 +2,8 @@
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
- 
+
+using Open.Hierarchy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -32,13 +33,7 @@ namespace Open.Evaluation
 			private set;
 		}
 
-		IReadOnlyList<object> IParent.Children
-		{
-			get
-			{
-				return Children;
-			}
-		}
+		IReadOnlyList<object> IParent.Children => Children;
 
 		public virtual object ReproductionParam => null;
 

@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Hierarchy;
 using System;
 
 namespace Open.Evaluation

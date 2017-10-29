@@ -3,6 +3,8 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Hierarchy;
+
 namespace Open.Evaluation
 {
 	public interface IEvaluationNode<TChild, in TContext, out TResult>

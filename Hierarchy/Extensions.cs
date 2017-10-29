@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Open.Hierarchy;
+using System.Linq;
 
 namespace Open.Evaluation.Hierarchy
 {
@@ -33,6 +34,7 @@ namespace Open.Evaluation.Hierarchy
 			// Everything is the same..
 			return true;
 		}
+
 
 	}
 }
