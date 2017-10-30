@@ -48,8 +48,7 @@ namespace Open.Evaluation.ArithmeticOperators
 		public override IEvaluate<TResult> Reduction()
 		{
 			var pow = Power.AsReduced();
-			var cPow = pow as Constant<TResult>;
-			if (cPow != null)
+			if (pow is Constant<TResult> cPow)
 			{
 				dynamic p = cPow.Value;
 				if (p == 0) return new Constant<TResult>((dynamic)1);
@@ -89,6 +88,37 @@ namespace Open.Evaluation.ArithmeticOperators
 
 	public class Exponent : Exponent<double>
 	{
+		public static Exponent<TResult, TPower> Create<TResult,TPower>(
+			IEvaluate<TResult> evaluation,
+			IEvaluate<TPower> power)
+			where TResult : struct, IComparable
+			where TPower : struct, IComparable
+		{
+			return new Exponent<TResult, TPower>(evaluation, power);
+		}
+
+		public static Exponent<TResult> Create<TResult>(
+			IEvaluate<TResult> evaluation,
+			IEvaluate<TResult> power)
+			where TResult : struct, IComparable
+		{
+			return new Exponent<TResult>(evaluation, power);
+		}
+
+		public static Exponent Create(
+			IEvaluate<double> evaluation,
+			IEvaluate<double> power)
+		{
+			return new Exponent(evaluation, power);
+		}
+
+		public static Exponent Create(
+			IEvaluate<double> evaluation,
+			double power)
+		{
+			return new Exponent(evaluation, power);
+		}
+
 		public const char SYMBOL = '^';
 		public const string SEPARATOR = "^";
 

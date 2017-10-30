@@ -19,6 +19,10 @@ namespace Open.Evaluation.ArithmeticOperators
 
 		}
 
+		public Sum(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+			: this(Enumerable.Repeat(first,1).Concat(rest))
+		{ }
+
 		protected override TResult EvaluateInternal(object context)
 		{
 			if (ChildrenInternal.Count == 0)
@@ -51,8 +55,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			var productsWithConstants = new List<Tuple<string, Constant<TResult>, IEvaluate<TResult>, Product<TResult>>>();
 			foreach (var p in children.OfType<Product<TResult>>())
 			{
-				Constant<TResult> multiple;
-				var reduced = p.ReductionWithMutlipleExtracted(out multiple);
+				var reduced = p.ReductionWithMutlipleExtracted(out Constant<TResult> multiple);
 				if (multiple != null)
 				{
 					productsWithConstants.Add(new Tuple<string, Constant<TResult>, IEvaluate<TResult>, Product<TResult>>(
@@ -74,10 +77,9 @@ namespace Open.Evaluation.ArithmeticOperators
 				foreach (var px in p.Select(t => t.Item4))
 					children.Remove(px);
 
-				var replacement = new List<IEvaluate<TResult>>();
-				replacement.Add(p1.Item3);
-				replacement.Add(multiple);
-				children.Add(new Product<TResult>(replacement));
+				children.Add(new Product<TResult>(
+					p1.Item3,
+					multiple));
 			}
 
 
@@ -116,6 +118,29 @@ namespace Open.Evaluation.ArithmeticOperators
 
 	public class Sum : Sum<double>
 	{
+		public static Sum<TResult> Create<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+			where TResult : struct, IComparable
+		{
+			return new Sum<TResult>(first, rest);
+		}
+
+		public static Sum<TResult> Create<TResult>(IEnumerable<IEvaluate<TResult>> children)
+			where TResult : struct, IComparable
+		{
+			return new Sum<TResult>(children);
+		}
+
+		public static Sum Create(IEvaluate<double> first, params IEvaluate<double>[] rest)
+		{
+			return new Sum(first, rest);
+		}
+
+		public static Sum Create(IEnumerable<IEvaluate<double>> children)
+		{
+			return new Sum(children);
+		}
+
+
 		public const char SYMBOL = '+';
 		public const string SEPARATOR = " + ";
 
@@ -124,6 +149,11 @@ namespace Open.Evaluation.ArithmeticOperators
 		{
 
 		}
+
+		public Sum(IEvaluate<double> first, params IEvaluate<double>[] rest)
+			: this(Enumerable.Repeat(first, 1).Concat(rest))
+		{ }
+
 
 		public static Sum<TResult> Of<TResult>(params IEvaluate<TResult>[] evaluations)
 		where TResult : struct, IComparable

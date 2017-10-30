@@ -8,19 +8,24 @@ using System.Linq;
 
 namespace Open.Evaluation.BooleanOperators
 {
-	public class Conditional<TResult> : FunctionBase<bool>, IFunction<TResult>
+	public class Conditional<TResult> : OperationBase<TResult>
 	{
 
 		public Conditional(
-			IEvaluate<bool> evaluation,
+			IEvaluate<bool> condition,
 			IEvaluate<TResult> ifTrue,
 			IEvaluate<TResult> ifFalse)
-			: base(Conditional.SYMBOL, Conditional.SEPARATOR, evaluation)
+			: base(Conditional.SYMBOL, Conditional.SEPARATOR)
 		{
+			Condition = condition;
 			IfTrue = ifTrue;
 			IfFalse = ifFalse;
-			ChildrenInternal.Add(ifTrue);
-			ChildrenInternal.Add(ifFalse);
+		}
+
+		public IEvaluate<bool> Condition
+		{
+			get;
+			private set;
 		}
 
 		public IEvaluate<TResult> IfTrue
@@ -28,46 +33,46 @@ namespace Open.Evaluation.BooleanOperators
 			get;
 			private set;
 		}
+
 		public IEvaluate<TResult> IfFalse
 		{
 			get;
 			private set;
 		}
 
-		public new TResult Evaluate(object context)
-		{
-			return base.Evaluate(context)
-				? IfTrue.Evaluate(context)
-				: IfFalse.Evaluate(context);
-		}
 
 		const string FormatString = "{0} ? {1} : {2}";
 
-		protected override string ToStringInternal(object evaluation)
+		protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
 		{
 			return string.Format(
 				FormatString,
-				evaluation,
-				IfTrue.ToStringRepresentation(),
-				IfFalse.ToStringRepresentation());
+				condition,
+				ifTrue,
+				ifFalse);
 		}
 
 		public override string ToString(object context)
 		{
-			return string.Format(
-				FormatString,
-				base.Evaluate(context),
+			return ToStringInternal(
+				Condition.Evaluate(context),
 				IfTrue.Evaluate(context),
 				IfFalse.Evaluate(context));
 		}
 
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		protected override string ToStringRepresentationInternal()
 		{
-			return new Conditional<TResult>(
-				(IEvaluate<bool>)param,
-				(IEvaluate<TResult>)children.First(),
-				(IEvaluate<TResult>)children.Skip(1).Single()
-			);
+			return ToStringInternal(
+				Condition.ToStringRepresentation(),
+				IfTrue.ToStringRepresentation(),
+				IfFalse.ToStringRepresentation());
+		}
+
+		protected override TResult EvaluateInternal(object context)
+		{
+			return Condition.Evaluate(context)
+			? IfTrue.Evaluate(context)
+			: IfFalse.Evaluate(context);
 		}
 	}
 

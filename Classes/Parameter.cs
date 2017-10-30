@@ -15,10 +15,8 @@ namespace Open.Evaluation
 
         public Parameter(ushort id, Func<object, ushort, TResult> evaluator) : base()
         {
-            if (evaluator == null)
-                throw new ArgumentNullException("evaluator");
-            ID = id;
-            _evaluator = evaluator;
+			_evaluator = evaluator ?? throw new ArgumentNullException("evaluator");
+			ID = id;
         }
 
         Func<object, ushort, TResult> _evaluator;
@@ -41,7 +39,7 @@ namespace Open.Evaluation
 
         protected override TResult EvaluateInternal(object context)
         {
-            return _evaluator(context, ID);
+            return _evaluator(context is ParameterContext p ? p.Context : context, ID);
         }
 
         protected override string ToStringInternal(object context)
@@ -58,8 +56,8 @@ namespace Open.Evaluation
 
         static double GetParamValueFrom(object source, ushort id)
         {
-			if (source is double[] array) return array[id];
 			if (source is IReadOnlyList<double> list) return list[id];
+			if (source is IDictionary<ushort, double> d) return d[id];
 			throw new ArgumentException("Unknown context type.");
         }
     }

@@ -40,17 +40,23 @@ namespace Open.Evaluation
 
 		object IEvaluate.Evaluate(object context)
 		{
-			return this.EvaluateInternal(context);
+			return Evaluate(context);
 		}
 
 		public TResult Evaluate(object context)
 		{
-			return this.EvaluateInternal(context);
+			// Use existing context... // Caches results...
+			if (context is ParameterContext pc)
+				return pc.GetOrAdd(this, k => EvaluateInternal(pc));
+
+			// Create a new one for this tree...
+			using (var newPc = new ParameterContext(context))
+				return Evaluate(newPc);
 		}
 
 		public virtual string ToString(object context)
 		{
-			return this.ToStringInternal(EvaluateInternal(context));
+			return ToStringInternal(EvaluateInternal(context));
 		}
 
 	}

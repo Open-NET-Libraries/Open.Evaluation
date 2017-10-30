@@ -28,7 +28,7 @@ namespace Open.Evaluation.BooleanOperators
 
 		protected override bool EvaluateInternal(object context)
 		{
-			return !base.Evaluate(context);
+			return !base.EvaluateInternal(context);
 		}
 
 	}

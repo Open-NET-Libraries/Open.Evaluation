@@ -107,6 +107,29 @@ namespace Open.Evaluation.ArithmeticOperators
 
 	public class Product : Product<double>
 	{
+		public static Product<TResult> Create<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+			where TResult : struct, IComparable
+		{
+			return new Product<TResult>(first, rest);
+		}
+
+		public static Product<TResult> Create<TResult>(IEnumerable<IEvaluate<TResult>> children)
+			where TResult : struct, IComparable
+		{
+			return new Product<TResult>(children);
+		}
+
+		public static Product Create(IEvaluate<double> first, params IEvaluate<double>[] rest)
+		{
+			return new Product(first, rest);
+		}
+
+		public static Product Create(IEnumerable<IEvaluate<double>> children)
+		{
+			return new Product(children);
+		}
+
+
 		public const char SYMBOL = '*';
 		public const string SEPARATOR = " * ";
 
