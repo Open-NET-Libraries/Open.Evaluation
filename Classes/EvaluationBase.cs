@@ -9,32 +9,25 @@ using System.Threading;
 namespace Open.Evaluation
 {
 
+	/*
+	 * The main idea here is to envorce an immutable class and it's related sub classes.  No changes allowed after construction
+	 * A clone can only be created by 'recreating' or 'reconstructing'.
+	 */
+
 	public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 	{
 		protected EvaluationBase()
 		{
-			ResetToStringRepresentation();
 		}
 
 		protected abstract string ToStringRepresentationInternal();
-		Lazy<string> _toStringRepresentation;
+		string _toStringRepresentation; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
 		public string ToStringRepresentation()
 		{
-			return _toStringRepresentation.Value;
+			return LazyInitializer.EnsureInitialized(ref _toStringRepresentation, ToStringRepresentationInternal);
 		}
 
-		// Preferrably this should never be needed, but because of potential implementations it is exposed for assurance of control.
-		public void ResetToStringRepresentation()
-		{
-			Interlocked.Exchange(
-				ref _toStringRepresentation,
-				new Lazy<string>(
-					ToStringRepresentationInternal,
-					LazyThreadSafetyMode.ExecutionAndPublication)
-			);
-		}
-
-		protected abstract TResult EvaluateInternal(object context);
+		protected abstract TResult EvaluateInternal(object context); // **
 
 		protected abstract string ToStringInternal(object context);
 
@@ -47,7 +40,7 @@ namespace Open.Evaluation
 		{
 			// Use existing context... // Caches results...
 			if (context is ParameterContext pc)
-				return pc.GetOrAdd(this, k => EvaluateInternal(pc));
+				return pc.GetOrAdd(this, k => EvaluateInternal(pc)); // **
 
 			// Create a new one for this tree...
 			using (var newPc = new ParameterContext(context))

@@ -9,20 +9,25 @@ using System.Linq;
 
 namespace Open.Evaluation.ArithmeticOperators
 {
-    public class Exponent<TResult, TPower> : FunctionBase<TResult>
+	public class Exponent<TResult> : OperatorBase<TResult>
 		where TResult : struct, IComparable
-		where TPower : struct, IComparable
 	{
 		public Exponent(
-			IEvaluate<TResult> evaluation,
-			IEvaluate<TPower> power)
-			: base(Exponent.SYMBOL, Exponent.SEPARATOR, evaluation)
+			IEvaluate<TResult> @base,
+			IEvaluate<TResult> power)
+			: base(Exponent.SYMBOL, Exponent.SEPARATOR, new IEvaluate<TResult>[] { @base, power })
 		{
+			Base = @base;
 			Power = power;
-			ChildrenInternal.Add(power);
 		}
 
-		public IEvaluate<TPower> Power
+		public IEvaluate<TResult> Base
+		{
+			get;
+			private set;
+		}
+
+		public IEvaluate<TResult> Power
 		{
 			get;
 			private set;
@@ -34,29 +39,23 @@ namespace Open.Evaluation.ArithmeticOperators
 		}
 		protected override TResult EvaluateInternal(object context)
 		{
-			var evaluation = ConvertToDouble(base.Evaluate(context));
+			var evaluation = ConvertToDouble(Base.Evaluate(context));
 			var power = ConvertToDouble(Power.Evaluate(context));
 
 			return (TResult)(dynamic)Math.Pow(evaluation, power);
 		}
 
-		protected override string ToStringRepresentationInternal()
+		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
-			return ToStringInternal(Evaluation.ToStringRepresentation(), Power.ToStringRepresentation());
-		}
-
-		public override IEvaluate<TResult> Reduction()
-		{
-			var pow = Power.AsReduced();
+			var pow = catalog.GetReduced(Power);
 			if (pow is Constant<TResult> cPow)
 			{
 				dynamic p = cPow.Value;
-				if (p == 0) return new Constant<TResult>((dynamic)1);
-				if (p == 1) return Evaluation.AsReduced();
+				if (p == 0) return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)1);
+				if (p == 1) return catalog.GetReduced(Base);
 			}
 
-			var result = new Exponent<TResult, TPower>(Evaluation.AsReduced(), pow);
-			return result.ToStringRepresentation() == result.ToStringRepresentation() ? null : result;
+			return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
 		}
 
 		protected string ToStringInternal(object contents, object power)
@@ -64,55 +63,23 @@ namespace Open.Evaluation.ArithmeticOperators
 			return string.Format("({0}^{1})", contents, power);
 		}
 
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate NewUsing(IEnumerable<IEvaluate<TResult>> param)
 		{
-			return new Exponent<TResult, TPower>((IEvaluate<TResult>)children.Single(), (IEvaluate<TPower>)param);
-		}
-	}
-
-	public class Exponent<TResult> : Exponent<TResult, TResult>
-		where TResult : struct, IComparable
-	{
-		public Exponent(
-			IEvaluate<TResult> evaluation,
-			IEvaluate<TResult> power) : base(evaluation, power)
-		{
-		}
-
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
-		{
-			return new Exponent<TResult>((IEvaluate<TResult>)children.Single(), (IEvaluate<TResult>)param);
+			return new Exponent<TResult>(param.First(), param.Skip(1).Single());
 		}
 	}
 
 
-	public class Exponent : Exponent<double>
+	public sealed class Exponent : Exponent<double>
 	{
-		public static Exponent<TResult, TPower> Create<TResult,TPower>(
-			IEvaluate<TResult> evaluation,
-			IEvaluate<TPower> power)
-			where TResult : struct, IComparable
-			where TPower : struct, IComparable
-		{
-			return new Exponent<TResult, TPower>(evaluation, power);
-		}
-
-		public static Exponent<TResult> Create<TResult>(
-			IEvaluate<TResult> evaluation,
-			IEvaluate<TResult> power)
-			where TResult : struct, IComparable
-		{
-			return new Exponent<TResult>(evaluation, power);
-		}
-
-		public static Exponent Create(
-			IEvaluate<double> evaluation,
+		public static Exponent Of(
+			IEvaluate<double> @base,
 			IEvaluate<double> power)
 		{
-			return new Exponent(evaluation, power);
+			return new Exponent(@base, power);
 		}
 
-		public static Exponent Create(
+		public static Exponent Of(
 			IEvaluate<double> evaluation,
 			double power)
 		{
@@ -122,6 +89,11 @@ namespace Open.Evaluation.ArithmeticOperators
 		public const char SYMBOL = '^';
 		public const string SEPARATOR = "^";
 
+		protected override double EvaluateInternal(object context)
+		{
+			return Math.Pow(Base.Evaluate(context), Power.Evaluate(context));
+		}
+
 		public Exponent(IEvaluate<double> evaluation, IEvaluate<double> power) : base(evaluation, power)
 		{
 		}
@@ -130,86 +102,11 @@ namespace Open.Evaluation.ArithmeticOperators
 		{
 		}
 
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
+		public override IEvaluate NewUsing(IEnumerable<IEvaluate<double>> param)
 		{
-			return new Exponent((IEvaluate<double>)children.Single(), (IEvaluate<double>)param);
+			return new Exponent(param.First(), param.Skip(1).Single());
 		}
 	}
 
-	// Can handle better precision operations that are only positive integers.
-	// Because any fractional or negative exponents can introduce precision error. 
-	public class IntegerExponent<TResult, TPower> : Exponent<TResult, TPower>
-		where TResult : struct, IComparable
-		where TPower : struct, IComparable
-	{
-		public IntegerExponent(
-			IEvaluate<TResult> evaluation,
-			IEvaluate<TPower> power) : base(evaluation, power)
-		{
-			if (!IsIntergerType(typeof(TPower), out IsSignedPowerType))
-				throw new InvalidOperationException("Incompatible power type for IntegerExponent.");
-		}
-
-		protected static bool IsIntergerType(Type type, out bool isSigned)
-		{
-			isSigned
-				= type == typeof(long)
-				|| type == typeof(int)
-				|| type == typeof(short)
-				|| type == typeof(sbyte);
-
-			return isSigned
-				|| type == typeof(uint)
-				|| type == typeof(ushort)
-				|| type == typeof(byte);
-		}
-
-		protected static bool IsIntergerType(Type type)
-		{
-			bool isSigned;
-			return IsIntergerType(type, out isSigned);
-		}
-
-		readonly bool IsSignedPowerType;
-
-		// Why is this good?  Because it avoids precision errors that would occur with the default double precision math.
-		// It also avoids any type conversion.  Integers stay integers, floats stay floats and decimals stay decimals.
-		// This makes a lot of sense when considering how common a number to the power of a positive integer is.
-		protected override TResult EvaluateInternal(object context)
-		{
-			dynamic value = Evaluation.Evaluate(context);
-			if (value == 0 || value == 1) return value;
-
-			dynamic power = Power.Evaluate(context);
-			if (value == 1) return value;
-			if (value == 0) return (TResult)(dynamic)1;
-
-			var isNegativePower = IsSignedPowerType && power < 0;
-			if (isNegativePower)
-			{
-				if (IsIntergerType(typeof(TResult)))
-				{
-					// Futile to divide integer 1 by another integer;
-					throw new InvalidOperationException("Applying a negative exponent to an integer type will always result in 0.");
-				}
-
-				for (long i = 0; i > power; i--) value *= value;
-
-				return 1 / value;
-			}
-			else
-			{
-				for (ulong i = 0; i < power; i++) value *= value;
-
-				return value;
-			}
-		}
-
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
-		{
-			return new IntegerExponent<TResult, TPower>((IEvaluate<TResult>)children.Single(), (IEvaluate<TPower>)param);
-		}
-
-	}
 
 }

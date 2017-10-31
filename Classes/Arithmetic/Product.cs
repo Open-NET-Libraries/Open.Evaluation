@@ -14,7 +14,7 @@ namespace Open.Evaluation.ArithmeticOperators
 		where TResult : struct, IComparable
 	{
 		public Product(IEnumerable<IEvaluate<TResult>> children = null)
-			: base(Product.SYMBOL, Product.SEPARATOR, children)
+			: base(Product.SYMBOL, Product.SEPARATOR, children, true)
 		{ }
 
 		public Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
@@ -35,10 +35,10 @@ namespace Open.Evaluation.ArithmeticOperators
 			return result;
 		}
 
-		public override IEvaluate<TResult> Reduction()
+		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
 			// Phase 1: Flatten products of products.
-			var children = ChildrenInternal.Flatten<Product<TResult>, TResult>().ToList();
+			var children = catalog.Flatten<Product<TResult>>(ChildrenInternal).ToList(); // ** chidren's reduction is done here.
 
 			// Phase 2: Can we collapse?
 			switch (children.Count)
@@ -51,80 +51,72 @@ namespace Open.Evaluation.ArithmeticOperators
 
 			// Phase 3&4: Sum compatible exponents together.
 			foreach (var exponents in children.OfType<Exponent<TResult>>()
-				.GroupBy(g => g.Evaluation.ToStringRepresentation())
+				.GroupBy(g => g.Base.ToStringRepresentation())
 				.Where(g => g.Count() > 1))
 			{
-				var e1 = exponents.First();
-				var power = new Sum<TResult>(exponents.Select(t => t.Power));
+				var newBase = exponents.First().Base; // reduction already done above during flatten...
+				var power = catalog.GetReduced(new Sum<TResult>(exponents.Select(t => t.Power)));
 				foreach (var e in exponents)
 					children.Remove(e);
 
-				children.Add(new Exponent<TResult>(e1.Evaluation, power.AsReduced()));
+				children.Add(new Exponent<TResult>(newBase, power));
 			}
 
 			// Phase 5: Combine constants.
-			var constants = children.ExtractConstants();
-			if (constants.Length != 0)
-				children.Add(constants.Length == 1 ? constants[0] : constants.Product());
+			var constants = children.ExtractType<Constant<TResult>>();
+			if (constants.Count != 0)
+				children.Add(constants.Count == 1 ? constants[0] : constants.Product());
 
-			// Phase 6: Check if collapsable?
-			if (children.Count == 1)
-				return children[0];
-
-			// Lastly: Sort and return if different.
-			children.Sort(Compare);
-			var result = new Product<TResult>(children);
-
-			return result.ToStringRepresentation() == result.ToStringRepresentation() ? null : result;
+			// Phase 6: Check if collapsable and return.
+			return catalog.Register(children.Count == 1 ? children[0] : new Product<TResult>(children));
 		}
 
-		public IEvaluate<TResult> ReductionWithMutlipleExtracted(out Constant<TResult> multiple)
+		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out Constant<TResult> multiple)
 		{
 			multiple = null;
-			var reduced = this.AsReduced();
-			var product = reduced as Product<TResult>;
-			if (product != null)
+			var reduced = catalog.GetReduced(this);
+			if (reduced is Product<TResult> product)
 			{
-				var children = product.ChildrenInternal.ToList();
-				var constants = product.ChildrenInternal.OfType<Constant<TResult>>().ToArray();
-				Debug.Assert(constants.Length <= 1, "Reduction should have collapsed constants.");
-				if (constants.Length == 0)
+				var children = product.ChildrenInternal.ToList(); // Make a copy to be worked on...
+				var constants = children.ExtractType<Constant<TResult>>();
+				Debug.Assert(constants.Count <= 1, "Reduction should have collapsed constants.");
+				if (constants.Count == 0)
+				{
 					return product;
+				}
 				multiple = constants.Single();
-				children.Remove(multiple);
 				return new Product<TResult>(children);
 			}
 			return reduced;
 		}
 
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
-		{
-			Debug.WriteLineIf(param != null, "A param object was provided to a Product and will be lost. " + param);
-			return new Product<TResult>(children.Cast<IEvaluate<TResult>>());
-		}
 
+		public override IEvaluate NewUsing(IEnumerable<IEvaluate<TResult>> param)
+		{
+			return new Product<TResult>(param);
+		}
 	}
 
 	public class Product : Product<double>
 	{
-		public static Product<TResult> Create<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+		public static Product<TResult> Of<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
 			where TResult : struct, IComparable
 		{
 			return new Product<TResult>(first, rest);
 		}
 
-		public static Product<TResult> Create<TResult>(IEnumerable<IEvaluate<TResult>> children)
+		public static Product<TResult> Of<TResult>(IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			return new Product<TResult>(children);
 		}
 
-		public static Product Create(IEvaluate<double> first, params IEvaluate<double>[] rest)
+		public static Product Of(IEvaluate<double> first, params IEvaluate<double>[] rest)
 		{
 			return new Product(first, rest);
 		}
 
-		public static Product Create(IEnumerable<IEvaluate<double>> children)
+		public static Product Of(IEnumerable<IEvaluate<double>> children)
 		{
 			return new Product(children);
 		}
@@ -141,16 +133,9 @@ namespace Open.Evaluation.ArithmeticOperators
 			: this(Enumerable.Repeat(first, 1).Concat(rest))
 		{ }
 
-		public static Product<TResult> Of<TResult>(params IEvaluate<TResult>[] evaluations)
-		where TResult : struct, IComparable
+		public override IEvaluate CreateNewUsing(IEnumerable<IEvaluate<double>> param)
 		{
-			return new Product<TResult>(evaluations);
-		}
-
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
-		{
-			Debug.WriteLineIf(param != null, "A param object was provided to a Product and will be lost. " + param);
-			return new Product(children.Cast<IEvaluate<double>>());
+			return new Product(param);
 		}
 	}
 
@@ -202,7 +187,6 @@ namespace Open.Evaluation.ArithmeticOperators
 		{
 			return new Product<ushort>(evaluations);
 		}
-
 
 		public static Product<int> Product<TContext>(this IEnumerable<IEvaluate<int>> evaluations)
 		{

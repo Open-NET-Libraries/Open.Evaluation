@@ -95,19 +95,25 @@ namespace Open.Evaluation
 
 	public static class ConstantExtensions
 	{
-		public static T GetConstant<T, TValue>(this EvaluationCatalog<TValue> catalog, TValue value, Func<TValue, T> factory)
+		public static T GetConstant<T, TValue>(this ICatalog<IEvaluate<TValue>> catalog, TValue value, Func<TValue, T> factory)
 			where TValue : IComparable
 			where T : IConstant<TValue>
 		{
 			return catalog.Register(value.ToString(), k => factory(value));
 		}
 
-		public static Constant GetConstant(this EvaluationCatalog<double> catalog, double value, Func<double, Constant> factory)
+		public static Constant<TValue> GetConstant<TValue>(this ICatalog<IEvaluate<TValue>> catalog, TValue value)
+			where TValue : IComparable
+		{
+			return GetConstant(catalog, value, v=> new Constant<TValue>(v));
+		}
+
+		public static Constant GetConstant(this ICatalog<IEvaluate<double>> catalog, double value, Func<double, Constant> factory)
 		{
 			return GetConstant<Constant, double>(catalog, value, factory);
 		}
 
-		public static Constant GetConstant(this EvaluationCatalog<double> catalog, double value)
+		public static Constant GetConstant(this ICatalog<IEvaluate<double>> catalog, double value)
 		{
 			return GetConstant(catalog, value, i => new Constant(value));
 		}

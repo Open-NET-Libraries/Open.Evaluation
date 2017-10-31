@@ -13,15 +13,16 @@ using System.Text;
 namespace Open.Evaluation
 {
 	public abstract class OperatorBase<TChild, TResult>
-		: OperationBase<TResult>, IOperator<TChild, TResult>
+		: OperationBase<TResult>, IOperator<TChild, TResult>, IReproducable<IEnumerable<TChild>>
 
 		where TChild : class, IEvaluate
 		where TResult : IComparable
 	{
 
-		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null) : base(symbol, separator)
+		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null, bool reorderChildren = false) : base(symbol, separator)
 		{
 			ChildrenInternal = children == null ? new List<TChild>() : new List<TChild>(children);
+			if (reorderChildren) ChildrenInternal.Sort(Compare);
 			Children = ChildrenInternal.AsReadOnly();
 		}
 
@@ -34,13 +35,6 @@ namespace Open.Evaluation
 		}
 
 		IReadOnlyList<object> IParent.Children => Children;
-
-		public virtual object ReproductionParam => null;
-
-		protected virtual void ReorderChildren()
-		{
-			ChildrenInternal.Sort(Compare);
-		}
 
 		protected override string ToStringInternal(object contents)
 		{
@@ -108,24 +102,42 @@ namespace Open.Evaluation
 
 		}
 
-		public abstract IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children);
-
-		public IEvaluate CreateNewFrom(IEnumerable<IEvaluate> children)
+		public IEvaluate NewUsing(TChild child, params TChild[] rest)
 		{
-			return CreateNewFrom(null, children);
+			return NewUsing(Enumerable.Repeat(child,1).Concat(rest));
 		}
 
-		public IEvaluate CreateNewFrom(object param, IEvaluate child)
+		public abstract IEvaluate NewUsing(IEnumerable<TChild> param);
+
+		public IEvaluate NewWithIndexRemoved(int index)
 		{
-			return CreateNewFrom(param, Enumerable.Repeat(child,1));
+			return NewUsing(ChildrenInternal.SkipAt(index));
 		}
 
-		public IEvaluate CreateNewFrom(IEvaluate child)
+		public IEvaluate NewWithIndexReplaced(int index, TChild repacement)
 		{
-			return CreateNewFrom(null, child);
+			return NewUsing(ChildrenInternal.ReplaceAt(index,repacement));
+		}
+
+		public IEvaluate NewWithAppended(IEnumerable<TChild> appended)
+		{
+			return NewUsing(ChildrenInternal.Concat(appended));
+		}
+
+		public IEvaluate NewWithAppended(TChild child, params TChild[] rest)
+		{
+			return NewWithAppended(Enumerable.Repeat(child, 1).Concat(rest));
 		}
 
 	}
 
+	public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>,TResult>
+		where TResult : IComparable
+	{
+		protected OperatorBase(char symbol, string separator, IEnumerable<IEvaluate<TResult>> children = null, bool reorderChildren = false) : base(symbol, separator)
+		{
+		}
+
+	}
 
 }

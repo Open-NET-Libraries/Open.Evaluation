@@ -2,13 +2,14 @@
 using Open.Hierarchy;
 using System;
 using System.Collections.Concurrent;
-using System.Diagnostics;
+using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Open.Evaluation
 {
-	public class Catalog<T>
-		where T : IEvaluate
+	public class Catalog<T> : ICatalog<T>
+		where T : class, IEvaluate
 	{
 		public Catalog() { }
 
@@ -54,6 +55,21 @@ namespace Open.Evaluation
 			}
 		}
 
+		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
+
+		public T GetReduced(T source)
+		{
+			source = Register(source);
+			return source is IReducibleEvaluation<T> s
+				? Reductions.GetValue(s, k => s.TryGetReduced(this, out T r) ? Register(r) : source)
+				: source;
+		}
+
+		public bool TryGetReduced(T source, out T reduction)
+		{
+			reduction = GetReduced(source);
+			return !reduction.Equals(source);
+		}
 
 		/// <summary>
 		/// For any evaluation node, correct the hierarchy to match.
@@ -83,10 +99,28 @@ namespace Open.Evaluation
 
 				var old = target.Value;
 				var registered = Register(target.Value);
-				if (!old.Equals(registered))
+				if (old!=registered)
 					target.Value = registered;
 
 				return target;
+			}
+		}
+
+		public IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)
+			where TFlat : IParent<T>
+		{
+			foreach (var child in source)
+			{
+				var c = GetReduced(child);
+				if(c is TFlat)
+				{
+					var f = (IParent<T>)c;
+					foreach (var sc in f.Children)
+						yield return sc;
+				} else
+				{
+					yield return c;
+				}
 			}
 		}
 

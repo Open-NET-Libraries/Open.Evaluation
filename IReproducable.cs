@@ -2,16 +2,8 @@
 
 namespace Open.Evaluation
 {
-	public interface IReproducable : IEvaluate
+	public interface IReproducable<TParam> : IEvaluate
     {
-		object ReproductionParam { get; }
-
-		IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children);
-
-		IEvaluate CreateNewFrom(IEnumerable<IEvaluate> children);
-
-		IEvaluate CreateNewFrom(object param, IEvaluate child);
-
-		IEvaluate CreateNewFrom(IEvaluate child);
+		IEvaluate NewUsing(TParam param);
 	}
 }

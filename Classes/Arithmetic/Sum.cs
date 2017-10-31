@@ -14,10 +14,8 @@ namespace Open.Evaluation.ArithmeticOperators
 		where TResult : struct, IComparable
 	{
 		public Sum(IEnumerable<IEvaluate<TResult>> children = null)
-			: base(Sum.SYMBOL, Sum.SEPARATOR, children)
-		{
-
-		}
+			: base(Sum.SYMBOL, Sum.SEPARATOR, children, true)
+		{ }
 
 		public Sum(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
 			: this(Enumerable.Repeat(first,1).Concat(rest))
@@ -37,10 +35,10 @@ namespace Open.Evaluation.ArithmeticOperators
 			return result;
 		}
 
-		public override IEvaluate<TResult> Reduction()
+		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
 			// Phase 1: Flatten sums of sums.
-			var children = ChildrenInternal.Flatten<Sum<TResult>, TResult>().ToList();
+			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal).ToList(); // ** chidren's reduction is done here.
 
 			// Phase 2: Can we collapse?
 			switch(children.Count)
@@ -55,7 +53,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			var productsWithConstants = new List<Tuple<string, Constant<TResult>, IEvaluate<TResult>, Product<TResult>>>();
 			foreach (var p in children.OfType<Product<TResult>>())
 			{
-				var reduced = p.ReductionWithMutlipleExtracted(out Constant<TResult> multiple);
+				var reduced = p.ReductionWithMutlipleExtracted(catalog, out Constant <TResult> multiple);
 				if (multiple != null)
 				{
 					productsWithConstants.Add(new Tuple<string, Constant<TResult>, IEvaluate<TResult>, Product<TResult>>(
@@ -84,58 +82,40 @@ namespace Open.Evaluation.ArithmeticOperators
 
 
 			// Phase 5: Combine constants.
-			var constants = children.ExtractConstants();
-			if (constants.Length!=0)
-				children.Add(constants.Length==1 ? constants[0] : constants.Sum());
+			var constants = children.ExtractType<Constant<TResult>>();
+			if (constants.Count!=0)
+				children.Add(constants.Count == 1 ? constants[0] : constants.Sum());
 
-			// Phase 6: Check if collapsable?
-			if (children.Count == 1)
-				return children[0];
-
-			// Lastly: Sort and return if different.
-			children.Sort(Compare);
-			var result = new Sum<TResult>(children);
-
-			return result.ToStringRepresentation() == result.ToStringRepresentation() ? null : result;
+			// Phase 6: Check if collapsable and return.
+			return catalog.Register(children.Count == 1 ? children[0] : new Sum<TResult>(children));
 		}
 
-		public Sum<TResult> ReplaceIndex(int index, IEvaluate<TResult> repacement)
+		public override IEvaluate NewUsing(IEnumerable<IEvaluate<TResult>> param)
 		{
-			if (index < 0) throw new ArgumentOutOfRangeException("replacement", repacement, "Must be at least zero.");
-
-			var newChildren = new List<IEvaluate<TResult>>(ChildrenInternal.Take(index)) { repacement };
-			foreach (var c in ChildrenInternal.Skip(index + 1)) newChildren.Add(c);
-
-			return new Sum<TResult>(newChildren);
-		}
-
-		public override IEvaluate CreateNewFrom(object param, IEnumerable<IEvaluate> children)
-		{
-			Debug.WriteLineIf(param != null, "A param object was provided to a Sum and will be lost. " + param);
-			return new Sum<TResult>(children.Cast<IEvaluate<TResult>>());
+			return new Sum<TResult>(param);
 		}
 	}
 
 	public class Sum : Sum<double>
 	{
-		public static Sum<TResult> Create<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+		public static Sum<TResult> Of<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
 			where TResult : struct, IComparable
 		{
 			return new Sum<TResult>(first, rest);
 		}
 
-		public static Sum<TResult> Create<TResult>(IEnumerable<IEvaluate<TResult>> children)
+		public static Sum<TResult> Of<TResult>(IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			return new Sum<TResult>(children);
 		}
 
-		public static Sum Create(IEvaluate<double> first, params IEvaluate<double>[] rest)
+		public static Sum Of(IEvaluate<double> first, params IEvaluate<double>[] rest)
 		{
 			return new Sum(first, rest);
 		}
 
-		public static Sum Create(IEnumerable<IEvaluate<double>> children)
+		public static Sum Of(IEnumerable<IEvaluate<double>> children)
 		{
 			return new Sum(children);
 		}

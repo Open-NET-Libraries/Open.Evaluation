@@ -8,7 +8,7 @@ using System;
 namespace Open.Evaluation
 {
 	public abstract class OperationBase<TResult>
-		: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<TResult>
+		: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<IEvaluate<TResult>>
 	{
 
 		protected OperationBase(char symbol, string symbolString) : base()
@@ -25,20 +25,17 @@ namespace Open.Evaluation
 			return string.Format("{0}({1})", SymbolString, contents);
 		}
 
-		public IEvaluate<TResult> AsReduced()
+		protected virtual IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
-			var r = Reduction();
-			if (r != null && r.ToStringRepresentation() == this.ToStringRepresentation()) r = this;
-			return r ?? this;
+			return this;
 		}
 
 		// Override this if reduction is possible.  Return null if you can't reduce.
-		public virtual IEvaluate<TResult> Reduction()
+		public bool TryGetReduced(ICatalog<IEvaluate<TResult>> catalog, out IEvaluate<TResult> reduction)
 		{
-			return null;
+			reduction = Reduction(catalog);
+			return reduction!=this;
 		}
-
-
 	}
 
 }
