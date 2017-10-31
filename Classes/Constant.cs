@@ -5,6 +5,8 @@
 
 using Open.Cloneable;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Open.Evaluation
 {
@@ -13,7 +15,7 @@ namespace Open.Evaluation
 		where TResult : IComparable
 	{
 
-		public Constant(TResult value) : base()
+		internal Constant(TResult value) : base()
 		{
 			Value = value;
 		}
@@ -52,45 +54,13 @@ namespace Open.Evaluation
 			return ToStringRepresentation();
 		}
 
-		public static Constant<TResult> operator +(Constant<TResult> a, Constant<TResult> b)
-		{
-			return new Constant<TResult>((dynamic)a.Value + b.Value);
-		}
-
-		public static Constant<TResult> operator +(Constant<TResult> a, TResult b)
-		{
-			return new Constant<TResult>(a.Value + (dynamic)b);
-		}
-
-		public static Constant<TResult> operator +(TResult a, Constant<TResult> b)
-		{
-			return new Constant<TResult>((dynamic)a + b.Value);
-		}
-
-		public static Constant<TResult> operator *(Constant<TResult> a, Constant<TResult> b)
-		{
-			return new Constant<TResult>((dynamic)a.Value * b.Value);
-		}
-
-		public static Constant<TResult> operator *(Constant<TResult> a, TResult b)
-		{
-			return new Constant<TResult>(a.Value * (dynamic)b);
-		}
-
-		public static Constant<TResult> operator *(TResult a, Constant<TResult> b)
-		{
-			return new Constant<TResult>((dynamic)a * b.Value);
-		}
-
-
 	}
 
 	public sealed class Constant : Constant<double>
 	{
-		public Constant(double value) : base(value)
+		internal Constant(double value) : base(value)
 		{
 		}
-
 	}
 
 	public static class ConstantExtensions
@@ -106,6 +76,22 @@ namespace Open.Evaluation
 			where TValue : IComparable
 		{
 			return GetConstant(catalog, value, v=> new Constant<TValue>(v));
+		}
+
+		public static Constant<TValue> SumConstants<TValue>(this ICatalog<IEvaluate<TValue>> catalog, IEnumerable<IConstant<TValue>> constants)
+			where TValue : struct, IComparable
+		{
+			dynamic result = 0;
+			foreach (var c in constants)
+			{
+				result += c.Value;
+			}
+			return GetConstant<TValue>(catalog, result);
+		}
+
+		public static Constant SumConstants(this ICatalog<IEvaluate<double>> catalog, IEnumerable<IConstant<double>> constants)
+		{
+			return GetConstant(catalog, constants.Select(c=>c.Value).Sum() );
 		}
 
 		public static Constant GetConstant(this ICatalog<IEvaluate<double>> catalog, double value, Func<double, Constant> factory)

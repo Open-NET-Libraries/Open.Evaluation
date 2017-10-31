@@ -102,31 +102,31 @@ namespace Open.Evaluation
 
 		}
 
-		public IEvaluate NewUsing(TChild child, params TChild[] rest)
+		public abstract IEvaluate NewUsing(ICatalog<IEvaluate> catalog, IEnumerable<TChild> param);
+
+		public IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TChild child, params TChild[] rest)
 		{
-			return NewUsing(Enumerable.Repeat(child,1).Concat(rest));
+			return NewUsing(catalog, Enumerable.Repeat(child,1).Concat(rest));
 		}
 
-		public abstract IEvaluate NewUsing(IEnumerable<TChild> param);
-
-		public IEvaluate NewWithIndexRemoved(int index)
+		public IEvaluate NewWithIndexRemoved(ICatalog<IEvaluate> catalog, int index)
 		{
-			return NewUsing(ChildrenInternal.SkipAt(index));
+			return NewUsing(catalog, ChildrenInternal.SkipAt(index));
 		}
 
-		public IEvaluate NewWithIndexReplaced(int index, TChild repacement)
+		public IEvaluate NewWithIndexReplaced(ICatalog<IEvaluate> catalog, int index, TChild repacement)
 		{
-			return NewUsing(ChildrenInternal.ReplaceAt(index,repacement));
+			return NewUsing(catalog, ChildrenInternal.ReplaceAt(index,repacement));
 		}
 
-		public IEvaluate NewWithAppended(IEnumerable<TChild> appended)
+		public IEvaluate NewWithAppended(ICatalog<IEvaluate> catalog, IEnumerable<TChild> appended)
 		{
-			return NewUsing(ChildrenInternal.Concat(appended));
+			return NewUsing(catalog, ChildrenInternal.Concat(appended));
 		}
 
-		public IEvaluate NewWithAppended(TChild child, params TChild[] rest)
+		public IEvaluate NewWithAppended(ICatalog<IEvaluate> catalog, TChild child, params TChild[] rest)
 		{
-			return NewWithAppended(Enumerable.Repeat(child, 1).Concat(rest));
+			return NewWithAppended(catalog, Enumerable.Repeat(child, 1).Concat(rest));
 		}
 
 	}

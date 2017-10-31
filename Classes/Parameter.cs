@@ -13,7 +13,7 @@ namespace Open.Evaluation
         where TResult : IComparable
     {
 
-        public Parameter(ushort id, Func<object, ushort, TResult> evaluator) : base()
+        internal Parameter(ushort id, Func<object, ushort, TResult> evaluator) : base()
         {
 			_evaluator = evaluator ?? throw new ArgumentNullException("evaluator");
 			ID = id;
@@ -50,7 +50,7 @@ namespace Open.Evaluation
 
     public class Parameter : Parameter<double>
     {
-        public Parameter(ushort id) : base(id, GetParamValueFrom)
+		internal Parameter(ushort id) : base(id, GetParamValueFrom)
         {
         }
 
@@ -65,18 +65,20 @@ namespace Open.Evaluation
 	public static class ParameterExtensions
 	{
 		public static TParameter GetParameter<TParameter,TResult>(
-			this Catalog<IEvaluate<TResult>> catalog, ushort id, Func<ushort, TParameter> factory)
+			this ICatalog<IEvaluate<TResult>> catalog, ushort id, Func<ushort, TParameter> factory)
 			where TParameter : IParameter<TResult>
 		{
 			return catalog.Register(Parameter.ToStringRepresentation(id), k => factory(id));
 		}
 
-		public static Parameter GetParameter(this Catalog<IEvaluate<double>> catalog, ushort id, Func<ushort, Parameter> factory)
+		public static Parameter GetParameter(
+			this ICatalog<IEvaluate<double>> catalog, ushort id, Func<ushort, Parameter> factory)
 		{
 			return GetParameter<Parameter, double>(catalog, id, factory);
 		}
 
-		public static Parameter GetParameter(this Catalog<IEvaluate<double>> catalog, ushort id)
+		public static Parameter GetParameter(
+			this ICatalog<IEvaluate<double>> catalog, ushort id)
 		{
 			return GetParameter(catalog, id, i => new Parameter(id));
 		}

@@ -63,7 +63,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			}
 
 			// Phase 5: Combine constants.
-			var constants = children.ExtractType<Constant<TResult>>();
+			var constants = children.ExtractType<IConstant<TResult>>();
 			if (constants.Count != 0)
 				children.Add(constants.Count == 1 ? constants[0] : constants.Product());
 
@@ -78,7 +78,7 @@ namespace Open.Evaluation.ArithmeticOperators
 			if (reduced is Product<TResult> product)
 			{
 				var children = product.ChildrenInternal.ToList(); // Make a copy to be worked on...
-				var constants = children.ExtractType<Constant<TResult>>();
+				var constants = children.ExtractType<IConstant<TResult>>();
 				Debug.Assert(constants.Count <= 1, "Reduction should have collapsed constants.");
 				if (constants.Count == 0)
 				{

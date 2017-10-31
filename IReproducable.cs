@@ -1,9 +1,7 @@
-﻿using System.Collections.Generic;
-
-namespace Open.Evaluation
+﻿namespace Open.Evaluation
 {
 	public interface IReproducable<TParam> : IEvaluate
     {
-		IEvaluate NewUsing(TParam param);
+		IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TParam param);
 	}
 }
