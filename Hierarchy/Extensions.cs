@@ -1,4 +1,5 @@
-﻿using Open.Hierarchy;
+﻿using Open.Evaluation.Core;
+using Open.Hierarchy;
 using System.Linq;
 
 namespace Open.Evaluation.Hierarchy
