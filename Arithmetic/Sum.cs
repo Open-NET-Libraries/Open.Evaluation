@@ -48,13 +48,13 @@ namespace Open.Evaluation.Arithmetic
 			}
 
 			// Phase 3: Look for groupings: constant multplied products
-			var productsWithConstants = new List<Tuple<string, IConstant<TResult>, IEvaluate<TResult>, Product<TResult>>>();
+			var productsWithConstants = new List<(string, IConstant<TResult>, IEvaluate<TResult>, Product<TResult>)>();
 			foreach (var p in children.OfType<Product<TResult>>())
 			{
 				var reduced = p.ReductionWithMutlipleExtracted(catalog, out IConstant<TResult> multiple);
 				if (multiple != null)
 				{
-					productsWithConstants.Add(new Tuple<string, IConstant<TResult>, IEvaluate<TResult>, Product<TResult>>(
+					productsWithConstants.Add((
 						reduced.ToStringRepresentation(),
 						multiple,
 						reduced,
