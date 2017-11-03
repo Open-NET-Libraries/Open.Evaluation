@@ -9,17 +9,17 @@ using System.Linq;
 
 namespace Open.Evaluation.Core
 {
-	public class Constant<TResult>
-		: EvaluationBase<TResult>, IConstant<TResult>
-		where TResult : IComparable
+	public class Constant<TValue>
+		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue>
+		where TValue : IComparable
 	{
 
-		internal Constant(TResult value) : base()
+		protected Constant(TValue value) : base()
 		{
 			Value = value;
 		}
 
-		public TResult Value
+		public TValue Value
 		{
 			get;
 			private set;
@@ -32,7 +32,7 @@ namespace Open.Evaluation.Core
 			return string.Empty + Value;
 		}
 
-		protected override TResult EvaluateInternal(object context)
+		protected override TValue EvaluateInternal(object context)
 		{
 			return Value;
 		}
@@ -42,28 +42,25 @@ namespace Open.Evaluation.Core
 			return ToStringRepresentation();
 		}
 
-	}
-
-	public sealed class Constant : Constant<double>
-	{
-		internal Constant(double value) : base(value)
+		internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
 		{
+			return catalog.Register(value.ToString(), k => new Constant<TValue>(value));
+		}
+
+		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TValue value)
+		{
+			return catalog.Register(value.ToString(), k => new Constant<TValue>(value));
 		}
 	}
 
-	public static class ConstantExtensions
+	public static partial class ConstantExtensions
 	{
-		public static T GetConstant<T, TValue>(this ICatalog<IEvaluate<TValue>> catalog, TValue value, Func<TValue, T> factory)
-			where TValue : IComparable
-			where T : IConstant<TValue>
-		{
-			return catalog.Register(value.ToString(), k => factory(value));
-		}
-
-		public static Constant<TValue> GetConstant<TValue>(this ICatalog<IEvaluate<TValue>> catalog, TValue value)
+		public static Constant<TValue> GetConstant<TValue>(
+			this ICatalog<IEvaluate<TValue>> catalog,
+			TValue value)
 			where TValue : IComparable
 		{
-			return GetConstant(catalog, value, v => new Constant<TValue>(v));
+			return Constant<TValue>.Create(catalog, value);
 		}
 
 		public static Constant<TValue> SumOfConstants<TValue>(
@@ -78,7 +75,6 @@ namespace Open.Evaluation.Core
 			}
 			return GetConstant<TValue>(catalog, result);
 		}
-
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
@@ -93,7 +89,6 @@ namespace Open.Evaluation.Core
 			return GetConstant<TValue>(catalog, result);
 		}
 
-
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
 			IConstant<TValue> c1, params IConstant<TValue>[] rest)
@@ -101,7 +96,6 @@ namespace Open.Evaluation.Core
 		{
 			return SumOfConstants(catalog, rest.Concat(c1));
 		}
-
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
@@ -115,7 +109,6 @@ namespace Open.Evaluation.Core
 			}
 			return GetConstant<TValue>(catalog, result);
 		}
-
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
@@ -138,28 +131,6 @@ namespace Open.Evaluation.Core
 			return GetConstant<TValue>(catalog, result);
 		}
 
-
-		public static Constant SumOfConstants(this ICatalog<IEvaluate<double>> catalog, IEnumerable<IConstant<double>> constants)
-		{
-			return GetConstant(catalog, constants.Select(c => c.Value).Sum());
-		}
-
-		public static Constant SumOfConstants(
-			this ICatalog<IEvaluate<double>> catalog,
-			IConstant<double> c1, params IConstant<double>[] rest)
-		{
-			return SumOfConstants(catalog, rest.Concat(c1));
-		}
-
-		public static Constant GetConstant(this ICatalog<IEvaluate<double>> catalog, double value, Func<double, Constant> factory)
-		{
-			return GetConstant<Constant, double>(catalog, value, factory);
-		}
-
-		public static Constant GetConstant(this ICatalog<IEvaluate<double>> catalog, double value)
-		{
-			return GetConstant(catalog, value, i => new Constant(value));
-		}
 	}
 
 }

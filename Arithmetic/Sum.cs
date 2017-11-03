@@ -15,7 +15,7 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<IEnumerable<IEvaluate<TResult>>>
 		where TResult : struct, IComparable
 	{
-		internal Sum(IEnumerable<IEvaluate<TResult>> children = null)
+		protected Sum(IEnumerable<IEvaluate<TResult>> children = null)
 			: base(Sum.SYMBOL, Sum.SEPARATOR, children, true)
 		{ }
 
@@ -42,7 +42,7 @@ namespace Open.Evaluation.Arithmetic
 			switch (children.Count)
 			{
 				case 0:
-					return new Constant<TResult>((TResult)(dynamic)0);
+					return catalog.GetConstant((TResult)(dynamic)0);
 				case 1:
 					return children[0];
 			}
@@ -73,48 +73,28 @@ namespace Open.Evaluation.Arithmetic
 				foreach (var px in p.Select(t => t.Item4))
 					children.Remove(px);
 
-				children.Add(new Product<TResult>(
-					p1.Item3,
-					multiple));
+				children.Add(catalog.ProductOf(multiple, p1.Item3));
 			}
 
 			return catalog.SumOf(children);
+		}
+
+		internal static Sum<TResult> Create(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> param)
+		{
+			return catalog.Register(new Sum<TResult>(param));
 		}
 
 		public virtual IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
-			return catalog.Register( new Sum<TResult>(param) );
+			return catalog.Register(new Sum<TResult>(param));
 		}
 	}
 
-	public class Sum : Sum<double>
-	{
-		public const char SYMBOL = '+';
-		public const string SEPARATOR = " + ";
-
-		internal Sum(IEnumerable<IEvaluate<double>> children = null)
-			: base(children)
-		{ }
-
-		protected override double EvaluateInternal(object context)
-		{
-			if (ChildrenInternal.Count == 0)
-				throw new InvalidOperationException("Cannot resolve sum of empty set.");
-
-			return ChildResults(context).Cast<double>().Sum();
-		}
-
-		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			IEnumerable<IEvaluate<double>> param)
-		{
-			return catalog.Register(new Sum(param));
-		}
-	}
-
-	public static class SumExtensions
+	public static partial class SumExtensions
 	{
 		public static IEvaluate<TResult> SumOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
@@ -135,38 +115,12 @@ namespace Open.Evaluation.Arithmetic
 			{
 				return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
 			}
-			else if(childList.Count==1)
-			{
-				return childList.Single();
-			}
-
-			return catalog.Register(new Sum<TResult>(childList));
-		}
-
-		public static IEvaluate<double> SumOf(
-			this ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> children)
-		{
-			var childList = children.ToList();
-			var constants = childList.ExtractType<IConstant<double>>();
-			if (constants.Count > 0)
-			{
-				var c = constants.Count == 1 ? constants.Single() : catalog.SumOfConstants(constants);
-				if (childList.Count == 0)
-					return c;
-
-				childList.Add(c);
-			}
-			else if (childList.Count == 0)
-			{
-				return catalog.GetConstant(0);
-			}
 			else if (childList.Count == 1)
 			{
 				return childList.Single();
 			}
 
-			return catalog.Register(new Sum(childList));
+			return Sum<TResult>.Create(catalog, childList);
 		}
 	}
 

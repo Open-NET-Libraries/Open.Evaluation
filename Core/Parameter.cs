@@ -8,20 +8,28 @@ using System.Collections.Generic;
 
 namespace Open.Evaluation.Core
 {
-    public class Parameter<TResult>
-        : EvaluationBase<TResult>, IParameter<TResult>
-        where TResult : IComparable
+    public class Parameter<TValue>
+        : EvaluationBase<TValue>, IParameter<TValue>, IReproducable<ushort>
+        where TValue : IComparable
     {
 
-        internal Parameter(ushort id, Func<object, ushort, TResult> evaluator) : base()
+        protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null) : base()
         {
-			_evaluator = evaluator ?? throw new ArgumentNullException("evaluator");
+			_evaluator = evaluator ?? GetParamValueFrom;
 			ID = id;
         }
 
-        Func<object, ushort, TResult> _evaluator;
+        Func<object, ushort, TValue> _evaluator;
 
-        public ushort ID
+		static TValue GetParamValueFrom(object source, ushort id)
+		{
+			if (source is IReadOnlyList<TValue> list) return list[id];
+			if (source is IDictionary<ushort, TValue> d) return d[id];
+			throw new ArgumentException("Unknown context type.");
+		}
+
+
+		public ushort ID
         {
             get;
             private set;
@@ -37,7 +45,7 @@ namespace Open.Evaluation.Core
             return ToStringRepresentation(ID);
         }
 
-        protected override TResult EvaluateInternal(object context)
+        protected override TValue EvaluateInternal(object context)
         {
             return _evaluator(context is ParameterContext p ? p.Context : context, ID);
         }
@@ -46,41 +54,25 @@ namespace Open.Evaluation.Core
         {
             return string.Empty + Evaluate(context);
         }
-    }
 
-    public class Parameter : Parameter<double>
-    {
-		internal Parameter(ushort id) : base(id, GetParamValueFrom)
-        {
-        }
+		internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
+		{
+			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
+		}
 
-        static double GetParamValueFrom(object source, ushort id)
-        {
-			if (source is IReadOnlyList<double> list) return list[id];
-			if (source is IDictionary<ushort, double> d) return d[id];
-			throw new ArgumentException("Unknown context type.");
-        }
-    }
+		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, ushort id)
+		{
+			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
+		}
+	}
 
-	public static class ParameterExtensions
+	public static partial class ParameterExtensions
 	{
-		public static TParameter GetParameter<TParameter,TResult>(
-			this ICatalog<IEvaluate<TResult>> catalog, ushort id, Func<ushort, TParameter> factory)
-			where TParameter : IParameter<TResult>
+		public static Parameter<TValue> GetParameter<TValue>(
+			this ICatalog<IEvaluate<TValue>> catalog, ushort id)
+			where TValue : IComparable
 		{
-			return catalog.Register(Parameter.ToStringRepresentation(id), k => factory(id));
-		}
-
-		public static Parameter GetParameter(
-			this ICatalog<IEvaluate<double>> catalog, ushort id, Func<ushort, Parameter> factory)
-		{
-			return GetParameter<Parameter, double>(catalog, id, factory);
-		}
-
-		public static Parameter GetParameter(
-			this ICatalog<IEvaluate<double>> catalog, ushort id)
-		{
-			return GetParameter(catalog, id, i => new Parameter(id));
+			return Parameter<TValue>.Create(catalog, id);
 		}
 	}
 

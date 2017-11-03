@@ -12,10 +12,15 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>)>
 		where TResult : struct, IComparable
 	{
-		public Exponent(
+		protected Exponent(
 			IEvaluate<TResult> @base,
 			IEvaluate<TResult> power)
-			: base(Exponent.SYMBOL, Exponent.SEPARATOR, new IEvaluate<TResult>[] { @base, power })
+			: base(
+				  Exponent.SYMBOL,
+				  Exponent.SEPARATOR,
+				  // Need to provide to children so a node tree can be built.
+				  new IEvaluate<TResult>[] { @base, power }
+			)
 		{
 			Base = @base;
 			Power = power;
@@ -37,6 +42,7 @@ namespace Open.Evaluation.Arithmetic
 		{
 			return (double)value;
 		}
+
 		protected override TResult EvaluateInternal(object context)
 		{
 			var evaluation = ConvertToDouble(Base.Evaluate(context));
@@ -63,60 +69,32 @@ namespace Open.Evaluation.Arithmetic
 			return string.Format("({0}^{1})", contents, power);
 		}
 
+		internal static Exponent<TResult> Create(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEvaluate<TResult> @base,
+			IEvaluate<TResult> power)
+		{
+			return catalog.Register(new Exponent<TResult>(@base, power));
+		}
+
 		public virtual IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
 			(IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
-			return catalog.Register(
-				new Exponent<TResult>(
-					param.Item1,
-					param.Item2));
+			return catalog.Register(new Exponent<TResult>(param.Item1, param.Item2));
 		}
 	}
 
-
-	public sealed class Exponent : Exponent<double>
+	public static partial class ExponentExtensions
 	{
-		public static Exponent Of(
-			IEvaluate<double> @base,
-			IEvaluate<double> power)
+		public static Exponent<TResult> GetExponent<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IEvaluate<TResult> @base,
+			IEvaluate<TResult> power)
+			where TResult : struct, IComparable
 		{
-			return new Exponent(@base, power);
-		}
-
-		public static Exponent Of(
-			IEvaluate<double> evaluation,
-			double power)
-		{
-			return new Exponent(evaluation, power);
-		}
-
-		public const char SYMBOL = '^';
-		public const string SEPARATOR = "^";
-
-		protected override double EvaluateInternal(object context)
-		{
-			return Math.Pow(Base.Evaluate(context), Power.Evaluate(context));
-		}
-
-		public Exponent(IEvaluate<double> evaluation, IEvaluate<double> power) : base(evaluation, power)
-		{
-		}
-
-		public Exponent(IEvaluate<double> evaluation, double power) : base(evaluation, new Constant<double>(power))
-		{
-		}
-
-		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			(IEvaluate<double>, IEvaluate<double>) param)
-		{
-			return catalog.Register(
-				new Exponent(
-					param.Item1,
-					param.Item2));
+			return Exponent<TResult>.Create(catalog, @base, power);
 		}
 	}
-
 
 }

@@ -16,12 +16,12 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<IEnumerable<IEvaluate<TResult>>>
 		where TResult : struct, IComparable
 	{
-		public Product(IEnumerable<IEvaluate<TResult>> children = null)
+		protected Product(IEnumerable<IEvaluate<TResult>> children = null)
 			: base(Product.SYMBOL, Product.SEPARATOR, children, true)
 		{ }
 
-		public Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
-			: this(Enumerable.Repeat(first,1).Concat(rest))
+		protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+			: this(Enumerable.Repeat(first, 1).Concat(rest))
 		{ }
 
 		protected override TResult EvaluateInternal(object context)
@@ -59,11 +59,11 @@ namespace Open.Evaluation.Arithmetic
 				.Where(g => g.Count() > 1))
 			{
 				var newBase = exponents.First().Base; // reduction already done above during flatten...
-				var power = catalog.GetReduced(new Sum<TResult>(exponents.Select(t => t.Power)));
+				var power = catalog.GetReduced(catalog.SumOf(exponents.Select(t => t.Power)));
 				foreach (var e in exponents)
 					children.Remove(e);
 
-				children.Add(new Exponent<TResult>(newBase, power));
+				children.Add(catalog.GetExponent(newBase, power));
 			}
 
 			// Phase 5: Combine constants.
@@ -94,59 +94,23 @@ namespace Open.Evaluation.Arithmetic
 			return reduced;
 		}
 
+		public static Product<TResult> Create(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> param)
+		{
+			return catalog.Register(new Product<TResult>(param));
+		}
+
 		public virtual IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
 			return catalog.Register(new Product<TResult>(param));
 		}
+
 	}
 
-	public class Product : Product<double>
-	{
-		public static Product<TResult> Of<TResult>(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
-			where TResult : struct, IComparable
-		{
-			return new Product<TResult>(first, rest);
-		}
-
-		public static Product<TResult> Of<TResult>(IEnumerable<IEvaluate<TResult>> children)
-			where TResult : struct, IComparable
-		{
-			return new Product<TResult>(children);
-		}
-
-		public static Product Of(IEvaluate<double> first, params IEvaluate<double>[] rest)
-		{
-			return new Product(first, rest);
-		}
-
-		public static Product Of(IEnumerable<IEvaluate<double>> children)
-		{
-			return new Product(children);
-		}
-
-
-		public const char SYMBOL = '*';
-		public const string SEPARATOR = " * ";
-
-		public Product(IEnumerable<IEvaluate<double>> children = null) : base(children)
-		{
-		}
-
-		public Product(IEvaluate<double> first, params IEvaluate<double>[] rest)
-			: this(Enumerable.Repeat(first, 1).Concat(rest))
-		{ }
-
-		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			IEnumerable<IEvaluate<double>> param)
-		{
-			return catalog.Register(new Product(param));
-		}
-	}
-
-	public static class ProductExtensions
+	public static partial class ProductExtensions
 	{
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
@@ -176,40 +140,45 @@ namespace Open.Evaluation.Arithmetic
 				return childList.Single();
 			}
 
-			return catalog.Register(new Product<TResult>(childList));
+			return Product<TResult>.Create(catalog, childList);
 		}
 
-		public static IEvaluate<double> ProductOf(
-			this ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> children)
+		public static IEvaluate<TResult> ProductOf<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IEvaluate<TResult> multiple,
+			IEnumerable<IEvaluate<TResult>> children)
+			where TResult : struct, IComparable
 		{
-			var childList = children.ToList();
-			if (childList.Count == 0)
-				throw new InvalidOperationException("Cannot produce a product of an empty set.");
+			return ProductOf(catalog, children.Concat(multiple));
+		}
 
-			var constants = childList.ExtractType<IConstant<double>>();
-			if (constants.Count > 0)
-			{
-				var c = constants.Count == 1 ? constants.Single() : catalog.ProductOfConstants(constants);
-				if (childList.Count == 0)
-					return c;
+		public static IEvaluate<TResult> ProductOf<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IEvaluate<TResult> multiple,
+			params IEvaluate<TResult>[] rest)
+			where TResult : struct, IComparable
+		{
+			return ProductOf(catalog, rest.Concat(multiple));
+		}
 
-				childList.Add(c);
-			}
-			else if (childList.Count == 0)
-			{
-				Debug.Fail("Extraction failure.","Should not have occured.");
-				throw new Exception("Extraction failure.");
-			}
-			else if (childList.Count == 1)
-			{
-				return childList.Single();
-			}
 
-			return catalog.Register(new Product(childList));
+		public static IEvaluate<TResult> ProductOf<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			TResult multiple,
+			IEnumerable<IEvaluate<TResult>> children)
+			where TResult : struct, IComparable
+		{
+			return ProductOf(catalog, catalog.GetConstant(multiple), children);
+		}
+
+		public static IEvaluate<TResult> ProductOf<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			TResult multiple,
+			params IEvaluate<TResult>[] rest)
+			where TResult : struct, IComparable
+		{
+			return ProductOf(catalog, catalog.GetConstant(multiple), rest);
 		}
 
 	}
-
-
 }

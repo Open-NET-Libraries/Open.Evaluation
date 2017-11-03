@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Open.Evaluation
+namespace Open.Evaluation.X
 {
 	public class Catalog<T> : ICatalog<T>
 		where T : class, IEvaluate
@@ -177,7 +177,7 @@ namespace Open.Evaluation
 				return sourceNode.Value is IParent<IEvaluate<T>>
 					? Source.ApplyClone(
 						sourceNode,
-						newNode => newNode.Add(Factory.Map(new Constant<T>(value))))
+						newNode => newNode.Add(Factory.Map( Source.GetConstant(value))))
 					: null;
 			}
 
@@ -470,7 +470,7 @@ namespace Open.Evaluation
 			if (multiple == 0 || double.IsNaN(multiple)) // Neustralized.
 				return catalog.Source.ApplyClone(sourceNode, newNode =>
 				{
-					newNode.Value = new Constant(multiple);
+					newNode.Value = catalog.Source.GetConstant(multiple);
 				});
 
 			if (sourceNode.Value is Product<double> p)
@@ -489,7 +489,7 @@ namespace Open.Evaluation
 				return catalog.Source.ApplyClone(sourceNode, newNode =>
 				{
 					var e = newNode.Value;
-					newNode.Value = new Product(new Constant(multiple), e);
+					newNode.Value = catalog.Source.ProductOf(multiple,e);
 				});
 			}
 		}
@@ -542,7 +542,7 @@ namespace Open.Evaluation
 				return catalog.Source.ApplyClone(sourceNode, newNode =>
 				{
 					var e = newNode.Value;
-					newNode.Value = new Product(new Constant(multiple), e);
+					newNode.Value = catalog.Source.ProductOf(multiple, e);
 				});
 			}
 		}
