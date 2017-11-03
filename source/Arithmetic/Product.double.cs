@@ -32,8 +32,8 @@ namespace Open.Evaluation.Arithmetic
 			return catalog.Register(new Product(param));
 		}
 
-		internal static Product Create(
-			ICatalog<IEvaluate> catalog,
+		internal new static Product Create(
+			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
 		{
 			return catalog.Register(new Product(param));

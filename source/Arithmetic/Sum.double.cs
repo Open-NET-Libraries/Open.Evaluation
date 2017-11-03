@@ -69,6 +69,15 @@ namespace Open.Evaluation.Arithmetic
 
 			return Sum.Create(catalog, children);
 		}
+
+		public static IEvaluate<double> SumOf(
+			this ICatalog<IEvaluate<double>> catalog,
+			params IEvaluate<double>[] children)
+		{
+			return SumOf(catalog, (IEnumerable<IEvaluate<double>>)children);
+		}
+
+
 	}
 
 }

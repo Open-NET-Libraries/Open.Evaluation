@@ -60,12 +60,7 @@ namespace Open.Evaluation.Core
 			this ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IConstant<double>> constants)
 		{
-			dynamic result = 0;
-			foreach (var c in constants)
-			{
-				result *= c.Value;
-			}
-			return GetConstant(catalog, result);
+			return ProductOfConstants(catalog, 1, constants);
 		}
 
 		public static Constant ProductOfConstants(
@@ -77,14 +72,21 @@ namespace Open.Evaluation.Core
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			double c1, params IConstant<double>[] rest)
+			double c1, IEnumerable<IConstant<double>> others)
 		{
 			dynamic result = c1;
-			foreach (var c in rest)
+			foreach (var c in others)
 			{
 				result *= c.Value;
 			}
 			return GetConstant(catalog, result);
+		}
+
+		public static Constant ProductOfConstants(
+			this ICatalog<IEvaluate<double>> catalog,
+			double c1, params IConstant<double>[] rest)
+		{
+			return ProductOfConstants(catalog, c1, (IEnumerable<IConstant<double>>)rest);
 		}
 
 	}

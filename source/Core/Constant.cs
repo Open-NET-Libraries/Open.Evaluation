@@ -5,10 +5,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Diagnostics;
 
 namespace Open.Evaluation.Core
 {
+	[DebuggerDisplay("Value = {Value}")]
 	public class Constant<TValue>
 		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue>
 		where TValue : IComparable

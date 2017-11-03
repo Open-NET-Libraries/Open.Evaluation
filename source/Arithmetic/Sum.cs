@@ -25,7 +25,7 @@ namespace Open.Evaluation.Arithmetic
 				throw new InvalidOperationException("Cannot resolve sum of empty set.");
 
 			dynamic result = 0;
-			foreach (var r in ChildResults(context))
+			foreach (var r in ChildResults(context).Cast<TResult>())
 			{
 				result += r;
 			}
@@ -122,6 +122,15 @@ namespace Open.Evaluation.Arithmetic
 
 			return Sum<TResult>.Create(catalog, childList);
 		}
+
+		public static IEvaluate<TResult> SumOf<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			params IEvaluate<TResult>[] children)
+			where TResult : struct, IComparable
+		{
+			return SumOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
+		}
+
 	}
 
 }

@@ -30,7 +30,7 @@ namespace Open.Evaluation.Arithmetic
 				throw new InvalidOperationException("Cannot resolve product of empty set.");
 
 			dynamic result = 1;
-			foreach (var r in ChildResults(context))
+			foreach (var r in ChildResults(context).Cast<TResult>())
 			{
 				result *= r;
 			}
@@ -154,13 +154,11 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			IEvaluate<TResult> multiple,
-			params IEvaluate<TResult>[] rest)
+			params IEvaluate<TResult>[] children)
 			where TResult : struct, IComparable
 		{
-			return ProductOf(catalog, rest.Concat(multiple));
+			return ProductOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
 		}
-
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,

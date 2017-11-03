@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Arithmetic;
+﻿using Open.Disposable;
+using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
@@ -7,12 +8,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-namespace Open.Evaluation.X
+namespace Open.Evaluation
 {
-	public class Catalog<T> : ICatalog<T>
+	public class Catalog<T> : DisposableBase, ICatalog<T>
 		where T : class, IEvaluate
 	{
 		public Catalog() { }
+
+		protected override void OnDispose(bool calledExplicitly)
+		{
+			if(calledExplicitly)
+			{
+				Registry.Clear();
+				Reductions.Clear();
+			}
+		}
 
 		readonly ConcurrentDictionary<string, T> Registry = new ConcurrentDictionary<string, T>();
 
@@ -144,6 +154,7 @@ namespace Open.Evaluation.X
 			Factory.Recycle(newRoot); // * 2
 			return value;
 		}
+
 	}
 
 	public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>

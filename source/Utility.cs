@@ -101,6 +101,7 @@ namespace Open.Evaluation
 			var extracted = new List<TExtract>();
 			var removed = new List<int>();
 			var len = target.Count;
+
 			for (var i = 0; i < len; i++)
 			{
 				if (target[i] is TExtract e)
@@ -109,8 +110,12 @@ namespace Open.Evaluation
 					removed.Add(i);
 				}
 			}
-			foreach (var i in removed)
-				target.RemoveAt(i);
+
+			for (var i = removed.Count - 1; i >= 0; i--)
+			{
+				target.RemoveAt(removed[i]);
+			}
+
 
 			return extracted;
 		}

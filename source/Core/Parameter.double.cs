@@ -3,8 +3,6 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
-using System.Collections.Generic;
 
 namespace Open.Evaluation.Core
 {
