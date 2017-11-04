@@ -39,8 +39,9 @@ namespace Open.Evaluation.Core
 		protected override string ToStringInternal(object contents)
 		{
 			var collection = contents as IEnumerable;
-			if (contents == null) return base.ToStringInternal(contents);
-			var result = new StringBuilder('(');
+			if (collection == null) return base.ToStringInternal(contents);
+			var result = new StringBuilder();
+			result.Append('(');
 			int index = -1;
 			foreach (var o in collection)
 			{
@@ -49,6 +50,11 @@ namespace Open.Evaluation.Core
 			}
 			result.Append(')');
 			return result.ToString();
+		}
+
+		public override string ToString(object context)
+		{
+			return ToStringInternal(Children.Select(c=>c.ToString(context)));
 		}
 
 		protected IEnumerable<object> ChildResults(object context)

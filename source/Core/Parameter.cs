@@ -25,6 +25,7 @@ namespace Open.Evaluation.Core
 		{
 			if (source is IReadOnlyList<TValue> list) return list[id];
 			if (source is IDictionary<ushort, TValue> d) return d[id];
+			if (source is TValue v) return v;
 			throw new ArgumentException("Unknown context type.");
 		}
 

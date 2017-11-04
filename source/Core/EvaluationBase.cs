@@ -48,7 +48,7 @@ namespace Open.Evaluation.Core
 
 		public virtual string ToString(object context)
 		{
-			return ToStringInternal(EvaluateInternal(context));
+			return ToStringInternal(Evaluate(context));
 		}
 
 	}
