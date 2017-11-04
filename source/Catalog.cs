@@ -459,7 +459,7 @@ namespace Open.Evaluation
 
 	}
 
-	public static class CatalogExtensions
+	public static partial class CatalogExtensions
 	{
 
 		/// <summary>

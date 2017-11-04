@@ -8,7 +8,7 @@ namespace Open.Evaluation.Tests
 	[TestClass]
 	public class SumTests
 	{
-		const string FORMAT = "(({0} * {1}) + ({2} * {3}))";
+		const string FORMAT = "(({0} * {1}) + ({2} * {3})) + ({0} * {1})";
 		readonly double[] PV = new double[] { 2, 3, 4, 5 };
 
 		readonly IEvaluate<double> Evaluation;
@@ -16,24 +16,17 @@ namespace Open.Evaluation.Tests
 		public SumTests()
 		{
 			var catalog = new EvaluateDoubleCatalog();
-			var e = catalog.ProductOf(
-				catalog.GetParameter(0),
-				catalog.GetParameter(1));
-
-			var f = catalog.ProductOf(
-				catalog.GetParameter(2),
-				catalog.GetParameter(3));
-
-			Evaluation = catalog
-				.SumOf(e, f);
+			Evaluation = catalog.Parse(FORMAT);
 		}
 
 
 		[TestMethod]
 		public void Sum_Evaluate()
 		{
+			var x1 = PV[0] * PV[1];
+			var x2 = PV[2] * PV[3];
 			Assert.AreEqual(
-				(PV[0] * PV[1]) + (PV[2] * PV[3]),
+				x1 + x2 + x1,
 				Evaluation.Evaluate(PV));
 		}
 
