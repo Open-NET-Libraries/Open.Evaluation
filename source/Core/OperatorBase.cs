@@ -74,16 +74,17 @@ namespace Open.Evaluation.Core
 			return ToStringInternal(ChildRepresentations());
 		}
 
+		protected virtual int ConstantPriority => +1;
 
 		// Need a standardized way to order so that comparisons are easier.
-		protected static int Compare(TChild a, TChild b)
+		protected virtual int Compare(TChild a, TChild b)
 		{
 
 			if (a is Constant<TResult> && !(b is Constant<TResult>))
-				return 1;
+				return +1 * ConstantPriority;
 
 			if (b is Constant<TResult> && !(a is Constant<TResult>))
-				return -1;
+				return -1 * ConstantPriority;
 
 			var aC = a as Constant<TResult>;
 			var bC = b as Constant<TResult>;
@@ -91,7 +92,7 @@ namespace Open.Evaluation.Core
 				return bC.Value.CompareTo(aC.Value); // Descending...
 
 			if (a is Parameter<TResult> && !(b is Parameter<TResult>))
-				return 1;
+				return +1;
 
 			if (b is Parameter<TResult> && !(a is Parameter<TResult>))
 				return -1;
@@ -112,7 +113,11 @@ namespace Open.Evaluation.Core
 	public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>,TResult>
 		where TResult : IComparable
 	{
-		protected OperatorBase(char symbol, string separator, IEnumerable<IEvaluate<TResult>> children = null, bool reorderChildren = false) : base(symbol, separator)
+		protected OperatorBase(
+			char symbol,
+			string separator,
+			IEnumerable<IEvaluate<TResult>> children = null,
+			bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
 		{
 		}
 

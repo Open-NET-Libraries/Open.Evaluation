@@ -1,34 +1,49 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using System;
+using System.Linq;
 
 namespace Open.Evaluation.Tests
 {
 	[TestClass]
 	public class ExponentTests
 	{
-		[TestMethod]
-		public void Exponent()
+		const string FORMAT = "(({0} + {1})^({2} + {3}))";
+		readonly double[] PV = new double[] { 2, 3, 4, 5 };
+
+		readonly IEvaluate<double> Evaluation;
+
+		public ExponentTests()
 		{
-			using (var catalog = new EvaluateDoubleCatalog())
-			{
-				var e = catalog.SumOf(
-					catalog.GetParameter(0),
-					catalog.GetParameter(1));
-
-				var f = catalog.SumOf(
-					catalog.GetParameter(2),
-					catalog.GetParameter(3));
-
-				var s = catalog
-					.GetExponent(e, f);
-
-				var p = new double[] { 2, 3, 4, 5 };
-				var expected = Math.Pow( p[0] + p[1], p[2] + p[3] );
-
-				Assert.AreEqual(expected, s.Evaluate(p));
-			}
+			var catalog = new EvaluateDoubleCatalog();
+			Evaluation = catalog.Parse(FORMAT);
 		}
+
+		[TestMethod]
+		public void Exponent_Evaluate()
+		{
+			var x1 = PV[0] + PV[1];
+			var x2 = PV[2] + PV[3];
+			Assert.AreEqual(
+				Math.Pow(x1, x2),
+				Evaluation.Evaluate(PV));
+		}
+
+		[TestMethod]
+		public void Exponent_ToString()
+		{
+			Assert.AreEqual(
+				string.Format(FORMAT, PV.Cast<object>().ToArray()),
+				Evaluation.ToString(PV));
+		}
+
+		[TestMethod]
+		public void Exponent_ToStringRepresentation()
+		{
+			Assert.AreEqual(
+				FORMAT,
+				Evaluation.ToStringRepresentation());
+		}
+
 	}
 }

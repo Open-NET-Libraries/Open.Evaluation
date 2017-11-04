@@ -24,6 +24,8 @@ namespace Open.Evaluation.Arithmetic
 			: this(Enumerable.Repeat(first, 1).Concat(rest))
 		{ }
 
+		protected override int ConstantPriority => -1;
+
 		protected override TResult EvaluateInternal(object context)
 		{
 			if (ChildrenInternal.Count == 0)

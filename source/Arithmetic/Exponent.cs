@@ -64,11 +64,6 @@ namespace Open.Evaluation.Arithmetic
 			return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
 		}
 
-		protected string ToStringInternal(object contents, object power)
-		{
-			return string.Format("({0}^{1})", contents, power);
-		}
-
 		internal static Exponent<TResult> Create(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEvaluate<TResult> @base,
