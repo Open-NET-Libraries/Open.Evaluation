@@ -55,26 +55,38 @@ namespace Open.Evaluation.Arithmetic
 					return children[0];
 			}
 
-			// Phase 3&4: Sum compatible exponents together.
-			foreach (var exponents in children.OfType<Exponent<TResult>>()
-				.GroupBy(g => g.Base.ToStringRepresentation())
-				.Where(g => g.Count() > 1))
-			{
-				var newBase = exponents.First().Base; // reduction already done above during flatten...
-				var power = catalog.GetReduced(catalog.SumOf(exponents.Select(t => t.Power)));
-				foreach (var e in exponents)
-					children.Remove(e);
+			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
+				return catalog.GetConstant((TResult)(dynamic)float.NaN);
 
-				children.Add(catalog.GetExponent(newBase, power));
-			}
+			if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
+				return catalog.GetConstant((TResult)(dynamic)double.NaN);
 
-			// Phase 5: Combine constants.
-			var constants = children.ExtractType<IConstant<TResult>>();
-			if (constants.Count != 0)
-				children.Add(constants.Count == 1 ? constants[0] : catalog.ProductOfConstants(constants));
+			var zero = catalog.GetConstant((TResult)(dynamic)0);
+			if (children.Any(c => c == zero)) return zero;
 
-			// Phase 6: Check if collapsable and return.
-			return catalog.Register(children.Count == 1 ? children[0] : new Product<TResult>(children));
+			var one = catalog.GetConstant((TResult)(dynamic)1);
+
+			// Phase 3: Convert to exponents.
+			var exponents = children.Select(c =>
+				c is Exponent<TResult> e
+				? (catalog.GetReduced(e.Base), e.Power)
+				: (c, one)).ToArray();
+
+			if (exponents.Any(c => c.Item1 == zero)) return zero;
+
+			children = exponents
+				.Where(e => e.Item2 != zero)
+				.GroupBy(e => e.Item1.ToStringRepresentation())
+				.Select(g =>
+				{
+					var @base = g.First().Item1;
+					var power = catalog.GetReduced(catalog.SumOf(g.Select(t => t.Item2)));
+					if (power == one) return @base;
+					return catalog.GetExponent(@base, power);
+				}).ToList();
+
+			return children.Count == 1 ? children[0] : catalog.ProductOf(children);
+
 		}
 
 		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
@@ -130,7 +142,19 @@ namespace Open.Evaluation.Arithmetic
 				if (childList.Count == 0)
 					return c;
 
-				childList.Add(c);
+				if (c is IConstant<float> f && float.IsNaN(f.Value))
+					return catalog.GetConstant((TResult)(dynamic)float.NaN);
+
+				if (c is IConstant<double> d && double.IsNaN(d.Value))
+					return catalog.GetConstant((TResult)(dynamic)double.NaN);
+
+				var zero = catalog.GetConstant((TResult)(dynamic)0);
+
+				if (c == zero) return zero;
+					
+					// No need to multiply by 1.
+				if (c != catalog.GetConstant((TResult)(dynamic)1))
+					childList.Add(c);
 			}
 			else if (childList.Count == 0)
 			{

@@ -67,7 +67,7 @@ namespace Open.Evaluation.Arithmetic
 				return childList.Single();
 			}
 
-			return Sum.Create(catalog, children);
+			return Sum.Create(catalog, childList);
 		}
 
 		public static IEvaluate<double> SumOf(

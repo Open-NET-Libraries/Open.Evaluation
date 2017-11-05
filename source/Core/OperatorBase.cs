@@ -102,6 +102,12 @@ namespace Open.Evaluation.Core
 			if (aP != null && bP != null)
 				return aP.ID.CompareTo(bP.ID);
 
+			var aChildCount = (a as IParent)?.Children.Count ?? 1;
+			var bChildCount = (b as IParent)?.Children.Count ?? 1;
+
+			if (aChildCount > bChildCount) return -1;
+			if (aChildCount < bChildCount) return +1;
+
 			var ats = a.ToStringRepresentation();
 			var bts = b.ToStringRepresentation();
 

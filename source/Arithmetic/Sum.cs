@@ -47,36 +47,54 @@ namespace Open.Evaluation.Arithmetic
 					return children[0];
 			}
 
-			// Phase 3: Look for groupings: constant multplied products
-			var productsWithConstants = new List<(string, IConstant<TResult>, IEvaluate<TResult>, Product<TResult>)>();
-			foreach (var p in children.OfType<Product<TResult>>())
+			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
+				return catalog.GetConstant((TResult)(dynamic)float.NaN);
+
+			if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
+				return catalog.GetConstant((TResult)(dynamic)double.NaN);
+
+			var one = catalog.GetConstant((TResult)(dynamic)1);
+
+			// Phase 3: Look for groupings by "multiples".
+			var withMultiples = children.Select(c =>
 			{
-				var reduced = p.ReductionWithMutlipleExtracted(catalog, out IConstant<TResult> multiple);
-				if (multiple != null)
+				if (c is Product<TResult> p)
 				{
-					productsWithConstants.Add((
+					var reduced = p.ReductionWithMutlipleExtracted(catalog, out IConstant<TResult> multiple);
+					if (multiple == null) multiple = one;
+
+					return (
 						reduced.ToStringRepresentation(),
 						multiple,
-						reduced,
-						p
-					));
+						reduced
+					);
 				}
-			}
+				else
+				{
+					return (
+						c.ToStringRepresentation(),
+						one,
+						c
+					);
+				}
+			});
+
+			var zero = catalog.GetConstant((TResult)(dynamic)0);
 
 			// Phase 4: Replace multipliable products with single merged version.
-			foreach (var p in productsWithConstants
-				.GroupBy(g => g.Item1)
-				.Where(g => g.Count() > 1))
-			{
-				var p1 = p.First();
-				var multiple = catalog.SumOfConstants(p.Select(t => t.Item2));
-				foreach (var px in p.Select(t => t.Item4))
-					children.Remove(px);
-
-				children.Add(catalog.ProductOf(multiple, p1.Item3));
-			}
-
-			return catalog.SumOf(children);
+			return catalog.SumOf(
+				withMultiples
+					.GroupBy(g => g.Item1)
+					.Select(g => (
+						catalog.SumOfConstants(g.Select(t => t.Item2)),
+						g.First().Item3
+					))
+					.Where(i => i.Item1 != zero)
+					.Select(i => i.Item1 == one
+						? i.Item2
+						: catalog.GetReduced(catalog.ProductOf(i.Item1, i.Item2))
+					)
+			);
 		}
 
 		internal static Sum<TResult> Create(

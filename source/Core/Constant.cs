@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 
 namespace Open.Evaluation.Core
 {
@@ -66,10 +67,22 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			IEnumerable<IConstant<TValue>> constants)
+			TValue c1, IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
-			dynamic result = 0;
+			if (typeof(TValue) == typeof(float))
+			{
+				if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
+					return catalog.GetConstant((TValue)(dynamic)float.NaN);
+			}
+
+			if (typeof(TValue) == typeof(double))
+			{
+				if (double.IsNaN((double)(dynamic)c1) || constants.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
+					return catalog.GetConstant((TValue)(dynamic)double.NaN);
+			}
+
+			dynamic result = c1;
 			foreach (var c in constants)
 			{
 				result += c.Value;
@@ -79,15 +92,18 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
+			IEnumerable<IConstant<TValue>> constants)
+			where TValue : struct, IComparable
+		{
+			return SumOfConstants(catalog, (TValue)(dynamic)0, constants);
+		}
+
+		public static Constant<TValue> SumOfConstants<TValue>(
+			this ICatalog<IEvaluate<TValue>> catalog,
 			TValue c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
 		{
-			dynamic result = c1;
-			foreach (var c in rest)
-			{
-				result += c.Value;
-			}
-			return GetConstant<TValue>(catalog, result);
+			return SumOfConstants(catalog, c1, (IEnumerable<IConstant<TValue>>)rest);
 		}
 
 		public static Constant<TValue> SumOfConstants<TValue>(
@@ -95,7 +111,35 @@ namespace Open.Evaluation.Core
 			IConstant<TValue> c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
 		{
-			return SumOfConstants(catalog, rest.Concat(c1));
+			return SumOfConstants(catalog, c1.Value, rest);
+		}
+
+		public static Constant<TValue> ProductOfConstants<TValue>(
+			this ICatalog<IEvaluate<TValue>> catalog,
+			TValue c1, IEnumerable<IConstant<TValue>> constants)
+			where TValue : struct, IComparable
+		{
+			if (typeof(TValue) == typeof(float)) 
+			{
+				if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
+					return catalog.GetConstant((TValue)(dynamic)float.NaN);
+			}
+
+			if (typeof(TValue) == typeof(double))
+			{
+				if (double.IsNaN((double)(dynamic)c1) || constants.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
+					return catalog.GetConstant((TValue)(dynamic)double.NaN);
+			}
+
+			dynamic zero = (TValue)(dynamic)0;
+			dynamic result = c1;
+			foreach (var c in constants)
+			{
+				var val = c.Value;
+				if (val == zero) return GetConstant<TValue>(catalog, zero);
+				result *= val;
+			}
+			return GetConstant<TValue>(catalog, result);
 		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
@@ -103,12 +147,7 @@ namespace Open.Evaluation.Core
 			IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
-			dynamic result = 0;
-			foreach (var c in constants)
-			{
-				result *= c.Value;
-			}
-			return GetConstant<TValue>(catalog, result);
+			return ProductOfConstants(catalog, (TValue)(dynamic)1, constants);
 		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
@@ -116,7 +155,7 @@ namespace Open.Evaluation.Core
 			IConstant<TValue> c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
 		{
-			return ProductOfConstants(catalog, rest.Concat(c1));
+			return ProductOfConstants(catalog, (TValue)(dynamic)1, (IEnumerable<IConstant<TValue>>)rest);
 		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
@@ -124,12 +163,7 @@ namespace Open.Evaluation.Core
 			TValue c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
 		{
-			dynamic result = c1;
-			foreach (var c in rest)
-			{
-				result *= c.Value;
-			}
-			return GetConstant<TValue>(catalog, result);
+			return ProductOfConstants(catalog, c1, (IEnumerable<IConstant<TValue>>)rest);
 		}
 
 	}

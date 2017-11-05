@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System;
 
 namespace Open.Evaluation.Tests
 {
@@ -40,6 +41,27 @@ namespace Open.Evaluation.Tests
 				}
 			}
 		}
+
+		[TestClass]
+		public class ProductCollapse : ParseTestBase
+		{
+			const string FORMAT = "(({0} + {1}) * ({0} + {1}) * {2} * {2} * {3} * 2 * 1)";
+			const string REP = "((2 * {2} * {2} * {3}) * ({0} + {1}) * ({0} + {1}))";
+			const string RED = "(2 * (({0} + {1})^2) * ({2}^2) * {3})";
+			public ProductCollapse() : base(FORMAT, REP, RED) { }
+
+			protected override double Expected
+			{
+				get
+				{
+					return Math.Pow(PV[0] + PV[1], 2)
+						* Math.Pow(PV[2], 2) 
+						* PV[3]
+						* 2;
+				}
+			}
+		}
+
 	}
-	
+
 }
