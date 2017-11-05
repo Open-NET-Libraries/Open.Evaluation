@@ -1,49 +1,44 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Core;
-using System.Linq;
 
 namespace Open.Evaluation.Tests
 {
-	[TestClass]
-	public class SumTests
+	public static class Sum
 	{
-		const string FORMAT = "(({0} * {1}) + ({2} * {3}) + (2 * {0} * {1}))";
-		readonly double[] PV = new double[] { 2, 3, 4, 5 };
-
-		readonly IEvaluate<double> Evaluation;
-
-		public SumTests()
+		[TestClass]
+		public class Default : ParseTestBase
 		{
-			var catalog = new EvaluateDoubleCatalog();
-			Evaluation = catalog.Parse(FORMAT);
+			const string FORMAT = "(({0} * {1}) + ({2} * {3}) + (2 * {0} * {1}))";
+			public Default() : base(FORMAT) { }
+
+			protected override double Expected
+			{
+				get
+				{
+					var x1 = PV[0] * PV[1];
+					var x2 = PV[2] * PV[3];
+					return 2 * x1 + x2 + x1;
+				}
+			}
+
 		}
 
-
-		[TestMethod]
-		public void Sum_Evaluate()
+		[TestClass]
+		public class ConstantCollapse : ParseTestBase
 		{
-			var x1 = PV[0] * PV[1];
-			var x2 = PV[2] * PV[3];
-			Assert.AreEqual(
-				2 * x1 + x2 + x1,
-				Evaluation.Evaluate(PV));
-		}
+			const string FORMAT = "(({0} + {1} + 13 + 17) * ({0} + {1}) * ({2} + {3}))";
+			const string REP = "(({0} + {1} + 30) * ({0} + {1}) * ({2} + {3}))";
+			public ConstantCollapse() : base(FORMAT, REP) { }
 
-		[TestMethod]
-		public void Sum_ToString()
-		{
-			Assert.AreEqual(
-				string.Format(FORMAT, PV.Cast<object>().ToArray()),
-				Evaluation.ToString(PV));
+			protected override double Expected
+			{
+				get
+				{
+					var x1 = PV[0] + PV[1];
+					var x2 = PV[2] + PV[3];
+					var x3 = x1 + 30;
+					return x1 * x2 * x3;
+				}
+			}
 		}
-
-		[TestMethod]
-		public void Sum_ToStringRepresentation()
-		{
-			Assert.AreEqual(
-				FORMAT,
-				Evaluation.ToStringRepresentation());
-		}
-
 	}
 }

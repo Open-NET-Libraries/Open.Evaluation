@@ -4,10 +4,10 @@ using Open.Evaluation.Core;
 namespace Open.Evaluation.Tests
 {
     [TestClass]
-    public class ParameterTests
+    public class Parameter
     {
         [TestMethod]
-        public void Parameter_Instantiation()
+        public void Instantiation()
         {
 			using (var catalog = new EvaluateDoubleCatalog())
 			{

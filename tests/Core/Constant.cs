@@ -5,10 +5,10 @@ using Open.Evaluation.Core;
 namespace Open.Evaluation.Tests
 {
     [TestClass]
-    public class ConstantTests
+    public class Constant
     {
         [TestMethod]
-        public void Constant_Instantiation()
+        public void Instantiation()
         {
 			using (var catalog = new EvaluateDoubleCatalog())
 			{
@@ -17,7 +17,7 @@ namespace Open.Evaluation.Tests
         }
 
 		[TestMethod]
-		public void Constant_Sum()
+		public void Sum()
 		{
 			using (var catalog = new EvaluateDoubleCatalog())
 			{
@@ -33,7 +33,7 @@ namespace Open.Evaluation.Tests
 		}
 
 		[TestMethod]
-		public void Constant_Product()
+		public void Product()
 		{
 			using (var catalog = new EvaluateDoubleCatalog())
 			{

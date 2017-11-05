@@ -1,49 +1,45 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Core;
-using System.Linq;
 
 namespace Open.Evaluation.Tests
 {
-	[TestClass]
-	public class ProductTests
+	public static class Product
 	{
-		const string FORMAT = "(({0} + {1} + 2) * ({0} + {1}) * ({2} + {3}))";
-		readonly double[] PV = new double[] { 2, 3, 4, 5 };
-
-		readonly IEvaluate<double> Evaluation;
-
-		public ProductTests()
+		[TestClass]
+		public class Default : ParseTestBase
 		{
-			var catalog = new EvaluateDoubleCatalog();
-			Evaluation = catalog.Parse(FORMAT);
+			const string FORMAT = "(({0} + {1} + 2) * ({0} + {1}) * ({2} + {3}))";
+			public Default() : base(FORMAT) { }
+
+			protected override double Expected
+			{
+				get
+				{
+					var x1 = PV[0] + PV[1];
+					var x2 = PV[2] + PV[3];
+					var x3 = x1 + 2;
+					return x1 * x2 * x3;
+				}
+			}
 		}
 
-		[TestMethod]
-		public void Product_Evaluate()
+		[TestClass]
+		public class ConstantCollapse : ParseTestBase
 		{
-			var x1 = PV[0] + PV[1];
-			var x2 = PV[2] + PV[3];
-			var x3 = x1 + 2;
-			Assert.AreEqual(
-				x1 * x2 * x3,
-				Evaluation.Evaluate(PV));
-		}
+			const string FORMAT = "(({0} * {1}) + (7 * 5 * 2 * {0}) + ({2} * {3}))";
+			const string REP = "(({0} * {1}) + ({2} * {3}) + (70 * {0}))";
+			public ConstantCollapse() : base(FORMAT, REP) { }
 
-		[TestMethod]
-		public void Product_ToString()
-		{
-			Assert.AreEqual(
-				string.Format(FORMAT, PV.Cast<object>().ToArray()),
-				Evaluation.ToString(PV));
+			protected override double Expected
+			{
+				get
+				{
+					var x1 = PV[0] * PV[1];
+					var x2 = 7 * 5 * 2 * PV[0];
+					var x3 = PV[2] * PV[3];
+					return x1 + x2 + x3;
+				}
+			}
 		}
-
-		[TestMethod]
-		public void Product_ToStringRepresentation()
-		{
-			Assert.AreEqual(
-				FORMAT,
-				Evaluation.ToStringRepresentation());
-		}
-		
 	}
+	
 }
