@@ -62,6 +62,17 @@ namespace Open.Evaluation.Tests
 			}
 		}
 
+		[TestClass]
+		public class ZeroCollapse : ParseTestBase
+		{
+			const string FORMAT = "(({0} + {1}) * 0 * {2} * {2} * {3} * 2 * 1)";
+			const string REP = "((0 * {2} * {2} * {3}) * ({0} + {1}))";
+			const string RED = "0";
+			public ZeroCollapse() : base(FORMAT, REP, RED) { }
+
+			protected override double Expected => 0;
+		}
+
 	}
 
 }

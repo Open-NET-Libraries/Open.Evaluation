@@ -22,5 +22,16 @@ namespace Open.Evaluation.Tests
 			}
 
 		}
+
+		[TestClass]
+		public class OneCollapse : ParseTestBase
+		{
+			const string FORMAT = "(({0} + {1})^0)";
+			const string RED = "1";
+			public OneCollapse() : base(FORMAT,null,RED) { }
+
+			protected override double Expected => 1;
+
+		}
 	}
 }

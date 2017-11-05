@@ -10,6 +10,8 @@ namespace Open.Evaluation
 {
 	public static partial class CatalogExtensions
 	{
+		static readonly Regex openParen = new Regex(@"[(]");
+		static readonly Regex closeParen = new Regex(@"[)]");
 		static readonly Regex unnecessaryParaenthesis = new Regex(@"\(({\w+})\)");
 		static readonly Regex paramOnly = new Regex(@"^(?:{(\d+)})$");
 		static readonly Regex registeredOnly = new Regex(@"^(?:{(\w+)})$");
@@ -48,6 +50,11 @@ namespace Open.Evaluation
 
 			evaluation = evaluation.Trim();
 
+			var oParenCount = openParen.Matches(evaluation).Count;
+			var cParenCount = closeParen.Matches(evaluation).Count;
+			if (oParenCount > cParenCount) throw new FormatException("Missing close parenthesis.");
+			if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
+
 			var count = 0;
 			var registry = new Dictionary<string, IEvaluate<double>>();
 
@@ -82,7 +89,7 @@ namespace Open.Evaluation
 				{
 					var key = string.Format("X{0}", ++count);
 					var sm = SubMatches(catalog, registry, m).ToArray();
-					if (sm.Length != 2) throw new InvalidOperationException(string.Format("Exponent with {0} elements defined.", sm.Length));
+					if (sm.Length != 2) throw new FormatException(string.Format("Exponent with {0} elements defined.", sm.Length));
 					registry.Add(key, catalog.GetExponent(sm.First(), sm.Last()));
 					return '{' + key + '}';
 				});
@@ -93,7 +100,7 @@ namespace Open.Evaluation
 			var checkRegisteredOnly = registeredOnly.Match(evaluation);
 			if (checkRegisteredOnly.Success) return registry[checkRegisteredOnly.Groups[1].Value];
 
-			throw new InvalidOperationException(string.Format("Could not parse sequence: {0}", original));
+			throw new FormatException(string.Format("Could not parse sequence: {0}", original));
 		}
 	}
 }
