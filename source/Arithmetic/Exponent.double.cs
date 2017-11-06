@@ -46,6 +46,14 @@ namespace Open.Evaluation.Arithmetic
 		{
 			return Exponent.Create(catalog, @base, power);
 		}
+
+		public static Exponent GetExponent(
+			this ICatalog<IEvaluate<double>> catalog,
+			IEvaluate<double> @base,
+			double power)
+		{
+			return Exponent.Create(catalog, @base, catalog.GetConstant(power));
+		}
 	}
 
 }

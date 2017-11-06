@@ -1,5 +1,7 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Boolean;
+using Open.Evaluation.Core;
+using System;
 using System.Collections.Generic;
 
 namespace Open.Evaluation
@@ -46,5 +48,32 @@ namespace Open.Evaluation
 
 		}
 
+
+		public static IEvaluate<double> GetOperator<TResult>(
+			this ICatalog<IEvaluate<double>> catalog, char op, IEnumerable<IEvaluate<double>> children)
+		{
+			switch (op)
+			{
+				case Sum.SYMBOL:
+					return catalog.SumOf(children);
+				case Product.SYMBOL:
+					return catalog.ProductOf(children);
+			}
+
+			throw new ArgumentException("Invalid operator.");
+		}
+
+		public static IEvaluate<double> GetFunction<TResult>(
+			this ICatalog<IEvaluate<double>> catalog, char op, params IEvaluate<double>[] children)
+		{
+			switch (op)
+			{
+				case Exponent.SYMBOL:
+					if (children.Length != 2) throw new ArgumentException("Must have 2 child params for an exponent.");
+					return catalog.GetExponent(children[0], children[1]);
+			}
+
+			throw new ArgumentException("Invalid function.");
+		}
 	}
 }
