@@ -46,7 +46,7 @@ namespace Open.Evaluation.Tests
 		public class ProductCollapse : ParseTestBase
 		{
 			const string FORMAT = "(({0} + {1}) * ({0} + {1}) * {2} * {2} * {3} * 2 * 1)";
-			const string REP = "((2 * {2} * {2} * {3}) * ({0} + {1}) * ({0} + {1}))";
+			const string REP = "(2 * ({0} + {1}) * ({0} + {1}) * {2} * {2} * {3})";
 			const string RED = "(2 * (({0} + {1})^2) * ({2}^2) * {3})";
 			public ProductCollapse() : base(FORMAT, REP, RED) { }
 
@@ -66,7 +66,7 @@ namespace Open.Evaluation.Tests
 		public class ZeroCollapse : ParseTestBase
 		{
 			const string FORMAT = "(({0} + {1}) * 0 * {2} * {2} * {3} * 2 * 1)";
-			const string REP = "((0 * {2} * {2} * {3}) * ({0} + {1}))";
+			const string REP = "(0 * ({0} + {1}) * {2} * {2} * {3})";
 			const string RED = "0";
 			public ZeroCollapse() : base(FORMAT, REP, RED) { }
 

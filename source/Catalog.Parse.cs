@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Open.Evaluation  
+namespace Open.Evaluation
 {
 	public static partial class CatalogExtensions
 	{
@@ -16,27 +16,41 @@ namespace Open.Evaluation
 		static readonly Regex paramOnly = new Regex(@"^(?:{(\d+)})$");
 		static readonly Regex registeredOnly = new Regex(@"^(?:{(\w+)})$");
 
-		static Regex GetOperatorRegex(char op)
+		static Regex GetOperatorRegex(string op)
 		{
 			return new Regex(
-				string.Format(@"{0} (?:\s*\{1}\s* {0} )+", @"({\w+}|\d+(?:\.\d*)*)", op),
+				string.Format(@"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
 				RegexOptions.IgnorePatternWhitespace);
 		}
 
-		static readonly Regex products = GetOperatorRegex('*');
-		static readonly Regex sums = GetOperatorRegex('+');
-		static readonly Regex exponents = GetOperatorRegex('^');
+		static readonly Regex products = GetOperatorRegex(@"\*");
+		static readonly Regex sums = GetOperatorRegex(@"\+");
+		static readonly Regex exponents = GetOperatorRegex(@"\^");
 
 		static IEnumerable<IEvaluate<double>> SubMatches(Catalog<IEvaluate<double>> catalog, Dictionary<string, IEvaluate<double>> registry, Match m)
 		{
-			return m.Groups.Skip(1).SelectMany(g=>g.Captures).Select(c => c.Value).Select(v =>
+			return m.Groups.Skip(1).SelectMany(g => g.Captures).Select(c => c.Value).Select(v =>
 			{
 				if (double.TryParse(v, out double constant)) return catalog.GetConstant(constant);
+
+				v = v.Trim();
+				var negative = v.StartsWith('-');
+				v = v.Trim('+', '-');
+
 				if (v.StartsWith('{') && v.EndsWith('}'))
 				{
 					v = v.TrimStart('{').TrimEnd('}');
-					if (registry.TryGetValue(v, out IEvaluate<double> result)) return result;
-					if (ushort.TryParse(v, out ushort p)) return catalog.GetParameter(p);
+
+					if (negative)
+					{
+						if (registry.TryGetValue(v, out IEvaluate<double> result)) return catalog.ProductOf(-1, result);
+						if (ushort.TryParse(v, out ushort p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
+					}
+					else
+					{
+						if (registry.TryGetValue(v, out IEvaluate<double> result)) return result;
+						if (ushort.TryParse(v, out ushort p)) return catalog.GetParameter(p);
+					}
 				}
 				throw new InvalidOperationException(string.Format("Unrecognized evaluation sequence: {0}", v));
 			});

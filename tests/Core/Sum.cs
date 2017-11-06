@@ -46,7 +46,7 @@ namespace Open.Evaluation.Tests
 		public class SumCollapse : ParseTestBase
 		{
 			const string FORMAT = "(({0} * {1}) + ({0} * {1}) + {2} + {2} + {3} + 2 + 1)";
-			const string REP = "(({2} + {2} + {3} + 3) + ({0} * {1}) + ({0} * {1}))";
+			const string REP = "(({0} * {1}) + ({0} * {1}) + {2} + {2} + {3} + 3)";
 			const string RED = "((2 * {0} * {1}) + (2 * {2}) + {3} + 3)";
 			public SumCollapse() : base(FORMAT, REP, RED) { }
 

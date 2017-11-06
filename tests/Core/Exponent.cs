@@ -28,10 +28,28 @@ namespace Open.Evaluation.Tests
 		{
 			const string FORMAT = "(({0} + {1})^0)";
 			const string RED = "1";
-			public OneCollapse() : base(FORMAT,null,RED) { }
+			public OneCollapse() : base(FORMAT, null, RED) { }
 
 			protected override double Expected => 1;
-
 		}
+
+		[TestClass]
+		public class Division : ParseTestBase
+		{
+			const string FORMAT = "(2 * (({0} + {1})^-1))";
+			public Division() : base(FORMAT) { }
+
+			protected override double Expected => 2 / (PV[0] + PV[1]);
+		}
+
+		[TestClass]
+		public class SquareRoot : ParseTestBase
+		{
+			const string FORMAT = "(2 * (({0} + {1})^0.5))";
+			public SquareRoot() : base(FORMAT) { }
+
+			protected override double Expected => 2 * Math.Sqrt(PV[0] + PV[1]);
+		}
+
 	}
 }
