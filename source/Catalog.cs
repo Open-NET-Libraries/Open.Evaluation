@@ -82,41 +82,6 @@ namespace Open.Evaluation
 			return !reduction.Equals(source);
 		}
 
-		/// <summary>
-		/// For any evaluation node, correct the hierarchy to match.
-		/// </summary>
-		/// <param name="target">The node tree to correct.</param>
-		/// <returns>The updated tree.</returns>
-		public Node<T> FixHierarchy(Node<T> target)
-		{
-			// Does this node's value contain children?
-			if (target.Value is IReproducable<IEnumerable<IEvaluate>> r)
-			{
-				// This recursion technique will operate on the leaves of the tree first.
-				var node = Factory.Map(
-					(T)r.NewUsing(
-						(ICatalog<IEvaluate>)this,
-						// Using new children... Rebuild using new structure and check for registration.
-						target.Select(n => (IEvaluate)Register(FixHierarchy(n).Value))
-					)
-				);
-				target.Parent?.Replace(target, node);
-				return node;
-			}
-			// No children? Then clear any child notes.
-			else
-			{
-				target.Clear();
-
-				var old = target.Value;
-				var registered = Register(target.Value);
-				if (old != registered)
-					target.Value = registered;
-
-				return target;
-			}
-		}
-
 		public IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)
 			where TFlat : IParent<T>
 		{
@@ -134,25 +99,6 @@ namespace Open.Evaluation
 					yield return c;
 				}
 			}
-		}
-
-		/// <summary>
-		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
-		/// </summary>
-		/// <param name="sourceNode">The node to clone.</param>
-		/// <param name="handler">the handler to pass the cloned node to.</param>
-		/// <returns>The resultant value corrected by .FixHierarchy()</returns>
-		public T ApplyClone(
-			Node<T> sourceNode,
-			Action<Node<T>> handler)
-		{
-			var newGene = Factory.CloneTree(sourceNode); // * new 1
-			handler(newGene);
-			var newRoot = FixHierarchy(newGene.Root); // * new 2
-			var value = newRoot.Value;
-			Factory.Recycle(newGene.Root); // * 1
-			Factory.Recycle(newRoot); // * 2
-			return value;
 		}
 
 	}
