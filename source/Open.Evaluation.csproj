@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Catalog.FixHierarchy.cs" />
+    <None Include="CatalogExtensions\FixHierarchy.cs" />
     <None Include="Arithmetic\Product.double.cs" />
     <None Include="Arithmetic\Sum.double.cs" />
   </ItemGroup>

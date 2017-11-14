@@ -16,16 +16,22 @@ namespace Open.Evaluation
 		/// </summary>
 		/// <param name="target">The node tree to correct.</param>
 		/// <returns>The updated tree.</returns>
-		public static Node<T> FixHierarchy<T, TValue>(this Catalog<T> catalog, Node<T> target)
+		public static Node<T> FixHierarchy<T, TValue>(
+			this Catalog<T> catalog,
+			Node<T> target,
+			bool operateDirectly = false)
 			where T : class, IEvaluate<TValue>
 		{
+			if (!operateDirectly)
+				target = catalog.Factory.Clone(target);
+
 			var value = target.Value;
 			// Does this node's value contain children?
 			if (value is IParent<IEnumerable<T>> p)
 			{
 				var fixedChildren = target
 					.Select(n => {
-						var f = FixHierarchy<T, TValue>(catalog, n);
+						var f = FixHierarchy<T, TValue>(catalog, n, true);
 						var v = f.Value;
 						if(f!=n) catalog.Factory.Recycle(f); // Only the owner of the target node should do the recycling.
 						return catalog.Register(v);
