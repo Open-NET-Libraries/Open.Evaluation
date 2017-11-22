@@ -52,7 +52,7 @@ namespace Open.Evaluation
 						if (ushort.TryParse(v, out ushort p)) return catalog.GetParameter(p);
 					}
 				}
-				throw new InvalidOperationException(string.Format("Unrecognized evaluation sequence: {0}", v));
+				throw new InvalidOperationException($"Unrecognized evaluation sequence: {v}");
 			});
 		}
 
@@ -87,21 +87,21 @@ namespace Open.Evaluation
 
 				evaluation = products.Replace(evaluation, m =>
 				{
-					var key = string.Format("X{0}", ++count);
+					var key = $"X{++count}";
 					registry.Add(key, catalog.ProductOf(SubMatches(catalog, registry, m)));
 					return '{' + key + '}';
 				});
 
 				evaluation = sums.Replace(evaluation, m =>
 				{
-					var key = string.Format("X{0}", ++count);
+					var key = $"X{++count}";
 					registry.Add(key, catalog.SumOf(SubMatches(catalog, registry, m)));
 					return '{' + key + '}';
 				});
 
 				evaluation = exponents.Replace(evaluation, m =>
 				{
-					var key = string.Format("X{0}", ++count);
+					var key = $"X{++count}";
 					var sm = SubMatches(catalog, registry, m).ToArray();
 					if (sm.Length != 2) throw new FormatException(string.Format("Exponent with {0} elements defined.", sm.Length));
 					registry.Add(key, catalog.GetExponent(sm.First(), sm.Last()));

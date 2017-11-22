@@ -22,7 +22,7 @@ namespace Open.Evaluation.Core
 
 		protected override string ToStringInternal(object contents)
 		{
-			return string.Format("{0}({1})", SymbolString, contents);
+			return $"{SymbolString}({contents})";
 		}
 
 		protected virtual IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)

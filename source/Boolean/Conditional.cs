@@ -41,15 +41,9 @@ namespace Open.Evaluation.Boolean
 		}
 
 
-		const string FormatString = "{0} ? {1} : {2}";
-
 		protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
 		{
-			return string.Format(
-				FormatString,
-				condition,
-				ifTrue,
-				ifFalse);
+			return $"{condition} ? {ifTrue} : {ifFalse}";
 		}
 
 		public override string ToString(object context)

@@ -33,7 +33,7 @@ namespace Open.Evaluation.Boolean
 
 		protected override string ToStringInternal(object contents)
 		{
-			return String.Format("{0}({1}, {2})", Prefix, Count, base.ToStringInternal(contents));
+			return $"{Prefix}({Count}, {base.ToStringInternal(contents)})";
 		}
 
 	}
