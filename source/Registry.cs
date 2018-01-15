@@ -60,7 +60,7 @@ namespace Open.Evaluation
 					return catalog.ProductOf(children);
 			}
 
-			throw new ArgumentException("Invalid operator.");
+			throw new ArgumentException("Invalid operator.", nameof(op));
 		}
 
 		public static IEvaluate<double> GetFunction<TResult>(
@@ -73,7 +73,7 @@ namespace Open.Evaluation
 					return catalog.GetExponent(children[0], children[1]);
 			}
 
-			throw new ArgumentException("Invalid function.");
+			throw new ArgumentException("Invalid function.", nameof(op));
 		}
 	}
 }

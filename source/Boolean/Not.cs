@@ -18,7 +18,7 @@ namespace Open.Evaluation.Boolean
 		internal Not(IEvaluate<bool> contents)
 			: base(SYMBOL, SYMBOL_STRING, Enumerable.Repeat(contents,1))
 		{
-			if (contents == null) throw new ArgumentNullException("contents");
+			if (contents == null) throw new ArgumentNullException(nameof(contents));
 		}
 
 		public IEvaluate NewUsing(

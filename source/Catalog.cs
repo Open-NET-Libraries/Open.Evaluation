@@ -218,7 +218,7 @@ namespace Open.Evaluation
 			public Genome ApplyFunction(Genome source, int geneIndex, char fn)
 			{
 				if (!Operators.Available.Functions.Contains(fn))
-					throw new ArgumentException("Invalid function operator.", "fn");
+					throw new ArgumentException("Invalid function operator.", nameof(fn));
 
 				// Validate worthyness.
 				return ApplyClone(source, geneIndex, (g, newGenome) =>
@@ -419,7 +419,7 @@ namespace Open.Evaluation
 			Node<IEvaluate<double>> sourceNode, double multiple)
 		{
 			if (sourceNode == null)
-				throw new ArgumentNullException("sourceNode");
+				throw new ArgumentNullException(nameof(sourceNode));
 
 			if (multiple == 1) // No change...
 				return sourceNode.Root.Value;
@@ -463,7 +463,7 @@ namespace Open.Evaluation
 			Node<IEvaluate<double>> sourceNode, double delta = 1)
 		{
 			if (sourceNode == null)
-				throw new ArgumentNullException("sourceNode");
+				throw new ArgumentNullException(nameof(sourceNode));
 
 			double multiple = 1;
 			if (sourceNode.Value is Product<double> px)

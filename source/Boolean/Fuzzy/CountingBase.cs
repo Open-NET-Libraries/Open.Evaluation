@@ -18,8 +18,8 @@ namespace Open.Evaluation.Boolean
 			: base(SYMBOL, SEPARATOR, children, true)
 		{
 			if (count < 0)
-				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 0.");
-			Prefix = prefix ?? throw new ArgumentNullException("prefix");
+				throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be at least 0.");
+			Prefix = prefix ?? throw new ArgumentNullException(nameof(prefix));
 			Count = count;
 		}
 

@@ -15,7 +15,7 @@ namespace Open.Evaluation
 
 		public static IEnumerable<T> SkipAt<T>(this IEnumerable<T> source, int index)
 		{
-			if (index < 0) throw new ArgumentOutOfRangeException("index", index, "Must be at least zero.");
+			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 
 			var count = 0;
 			var e = source.GetEnumerator();
@@ -30,7 +30,7 @@ namespace Open.Evaluation
 
 		public static IEnumerable<T> ReplaceAt<T>(this IEnumerable<T> source, int index, T replacement)
 		{
-			if (index < 0) throw new ArgumentOutOfRangeException("index", index, "Must be at least zero.");
+			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 
 			var count = 0;
 			var e = source.GetEnumerator();
@@ -45,15 +45,15 @@ namespace Open.Evaluation
 			}
 		}
 
-		public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int at, IEnumerable<T> injection)
+		public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int index, IEnumerable<T> injection)
 		{
-			if (at < 0) throw new ArgumentOutOfRangeException("index", at, "Must be at least zero.");
+			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 
 			var count = 0;
 			var e = source.GetEnumerator();
 			while (e.MoveNext())
 			{
-				if (count == at)
+				if (count == index)
 				{
 					foreach(var i in injection)
 						yield return i;
@@ -65,15 +65,15 @@ namespace Open.Evaluation
 			}
 		}
 
-		public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int at, T injection)
+		public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int index, T injection)
 		{
-			if (at < 0) throw new ArgumentOutOfRangeException("index", at, "Must be at least zero.");
+			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 
 			var count = 0;
 			var e = source.GetEnumerator();
 			while (e.MoveNext())
 			{
-				if (count == at)
+				if (count == index)
 				{
 					yield return injection;
 				}

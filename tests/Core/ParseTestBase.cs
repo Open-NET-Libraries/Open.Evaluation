@@ -19,7 +19,7 @@ namespace Open.Evaluation.Tests
 
 		protected ParseTestBase(string format, string representation = null, string reduction = null)
 		{
-			Format = format ?? throw new ArgumentNullException("format");
+			Format = format ?? throw new ArgumentNullException(nameof(format));
 			Representation = representation ?? format;
 			Reduction = reduction ?? Representation;
 			Catalog = new EvaluateDoubleCatalog();
