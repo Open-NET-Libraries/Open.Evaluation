@@ -5,6 +5,7 @@ using Open.Hierarchy;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -17,10 +18,10 @@ namespace Open.Evaluation
 
 		protected override void OnDispose(bool calledExplicitly)
 		{
-			if(calledExplicitly)
+			if (calledExplicitly)
 			{
 				Registry.Clear();
-				Reductions.Clear();
+				//Reductions.Clear();
 			}
 		}
 
@@ -52,14 +53,17 @@ namespace Open.Evaluation
 			return result;
 		}
 
+
+
 		public readonly Node<T>.Factory Factory = new Node<T>.Factory();
 
-		public abstract class CatalogSubmodule
+		public abstract class CatalogSubmodule<TCatalog>
+			where TCatalog : Catalog<T>
 		{
-			internal readonly Catalog<T> Source;
+			internal readonly TCatalog Source;
 			internal readonly Node<T>.Factory Factory;
 
-			protected CatalogSubmodule(Catalog<T> source)
+			protected CatalogSubmodule(TCatalog source)
 			{
 				Source = source;
 				Factory = source.Factory;
@@ -115,8 +119,109 @@ namespace Open.Evaluation
 		public readonly VariationCatalog Variations;
 		public readonly MutationCatalog Mutations;
 
+		/// <summary>
+		/// For any evaluation node, correct the hierarchy to match.
+		/// 
+		/// Uses .NewUsing methods to reconstruct the tree.
+		/// </summary>
+		/// <param name="target">The node tree to correct.</param>
+		/// <returns>The updated tree.</returns>
+		public Node<IEvaluate<T>> FixHierarchy(
+			Node<IEvaluate<T>> target,
+			bool operateDirectly = false)
+		{
+			if (!operateDirectly)
+				target = Factory.Clone(target);
 
-		public class VariationCatalog : CatalogSubmodule
+			var value = target.Value;
+			// Does this node's value contain children?
+			if (value is IParent<IEnumerable<IEvaluate<T>>> p)
+			{
+				var fixedChildren = target
+					.Select(n =>
+					{
+						var f = FixHierarchy(n, true);
+						var v = f.Value;
+						if (f != n) Factory.Recycle(f); // Only the owner of the target node should do the recycling.
+						return Register(v);
+					}).ToArray();
+
+				Node<IEvaluate<T>> node;
+
+				if (value is IReproducable<IEnumerable<IEvaluate<T>>> r)
+				{
+					// This recursion technique will operate on the leaves of the tree first.
+					node = Factory.Map(
+						(IEvaluate<T>)r.NewUsing(
+							(ICatalog<IEvaluate>)this,
+							// Using new children... Rebuild using new structure and check for registration.
+							fixedChildren
+						)
+					);
+				}
+				else if (value is IReproducable<(IEvaluate<T>, IEvaluate<T>)> e) // Functions, exponent, etc...
+				{
+					Debug.Assert(target.Children.Count == 2);
+					node = Factory.Map(
+						(IEvaluate<T>)e.NewUsing(
+							(ICatalog<IEvaluate>)this,
+							(fixedChildren[0], fixedChildren[1])
+						)
+					);
+
+				}
+				else
+				{
+					throw new Exception("Unknown IParent / IReproducable.");
+				}
+
+				target.Parent?.Replace(target, node);
+				return node;
+
+			}
+			// No children? Then clear any child notes.
+			else
+			{
+				target.Clear();
+
+				var old = target.Value;
+				var registered = Register(target.Value);
+				if (old != registered)
+					target.Value = registered;
+
+				return target;
+			}
+		}
+
+		/// <summary>
+		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
+		/// </summary>
+		/// <param name="sourceNode">The node to clone.</param>
+		/// <param name="handler">the handler to pass the cloned node to.</param>
+		/// <returns>The resultant value corrected by .FixHierarchy()</returns>
+		public IEvaluate<T> ApplyClone(
+			Node<IEvaluate<T>> sourceNode,
+			Action<Node<IEvaluate<T>>> handler)
+		{
+			var newGene = Factory.CloneTree(sourceNode); // * new 1
+			handler(newGene);
+			var newRoot = FixHierarchy(newGene.Root); // * new 2
+			var value = newRoot.Value;
+			Factory.Recycle(newGene.Root); // * 1
+			Factory.Recycle(newRoot); // * 2
+			return value;
+		}
+
+		public Node<IEvaluate<T>> RemoveNode(
+			Node<IEvaluate<T>> node)
+		{
+			if (node == null || node.Parent == null) return null;
+			var root = node.Root;
+			node.Parent.Remove(node);
+			return FixHierarchy(root, true);
+		}
+
+		public class VariationCatalog : CatalogSubmodule<EvaluationCatalog<T>>
 		{
 			internal VariationCatalog(EvaluationCatalog<T> source) : base(source)
 			{
@@ -134,7 +239,7 @@ namespace Open.Evaluation
 				return sourceNode.Value is IParent<IEvaluate<T>>
 					? Source.ApplyClone(
 						sourceNode,
-						newNode => newNode.Add(Factory.Map( Source.GetConstant(value))))
+						newNode => newNode.Add(Factory.Map(Source.GetConstant(value))))
 					: null;
 			}
 
@@ -239,7 +344,7 @@ namespace Open.Evaluation
 		}
 
 
-		public class MutationCatalog : CatalogSubmodule
+		public class MutationCatalog : CatalogSubmodule<EvaluationCatalog<T>>
 		{
 			internal MutationCatalog(EvaluationCatalog<T> source) : base(source)
 			{
@@ -446,7 +551,7 @@ namespace Open.Evaluation
 				return catalog.Source.ApplyClone(sourceNode, newNode =>
 				{
 					var e = newNode.Value;
-					newNode.Value = catalog.Source.ProductOf(multiple,e);
+					newNode.Value = catalog.Source.ProductOf(multiple, e);
 				});
 			}
 		}

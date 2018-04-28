@@ -29,15 +29,21 @@ namespace Open.Evaluation
 
 		static IEnumerable<IEvaluate<double>> SubMatches(Catalog<IEvaluate<double>> catalog, Dictionary<string, IEvaluate<double>> registry, Match m)
 		{
-			return m.Groups.Skip(1).SelectMany(g => g.Captures).Select(c => c.Value).Select(v =>
+			return m.Groups.
+				Cast<Group>()
+				.Skip(1)
+				.SelectMany(g => g.Captures.Cast<Capture>())
+				.Select(c => c.Value)
+				.Select(v =>
 			{
 				if (double.TryParse(v, out double constant)) return catalog.GetConstant(constant);
 
 				v = v.Trim();
-				var negative = v.StartsWith('-');
+				var negative = v.Length != 0 && v[0] == '-';
 				v = v.Trim('+', '-');
 
-				if (v.StartsWith('{') && v.EndsWith('}'))
+				var len = v.Length;
+				if (len != 0 && v[0] == '{' && v[len - 1] == '}')
 				{
 					v = v.TrimStart('{').TrimEnd('}');
 
