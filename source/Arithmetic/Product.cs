@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -151,8 +151,8 @@ namespace Open.Evaluation.Arithmetic
 				var zero = catalog.GetConstant((TResult)(dynamic)0);
 
 				if (c == zero) return zero;
-					
-					// No need to multiply by 1.
+
+				// No need to multiply by 1.
 				if (c != catalog.GetConstant((TResult)(dynamic)1))
 					childList.Add(c);
 			}

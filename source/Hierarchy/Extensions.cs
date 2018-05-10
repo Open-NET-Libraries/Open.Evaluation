@@ -5,7 +5,7 @@ using System.Linq;
 namespace Open.Evaluation.Hierarchy
 {
 	public static class Extensions
-    {
+	{
 
 		public static bool AreChildrenAligned(this Node<IEvaluate> target)
 		{

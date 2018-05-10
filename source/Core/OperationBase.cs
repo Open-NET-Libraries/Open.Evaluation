@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -34,7 +34,7 @@ namespace Open.Evaluation.Core
 		public bool TryGetReduced(ICatalog<IEvaluate<TResult>> catalog, out IEvaluate<TResult> reduction)
 		{
 			reduction = Reduction(catalog);
-			return reduction!=this;
+			return reduction != this;
 		}
 	}
 

@@ -55,7 +55,7 @@ namespace Open.Evaluation.Tests
 				get
 				{
 					return Math.Pow(PV[0] + PV[1], 2)
-						* Math.Pow(PV[2], 2) 
+						* Math.Pow(PV[2], 2)
 						* PV[3]
 						* 2;
 				}

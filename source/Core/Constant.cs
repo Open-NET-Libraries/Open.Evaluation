@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -119,7 +119,7 @@ namespace Open.Evaluation.Core
 			TValue c1, IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
-			if (typeof(TValue) == typeof(float)) 
+			if (typeof(TValue) == typeof(float))
 			{
 				if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
 					return catalog.GetConstant((TValue)(dynamic)float.NaN);
