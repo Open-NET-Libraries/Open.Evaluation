@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -54,7 +54,7 @@ namespace Open.Evaluation.Core
 
 		public override string ToString(object context)
 		{
-			return ToStringInternal(Children.Select(c=>c.ToString(context)));
+			return ToStringInternal(Children.Select(c => c.ToString(context)));
 		}
 
 		protected IEnumerable<object> ChildResults(object context)
@@ -116,7 +116,7 @@ namespace Open.Evaluation.Core
 		}
 	}
 
-	public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>,TResult>
+	public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, TResult>
 		where TResult : IComparable
 	{
 		protected OperatorBase(

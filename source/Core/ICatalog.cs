@@ -6,7 +6,7 @@ namespace Open.Evaluation.Core
 {
 	public interface ICatalog<T> : IDisposable
 		where T : IEvaluate
-    {
+	{
 		TItem Register<TItem>(TItem item)
 			where TItem : T;
 

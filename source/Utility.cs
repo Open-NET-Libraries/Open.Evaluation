@@ -34,7 +34,7 @@ namespace Open.Evaluation
 
 			var count = 0;
 			var e = source.GetEnumerator();
-			while(e.MoveNext())
+			while (e.MoveNext())
 			{
 				if (count == index)
 					yield return replacement;
@@ -55,7 +55,7 @@ namespace Open.Evaluation
 			{
 				if (count == index)
 				{
-					foreach(var i in injection)
+					foreach (var i in injection)
 						yield return i;
 				}
 

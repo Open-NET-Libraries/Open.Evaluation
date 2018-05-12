@@ -1,20 +1,20 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Tests
 {
-    [TestClass]
-    public class Constant
-    {
-        [TestMethod]
-        public void Instantiation()
-        {
+	[TestClass]
+	public class Constant
+	{
+		[TestMethod]
+		public void Instantiation()
+		{
 			using (var catalog = new EvaluateDoubleCatalog())
 			{
 				catalog.GetConstant(5).ValidateValue(5);
 			}
-        }
+		}
 
 		[TestMethod]
 		public void Sum()

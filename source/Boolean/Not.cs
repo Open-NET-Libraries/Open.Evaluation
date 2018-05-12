@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -16,7 +16,7 @@ namespace Open.Evaluation.Boolean
 		public const string SYMBOL_STRING = "!";
 
 		internal Not(IEvaluate<bool> contents)
-			: base(SYMBOL, SYMBOL_STRING, Enumerable.Repeat(contents,1))
+			: base(SYMBOL, SYMBOL_STRING, Enumerable.Repeat(contents, 1))
 		{
 			if (contents == null) throw new ArgumentNullException(nameof(contents));
 		}
@@ -34,5 +34,5 @@ namespace Open.Evaluation.Boolean
 		}
 
 	}
-	
+
 }

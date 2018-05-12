@@ -9,7 +9,7 @@ namespace Open.Evaluation.Tests
 		{
 			const string FORMAT = "((2 * {0} * {1}) + ({0} * {1}) + ({2} * {3}))";
 			const string RED = "((3 * {0} * {1}) + ({2} * {3}))";
-			public Default() : base(FORMAT,null, RED) { }
+			public Default() : base(FORMAT, null, RED) { }
 
 			protected override double Expected
 			{
