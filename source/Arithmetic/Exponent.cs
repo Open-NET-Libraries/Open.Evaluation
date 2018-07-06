@@ -13,8 +13,8 @@ namespace Open.Evaluation.Arithmetic
 		where TResult : struct, IComparable
 	{
 		protected Exponent(
-			IEvaluate<TResult> @base,
-			IEvaluate<TResult> power)
+			in IEvaluate<TResult> @base,
+			in IEvaluate<TResult> power)
 			: base(
 				  Exponent.SYMBOL,
 				  Exponent.SEPARATOR,
@@ -38,12 +38,12 @@ namespace Open.Evaluation.Arithmetic
 			private set;
 		}
 
-		protected static double ConvertToDouble(dynamic value)
+		protected static double ConvertToDouble(in dynamic value)
 		{
 			return (double)value;
 		}
 
-		protected override TResult EvaluateInternal(object context)
+		protected override TResult EvaluateInternal(in object context)
 		{
 			var evaluation = ConvertToDouble(Base.Evaluate(context));
 			var power = ConvertToDouble(Power.Evaluate(context));
@@ -51,7 +51,7 @@ namespace Open.Evaluation.Arithmetic
 			return (TResult)(dynamic)Math.Pow(evaluation, power);
 		}
 
-		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
+		protected override IEvaluate<TResult> Reduction(in ICatalog<IEvaluate<TResult>> catalog)
 		{
 			var pow = catalog.GetReduced(Power);
 			if (pow is Constant<TResult> cPow)
@@ -65,16 +65,16 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		internal static Exponent<TResult> Create(
-			ICatalog<IEvaluate<TResult>> catalog,
-			IEvaluate<TResult> @base,
-			IEvaluate<TResult> power)
+			in ICatalog<IEvaluate<TResult>> catalog,
+			in IEvaluate<TResult> @base,
+			in IEvaluate<TResult> power)
 		{
 			return catalog.Register(new Exponent<TResult>(@base, power));
 		}
 
 		public virtual IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			(IEvaluate<TResult>, IEvaluate<TResult>) param)
+			in ICatalog<IEvaluate> catalog,
+			in (IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
 			return catalog.Register(new Exponent<TResult>(param.Item1, param.Item2));
 		}
@@ -84,11 +84,11 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static Exponent<TResult> GetExponent<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			IEvaluate<TResult> @base,
-			IEvaluate<TResult> power)
+			in IEvaluate<TResult> @base,
+			in IEvaluate<TResult> power)
 			where TResult : struct, IComparable
 		{
-			return Exponent<TResult>.Create(catalog, @base, power);
+			return Exponent<TResult>.Create(catalog, in @base, in power);
 		}
 	}
 

@@ -26,15 +26,15 @@ namespace Open.Evaluation.Arithmetic
 		{ }
 
 		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			IEnumerable<IEvaluate<double>> param)
+			in ICatalog<IEvaluate> catalog,
+			in IEnumerable<IEvaluate<double>> param)
 		{
 			return catalog.Register(new Product(param));
 		}
 
 		internal new static Product Create(
-			ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> param)
+			in ICatalog<IEvaluate<double>> catalog,
+			in IEnumerable<IEvaluate<double>> param)
 		{
 			return catalog.Register(new Product(param));
 		}
@@ -44,7 +44,7 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> children)
+			in IEnumerable<IEvaluate<double>> children)
 		{
 			var childList = children.ToList();
 			if (childList.Count == 0)
@@ -74,15 +74,15 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEvaluate<double> multiple,
-			IEnumerable<IEvaluate<double>> children)
+			in IEvaluate<double> multiple,
+			in IEnumerable<IEvaluate<double>> children)
 		{
 			return ProductOf(catalog, children.Concat(multiple));
 		}
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEvaluate<double> multiple,
+			in IEvaluate<double> multiple,
 			params IEvaluate<double>[] rest)
 		{
 			return ProductOf(catalog, rest.Concat(multiple));
@@ -90,18 +90,18 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			double multiple,
-			IEnumerable<IEvaluate<double>> children)
+			in double multiple,
+			in IEnumerable<IEvaluate<double>> children)
 		{
-			return ProductOf(catalog, catalog.GetConstant(multiple), children);
+			return ProductOf(catalog, catalog.GetConstant(in multiple), in children);
 		}
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			double multiple,
+			in double multiple,
 			params IEvaluate<double>[] rest)
 		{
-			return ProductOf(catalog, catalog.GetConstant(multiple), rest);
+			return ProductOf(catalog, catalog.GetConstant(in multiple), rest);
 		}
 	}
 }

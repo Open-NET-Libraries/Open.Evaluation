@@ -13,25 +13,26 @@ namespace Open.Evaluation.Arithmetic
 		public const char SYMBOL = '^';
 		public const string SEPARATOR = "^";
 
-		protected override double EvaluateInternal(object context)
+		protected override double EvaluateInternal(in object context)
 		{
-			return Math.Pow(Base.Evaluate(context), Power.Evaluate(context));
+			return Math.Pow(Base.Evaluate(in context), Power.Evaluate(in context));
 		}
 
-		Exponent(IEvaluate<double> evaluation, IEvaluate<double> power) : base(evaluation, power)
+		Exponent(in IEvaluate<double> evaluation, in IEvaluate<double> power)
+			: base(in evaluation, in power)
 		{ }
 
 		internal new static Exponent Create(
-			ICatalog<IEvaluate<double>> catalog,
-			IEvaluate<double> @base,
-			IEvaluate<double> power)
+			in ICatalog<IEvaluate<double>> catalog,
+			in IEvaluate<double> @base,
+			in IEvaluate<double> power)
 		{
-			return catalog.Register(new Exponent(@base, power));
+			return catalog.Register(new Exponent(in @base, in power));
 		}
 
 		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			(IEvaluate<double>, IEvaluate<double>) param)
+			in ICatalog<IEvaluate> catalog,
+			in (IEvaluate<double>, IEvaluate<double>) param)
 		{
 			return catalog.Register(new Exponent(param.Item1, param.Item2));
 		}
@@ -41,18 +42,18 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static Exponent GetExponent(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEvaluate<double> @base,
-			IEvaluate<double> power)
+			in IEvaluate<double> @base,
+			in IEvaluate<double> power)
 		{
-			return Exponent.Create(catalog, @base, power);
+			return Exponent.Create(in catalog, in @base, in power);
 		}
 
 		public static Exponent GetExponent(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEvaluate<double> @base,
-			double power)
+			in IEvaluate<double> @base,
+			in double power)
 		{
-			return Exponent.Create(catalog, @base, catalog.GetConstant(power));
+			return Exponent.Create(in catalog, in @base, catalog.GetConstant(in power));
 		}
 	}
 

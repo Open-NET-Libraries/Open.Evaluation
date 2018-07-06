@@ -11,7 +11,7 @@ namespace Open.Evaluation.Core
 		: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<IEvaluate<TResult>>
 	{
 
-		protected OperationBase(char symbol, string symbolString) : base()
+		protected OperationBase(in char symbol, in string symbolString) : base()
 		{
 			SymbolString = symbolString ?? throw new ArgumentNullException(nameof(symbolString));
 			Symbol = symbol;
@@ -20,18 +20,18 @@ namespace Open.Evaluation.Core
 		public char Symbol { get; private set; }
 		public string SymbolString { get; private set; }
 
-		protected override string ToStringInternal(object contents)
+		protected override string ToStringInternal(in object contents)
 		{
 			return $"{SymbolString}({contents})";
 		}
 
-		protected virtual IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
+		protected virtual IEvaluate<TResult> Reduction(in ICatalog<IEvaluate<TResult>> catalog)
 		{
 			return this;
 		}
 
 		// Override this if reduction is possible.  Return null if you can't reduce.
-		public bool TryGetReduced(ICatalog<IEvaluate<TResult>> catalog, out IEvaluate<TResult> reduction)
+		public bool TryGetReduced(in ICatalog<IEvaluate<TResult>> catalog, out IEvaluate<TResult> reduction)
 		{
 			reduction = Reduction(catalog);
 			return reduction != this;

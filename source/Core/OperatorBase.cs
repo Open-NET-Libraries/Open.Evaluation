@@ -19,7 +19,7 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 
-		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null, bool reorderChildren = false) : base(symbol, separator)
+		protected OperatorBase(in char symbol, in string separator, in IEnumerable<TChild> children = null, in bool reorderChildren = false) : base(symbol, separator)
 		{
 			ChildrenInternal = children == null ? new List<TChild>() : new List<TChild>(children);
 			if (reorderChildren) ChildrenInternal.Sort(Compare);
@@ -36,10 +36,11 @@ namespace Open.Evaluation.Core
 
 		IReadOnlyList<object> IParent.Children => Children;
 
-		protected override string ToStringInternal(object contents)
+		protected override string ToStringInternal(in object contents)
 		{
-			var collection = contents as IEnumerable;
-			if (collection == null) return base.ToStringInternal(contents);
+			if (!(contents is IEnumerable collection))
+				return base.ToStringInternal(contents);
+
 			var result = new StringBuilder();
 			result.Append('(');
 			int index = -1;
@@ -52,9 +53,10 @@ namespace Open.Evaluation.Core
 			return result.ToString();
 		}
 
-		public override string ToString(object context)
+		public override string ToString(in object context)
 		{
-			return ToStringInternal(Children.Select(c => c.ToString(context)));
+			var co = context;
+			return ToStringInternal(Children.Select(c => c.ToString(co)));
 		}
 
 		protected IEnumerable<object> ChildResults(object context)
@@ -85,10 +87,8 @@ namespace Open.Evaluation.Core
 
 			if (b is Constant<TResult> && !(a is Constant<TResult>))
 				return -1 * ConstantPriority;
-
-			var aC = a as Constant<TResult>;
-			var bC = b as Constant<TResult>;
-			if (aC != null && bC != null)
+			
+			if (a is Constant<TResult> aC && b is Constant<TResult> bC)
 				return bC.Value.CompareTo(aC.Value); // Descending...
 
 			if (a is Parameter<TResult> && !(b is Parameter<TResult>))
@@ -97,9 +97,7 @@ namespace Open.Evaluation.Core
 			if (b is Parameter<TResult> && !(a is Parameter<TResult>))
 				return -1;
 
-			var aP = a as Parameter<TResult>;
-			var bP = b as Parameter<TResult>;
-			if (aP != null && bP != null)
+			if (a is Parameter<TResult> aP && b is Parameter<TResult> bP)
 				return aP.ID.CompareTo(bP.ID);
 
 			var aChildCount = (a as IParent)?.Children.Count ?? 1;
@@ -120,10 +118,10 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 		protected OperatorBase(
-			char symbol,
-			string separator,
-			IEnumerable<IEvaluate<TResult>> children = null,
-			bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
+			in char symbol,
+			in string separator,
+			in IEnumerable<IEvaluate<TResult>> children = null,
+			in bool reorderChildren = false) : base(in symbol, in separator, in children, in reorderChildren)
 		{
 		}
 

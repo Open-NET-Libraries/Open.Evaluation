@@ -12,14 +12,14 @@ namespace Open.Evaluation.Core
 		/// </summary>
 		/// <param name="context">The context object that defines the parameters for the evaluation.</param>
 		/// <returns>The resultant value of this evaluation</returns>
-		object Evaluate(object context);
+		object Evaluate(in object context);
 
 		/// <summary>
 		/// Returns the string representation of this evaluation using the context parameters.
 		/// </summary>
 		/// <param name="context">The context object that defines the parameters for the evaluation.</param>
 		/// <returns>The resultant string that repesents the actual calcuation being done by .Evaluation().</returns>
-		string ToString(object context);
+		string ToString(in object context);
 
 		/// <summary>
 		/// Returns the formulaic representation of this evaluation without using the actual parameter values.
@@ -30,7 +30,7 @@ namespace Open.Evaluation.Core
 
 	public interface IEvaluate<out TResult> : IEvaluate
 	{
-		new TResult Evaluate(object context);
+		new TResult Evaluate(in object context);
 	}
 
 }

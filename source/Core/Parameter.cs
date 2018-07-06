@@ -13,13 +13,13 @@ namespace Open.Evaluation.Core
 		where TValue : IComparable
 	{
 
-		protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null) : base()
+		protected Parameter(in ushort id, in Func<object, ushort, TValue> evaluator = null) : base()
 		{
 			_evaluator = evaluator ?? GetParamValueFrom;
 			ID = id;
 		}
 
-		Func<object, ushort, TValue> _evaluator;
+		readonly Func<object, ushort, TValue> _evaluator;
 
 		static TValue GetParamValueFrom(object source, ushort id)
 		{
@@ -36,7 +36,7 @@ namespace Open.Evaluation.Core
 			private set;
 		}
 
-		public static string ToStringRepresentation(ushort id)
+		public static string ToStringRepresentation(in ushort id)
 		{
 			return "{" + id + "}";
 		}
@@ -46,24 +46,26 @@ namespace Open.Evaluation.Core
 			return ToStringRepresentation(ID);
 		}
 
-		protected override TValue EvaluateInternal(object context)
+		protected override TValue EvaluateInternal(in object context)
 		{
 			return _evaluator(context is ParameterContext p ? p.Context : context, ID);
 		}
 
-		protected override string ToStringInternal(object context)
+		protected override string ToStringInternal(in object context)
 		{
-			return string.Empty + Evaluate(context);
+			return string.Empty + Evaluate(in context);
 		}
 
-		internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
+		internal static Parameter<TValue> Create(in ICatalog<IEvaluate<TValue>> catalog, in ushort id)
 		{
-			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
+			var i = id;
+			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(i));
 		}
 
-		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, ushort id)
+		public virtual IEvaluate NewUsing(in ICatalog<IEvaluate> catalog, in ushort id)
 		{
-			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
+			var i = id;
+			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(i));
 		}
 	}
 
