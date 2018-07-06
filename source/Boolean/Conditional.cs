@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -12,9 +12,9 @@ namespace Open.Evaluation.Boolean
 	{
 
 		public Conditional(
-			IEvaluate<bool> condition,
-			IEvaluate<TResult> ifTrue,
-			IEvaluate<TResult> ifFalse)
+			in IEvaluate<bool> condition,
+			in IEvaluate<TResult> ifTrue,
+			in IEvaluate<TResult> ifFalse)
 			: base(Conditional.SYMBOL, Conditional.SEPARATOR)
 		{
 			Condition = condition;
@@ -41,12 +41,12 @@ namespace Open.Evaluation.Boolean
 		}
 
 
-		protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
+		protected string ToStringInternal(in object condition, in object ifTrue, in object ifFalse)
 		{
 			return $"{condition} ? {ifTrue} : {ifFalse}";
 		}
 
-		public override string ToString(object context)
+		public override string ToString(in object context)
 		{
 			return ToStringInternal(
 				Condition.Evaluate(context),
@@ -62,7 +62,7 @@ namespace Open.Evaluation.Boolean
 				IfFalse.ToStringRepresentation());
 		}
 
-		protected override TResult EvaluateInternal(object context)
+		protected override TResult EvaluateInternal(in object context)
 		{
 			return Condition.Evaluate(context)
 			? IfTrue.Evaluate(context)
@@ -70,8 +70,8 @@ namespace Open.Evaluation.Boolean
 		}
 
 		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
+			in ICatalog<IEvaluate> catalog,
+			in (IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
 			return catalog.Register(
 				new Conditional<TResult>(

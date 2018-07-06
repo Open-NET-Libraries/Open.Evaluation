@@ -7,7 +7,7 @@ namespace Open.Evaluation
 {
 	internal static class Utility
 	{
-		public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, T next)
+		public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, in T next)
 		{
 			return source
 				.Concat(Enumerable.Repeat(next, 1));
@@ -84,7 +84,7 @@ namespace Open.Evaluation
 			}
 		}
 
-		public static List<T> Extract<T>(this IList<T> target, Func<T, bool> predicate)
+		public static List<T> Extract<T>(this IList<T> target, in Func<T, bool> predicate)
 		{
 			var extracted = new List<T>();
 			var contents = target.ToArray();

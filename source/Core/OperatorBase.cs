@@ -62,7 +62,7 @@ namespace Open.Evaluation.Core
 		protected IEnumerable<object> ChildResults(object context)
 		{
 			foreach (var child in ChildrenInternal)
-				yield return child.Evaluate(context);
+				yield return child.Evaluate(in context);
 		}
 
 		protected IEnumerable<string> ChildRepresentations()
@@ -87,7 +87,7 @@ namespace Open.Evaluation.Core
 
 			if (b is Constant<TResult> && !(a is Constant<TResult>))
 				return -1 * ConstantPriority;
-			
+
 			if (a is Constant<TResult> aC && b is Constant<TResult> bC)
 				return bC.Value.CompareTo(aC.Value); // Descending...
 

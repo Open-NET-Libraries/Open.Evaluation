@@ -27,13 +27,17 @@ namespace Open.Evaluation
 
 		readonly ConcurrentDictionary<string, T> Registry = new ConcurrentDictionary<string, T>();
 
-		public TItem Register<TItem>(TItem item)
+		public void Register<TItem>(ref TItem item)
 			where TItem : T
 		{
-			return (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item);
+			item = (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item);
 		}
 
-		public TItem Register<TItem>(string id, Func<string, TItem> factory)
+		public TItem Register<TItem>(TItem item)
+			where TItem : T
+			=> (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item);
+
+		public TItem Register<TItem>(in string id, Func<string, TItem> factory)
 			where TItem : T
 		{
 			return (TItem)Registry.GetOrAdd(id, k =>
@@ -45,7 +49,7 @@ namespace Open.Evaluation
 			});
 		}
 
-		public bool TryGetItem<TItem>(string id, out TItem item)
+		public bool TryGetItem<TItem>(in string id, out TItem item)
 			where TItem : T
 		{
 			var result = Registry.TryGetValue(id, out T e);
@@ -63,7 +67,7 @@ namespace Open.Evaluation
 			internal readonly TCatalog Source;
 			internal readonly Node<T>.Factory Factory;
 
-			protected CatalogSubmodule(TCatalog source)
+			protected CatalogSubmodule(in TCatalog source)
 			{
 				Source = source;
 				Factory = source.Factory;
@@ -72,15 +76,15 @@ namespace Open.Evaluation
 
 		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
 
-		public T GetReduced(T source)
+		public T GetReduced(in T source)
 		{
-			source = Register(source);
-			return source is IReducibleEvaluation<T> s
-				? Reductions.GetValue(s, k => s.TryGetReduced(this, out T r) ? Register(r) : source)
-				: source;
+			var src = Register(source);
+			return src is IReducibleEvaluation<T> s
+				? Reductions.GetValue(s, k => s.TryGetReduced(this, out T r) ? Register(r) : src)
+				: src;
 		}
 
-		public bool TryGetReduced(T source, out T reduction)
+		public bool TryGetReduced(in T source, out T reduction)
 		{
 			reduction = GetReduced(source);
 			return !reduction.Equals(source);

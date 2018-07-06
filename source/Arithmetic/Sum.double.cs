@@ -15,11 +15,11 @@ namespace Open.Evaluation.Arithmetic
 		public const char SYMBOL = '+';
 		public const string SEPARATOR = " + ";
 
-		internal Sum(IEnumerable<IEvaluate<double>> children = null)
-			: base(children)
+		internal Sum(in IEnumerable<IEvaluate<double>> children = null)
+			: base(in children)
 		{ }
 
-		protected override double EvaluateInternal(object context)
+		protected override double EvaluateInternal(in object context)
 		{
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve sum of empty set.");
@@ -28,17 +28,17 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		internal new static Sum Create(
-			ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> param)
+			in ICatalog<IEvaluate<double>> catalog,
+			in IEnumerable<IEvaluate<double>> param)
 		{
-			return catalog.Register(new Sum(param));
+			return catalog.Register(new Sum(in param));
 		}
 
 		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			IEnumerable<IEvaluate<double>> param)
+			in ICatalog<IEvaluate> catalog,
+			in IEnumerable<IEvaluate<double>> param)
 		{
-			return catalog.Register(new Sum(param));
+			return catalog.Register(new Sum(in param));
 		}
 	}
 
@@ -46,7 +46,7 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static IEvaluate<double> SumOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> children)
+			in IEnumerable<IEvaluate<double>> children)
 		{
 			var childList = children.ToList();
 			var constants = childList.ExtractType<IConstant<double>>();

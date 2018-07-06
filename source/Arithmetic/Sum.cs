@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -15,11 +15,11 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<IEnumerable<IEvaluate<TResult>>>
 		where TResult : struct, IComparable
 	{
-		protected Sum(IEnumerable<IEvaluate<TResult>> children = null)
+		protected Sum(in IEnumerable<IEvaluate<TResult>> children = null)
 			: base(Sum.SYMBOL, Sum.SEPARATOR, children, true)
 		{ }
 
-		protected override TResult EvaluateInternal(object context)
+		protected override TResult EvaluateInternal(in object context)
 		{
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve sum of empty set.");
@@ -33,7 +33,7 @@ namespace Open.Evaluation.Arithmetic
 			return result;
 		}
 
-		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
+		protected override IEvaluate<TResult> Reduction(in ICatalog<IEvaluate<TResult>> catalog)
 		{
 			// Phase 1: Flatten sums of sums.
 			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal).ToList(); // ** chidren's reduction is done here.
@@ -55,12 +55,13 @@ namespace Open.Evaluation.Arithmetic
 
 			var one = catalog.GetConstant((TResult)(dynamic)1);
 
+			var cat = catalog;
 			// Phase 3: Look for groupings by "multiples".
 			var withMultiples = children.Select(c =>
 			{
 				if (c is Product<TResult> p)
 				{
-					var reduced = p.ReductionWithMutlipleExtracted(catalog, out IConstant<TResult> multiple);
+					var reduced = p.ReductionWithMutlipleExtracted(cat, out IConstant<TResult> multiple);
 					if (multiple == null) multiple = one;
 
 					return (
@@ -86,29 +87,29 @@ namespace Open.Evaluation.Arithmetic
 				withMultiples
 					.GroupBy(g => g.Item1)
 					.Select(g => (
-						catalog.SumOfConstants(g.Select(t => t.Item2)),
-						g.First().Item3
+						cat.SumOfConstants(g.Select(t => t.multiple)),
+						g.First().reduced
 					))
 					.Where(i => i.Item1 != zero)
 					.Select(i => i.Item1 == one
-						? i.Item2
-						: catalog.GetReduced(catalog.ProductOf(i.Item1, i.Item2))
+						? i.reduced
+						: cat.GetReduced(cat.ProductOf(i.Item1, i.reduced))
 					)
 			);
 		}
 
 		internal static Sum<TResult> Create(
-			ICatalog<IEvaluate<TResult>> catalog,
-			IEnumerable<IEvaluate<TResult>> param)
+			in ICatalog<IEvaluate<TResult>> catalog,
+			in IEnumerable<IEvaluate<TResult>> param)
 		{
-			return catalog.Register(new Sum<TResult>(param));
+			return catalog.Register(new Sum<TResult>(in param));
 		}
 
 		public virtual IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			IEnumerable<IEvaluate<TResult>> param)
+			in ICatalog<IEvaluate> catalog,
+			in IEnumerable<IEvaluate<TResult>> param)
 		{
-			return catalog.Register(new Sum<TResult>(param));
+			return catalog.Register(new Sum<TResult>(in param));
 		}
 	}
 
@@ -116,7 +117,7 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static IEvaluate<TResult> SumOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			IEnumerable<IEvaluate<TResult>> children)
+			in IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			var childList = children.ToList();

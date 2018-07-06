@@ -7,10 +7,13 @@ namespace Open.Evaluation.Core
 	public interface ICatalog<T> : IDisposable
 		where T : IEvaluate
 	{
-		TItem Register<TItem>(in TItem item)
+		TItem Register<TItem>(TItem item)
 			where TItem : T;
 
-		TItem Register<TItem>(in string id, in Func<string, TItem> factory)
+		void Register<TItem>(ref TItem item)
+			where TItem : T;
+
+		TItem Register<TItem>(in string id, Func<string, TItem> factory)
 			where TItem : T;
 
 		bool TryGetItem<TItem>(in string id, out TItem item)

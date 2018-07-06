@@ -15,20 +15,20 @@ namespace Open.Evaluation.Boolean
 		public const char SYMBOL = '!';
 		public const string SYMBOL_STRING = "!";
 
-		internal Not(IEvaluate<bool> contents)
+		internal Not(in IEvaluate<bool> contents)
 			: base(SYMBOL, SYMBOL_STRING, Enumerable.Repeat(contents, 1))
 		{
 			if (contents == null) throw new ArgumentNullException(nameof(contents));
 		}
 
 		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			IEvaluate<bool> param)
+			in ICatalog<IEvaluate> catalog,
+			in IEvaluate<bool> param)
 		{
-			return catalog.Register(new Not(param));
+			return catalog.Register(new Not(in param));
 		}
 
-		protected override bool EvaluateInternal(object context)
+		protected override bool EvaluateInternal(in object context)
 		{
 			return !ChildResults(context).Cast<bool>().Single();
 		}

@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * @author electricessence / https://github.com/electricessence/
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
@@ -13,21 +13,21 @@ namespace Open.Evaluation.Boolean
 		IReproducable<(int, IEnumerable<IEvaluate<bool>>)>
 	{
 		public const string PREFIX = "AtLeast";
-		internal AtLeast(int count, IEnumerable<IEvaluate<bool>> children = null)
-			: base(PREFIX, count, children)
+		internal AtLeast(in int count, in IEnumerable<IEvaluate<bool>> children = null)
+			: base(PREFIX, in count, in children)
 		{
 			if (count < 1)
 				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 1.");
 		}
 
 		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
-			(int, IEnumerable<IEvaluate<bool>>) param)
+			in ICatalog<IEvaluate> catalog,
+			in (int, IEnumerable<IEvaluate<bool>>) param)
 		{
 			return catalog.Register(new AtLeast(param.Item1, param.Item2));
 		}
 
-		protected override bool EvaluateInternal(object context)
+		protected override bool EvaluateInternal(in object context)
 		{
 			int count = 0;
 			foreach (var result in ChildResults(context))
