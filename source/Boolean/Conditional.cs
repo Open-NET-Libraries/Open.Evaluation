@@ -12,9 +12,9 @@ namespace Open.Evaluation.Boolean
 	{
 
 		public Conditional(
-			in IEvaluate<bool> condition,
-			in IEvaluate<TResult> ifTrue,
-			in IEvaluate<TResult> ifFalse)
+			IEvaluate<bool> condition,
+			IEvaluate<TResult> ifTrue,
+			IEvaluate<TResult> ifFalse)
 			: base(Conditional.SYMBOL, Conditional.SEPARATOR)
 		{
 			Condition = condition;
@@ -41,12 +41,12 @@ namespace Open.Evaluation.Boolean
 		}
 
 
-		protected string ToStringInternal(in object condition, in object ifTrue, in object ifFalse)
+		protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
 		{
 			return $"{condition} ? {ifTrue} : {ifFalse}";
 		}
 
-		public override string ToString(in object context)
+		public override string ToString(object context)
 		{
 			return ToStringInternal(
 				Condition.Evaluate(context),
@@ -62,7 +62,7 @@ namespace Open.Evaluation.Boolean
 				IfFalse.ToStringRepresentation());
 		}
 
-		protected override TResult EvaluateInternal(in object context)
+		protected override TResult EvaluateInternal(object context)
 		{
 			return Condition.Evaluate(context)
 			? IfTrue.Evaluate(context)
@@ -70,7 +70,7 @@ namespace Open.Evaluation.Boolean
 		}
 
 		public IEvaluate NewUsing(
-			in ICatalog<IEvaluate> catalog,
+			ICatalog<IEvaluate> catalog,
 			in (IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
 			return catalog.Register(

@@ -14,8 +14,8 @@ namespace Open.Evaluation.Boolean
 		public const char SYMBOL = ',';
 		public const string SEPARATOR = ", ";
 
-		protected CountingBase(in string prefix, in int count, in IEnumerable<IEvaluate<bool>> children)
-			: base(SYMBOL, SEPARATOR, in children, true)
+		protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<bool>> children)
+			: base(SYMBOL, SEPARATOR, children, true)
 		{
 			if (count < 0)
 				throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be at least 0.");
@@ -31,9 +31,9 @@ namespace Open.Evaluation.Boolean
 			private set;
 		}
 
-		protected override string ToStringInternal(in object contents)
+		protected override string ToStringInternal(object contents)
 		{
-			return $"{Prefix}({Count}, {base.ToStringInternal(in contents)})";
+			return $"{Prefix}({Count}, {base.ToStringInternal(contents)})";
 		}
 
 	}

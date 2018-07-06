@@ -15,11 +15,11 @@ namespace Open.Evaluation.Boolean
 		public const char SYMBOL = '&';
 		public const string SEPARATOR = " & ";
 
-		public And(in IEnumerable<IEvaluate<bool>> children = null)
+		public And(IEnumerable<IEvaluate<bool>> children = null)
 			: base(SYMBOL, SEPARATOR, children, true)
 		{ }
 
-		protected override bool EvaluateInternal(in object context)
+		protected override bool EvaluateInternal(object context)
 		{
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve boolean of empty set.");
@@ -33,10 +33,10 @@ namespace Open.Evaluation.Boolean
 		}
 
 		public IEvaluate NewUsing(
-			in ICatalog<IEvaluate> catalog,
+			ICatalog<IEvaluate> catalog,
 			in IEnumerable<IEvaluate<bool>> param)
 		{
-			return catalog.Register(new And(in param));
+			return catalog.Register(new And(param));
 		}
 
 	}

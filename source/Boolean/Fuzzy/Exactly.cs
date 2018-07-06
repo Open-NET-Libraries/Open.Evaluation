@@ -12,18 +12,18 @@ namespace Open.Evaluation.Boolean
 		IReproducable<(int, IEnumerable<IEvaluate<bool>>)>
 	{
 		public const string PREFIX = "Exactly";
-		internal Exactly(in int count, in IEnumerable<IEvaluate<bool>> children = null)
-			: base(PREFIX, in count, in children)
+		internal Exactly(int count, IEnumerable<IEvaluate<bool>> children = null)
+			: base(PREFIX, count, children)
 		{ }
 
 		public IEvaluate NewUsing(
-			in ICatalog<IEvaluate> catalog,
+			ICatalog<IEvaluate> catalog,
 			in (int, IEnumerable<IEvaluate<bool>>) param)
 		{
 			return catalog.Register(new Exactly(param.Item1, param.Item2));
 		}
 
-		protected override bool EvaluateInternal(in object context)
+		protected override bool EvaluateInternal(object context)
 		{
 			int count = 0;
 			foreach (var result in ChildResults(context))

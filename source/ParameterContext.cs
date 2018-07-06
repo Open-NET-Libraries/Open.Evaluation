@@ -14,7 +14,7 @@ namespace Open.Evaluation
 			Context = context;
 		}
 
-		public TResult GetOrAdd<TResult>(in IEvaluate key, Func<IEvaluate, TResult> factory)
+		public TResult GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, TResult> factory)
 		{
 			return base.GetOrAdd(key, k => new Lazy<object>(() => factory(k))).Value is TResult r ? r
 				: throw new InvalidCastException("Result doesn't match factory return type.");

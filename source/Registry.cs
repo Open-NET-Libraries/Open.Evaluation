@@ -50,7 +50,7 @@ namespace Open.Evaluation
 
 
 		public static IEvaluate<double> GetOperator<TResult>(
-			this ICatalog<IEvaluate<double>> catalog, in char op, in IEnumerable<IEvaluate<double>> children)
+			this ICatalog<IEvaluate<double>> catalog, char op, IEnumerable<IEvaluate<double>> children)
 		{
 			switch (op)
 			{
@@ -64,7 +64,7 @@ namespace Open.Evaluation
 		}
 
 		public static IEvaluate<double> GetFunction<TResult>(
-			this ICatalog<IEvaluate<double>> catalog, in char op, params IEvaluate<double>[] children)
+			this ICatalog<IEvaluate<double>> catalog, char op, params IEvaluate<double>[] children)
 		{
 			switch (op)
 			{

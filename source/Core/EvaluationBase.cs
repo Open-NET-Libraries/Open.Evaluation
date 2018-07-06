@@ -26,16 +26,16 @@ namespace Open.Evaluation.Core
 			return LazyInitializer.EnsureInitialized(ref _toStringRepresentation, ToStringRepresentationInternal);
 		}
 
-		protected abstract TResult EvaluateInternal(in object context); // **
+		protected abstract TResult EvaluateInternal(object context); // **
 
-		protected abstract string ToStringInternal(in object context);
+		protected abstract string ToStringInternal(object context);
 
-		object IEvaluate.Evaluate(in object context)
+		object IEvaluate.Evaluate(object context)
 		{
 			return Evaluate(context);
 		}
 
-		public TResult Evaluate(in object context)
+		public TResult Evaluate(object context)
 		{
 			// Use existing context... // Caches results...
 			if (context is ParameterContext pc)
@@ -46,7 +46,7 @@ namespace Open.Evaluation.Core
 				return Evaluate(newPc);
 		}
 
-		public virtual string ToString(in object context)
+		public virtual string ToString(object context)
 		{
 			return ToStringInternal(Evaluate(context));
 		}

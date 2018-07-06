@@ -37,7 +37,7 @@ namespace Open.Evaluation
 			where TItem : T
 			=> (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item);
 
-		public TItem Register<TItem>(in string id, Func<string, TItem> factory)
+		public TItem Register<TItem>(string id, Func<string, TItem> factory)
 			where TItem : T
 		{
 			return (TItem)Registry.GetOrAdd(id, k =>
@@ -49,7 +49,7 @@ namespace Open.Evaluation
 			});
 		}
 
-		public bool TryGetItem<TItem>(in string id, out TItem item)
+		public bool TryGetItem<TItem>(string id, out TItem item)
 			where TItem : T
 		{
 			var result = Registry.TryGetValue(id, out T e);

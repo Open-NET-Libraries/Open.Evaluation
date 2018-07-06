@@ -16,8 +16,8 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<IEnumerable<IEvaluate<TResult>>>
 		where TResult : struct, IComparable
 	{
-		protected Product(in IEnumerable<IEvaluate<TResult>> children = null)
-			: base(Product.SYMBOL, Product.SEPARATOR, in children, true)
+		protected Product(IEnumerable<IEvaluate<TResult>> children = null)
+			: base(Product.SYMBOL, Product.SEPARATOR, children, true)
 		{ }
 
 		protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
@@ -26,7 +26,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override int ConstantPriority => -1;
 
-		protected override TResult EvaluateInternal(in object context)
+		protected override TResult EvaluateInternal(object context)
 		{
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve product of empty set.");
@@ -41,7 +41,7 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		protected override IEvaluate<TResult> Reduction(
-			in ICatalog<IEvaluate<TResult>> catalog)
+			ICatalog<IEvaluate<TResult>> catalog)
 		{
 			// Phase 1: Flatten products of products.
 			var children = catalog.Flatten<Product<TResult>>(ChildrenInternal).ToList(); // ** chidren's reduction is done here.
@@ -90,7 +90,7 @@ namespace Open.Evaluation.Arithmetic
 
 		}
 
-		public IEvaluate<TResult> ReductionWithMutlipleExtracted(in ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
+		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
 		{
 			multiple = null;
 			var reduced = catalog.GetReduced(this);
@@ -110,14 +110,14 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		public static Product<TResult> Create(
-			in ICatalog<IEvaluate<TResult>> catalog,
-			in IEnumerable<IEvaluate<TResult>> param)
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> param)
 		{
-			return catalog.Register(new Product<TResult>(in param));
+			return catalog.Register(new Product<TResult>(param));
 		}
 
 		public virtual IEvaluate NewUsing(
-			in ICatalog<IEvaluate> catalog,
+			ICatalog<IEvaluate> catalog,
 			in IEnumerable<IEvaluate<TResult>> param)
 		{
 			return catalog.Register(new Product<TResult>(param));
@@ -129,7 +129,7 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			in IEnumerable<IEvaluate<TResult>> children)
+			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			var childList = children.ToList();
@@ -172,8 +172,8 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			in IEvaluate<TResult> multiple,
-			in IEnumerable<IEvaluate<TResult>> children)
+			IEvaluate<TResult> multiple,
+			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			return ProductOf(catalog, children.Concat(multiple));
@@ -190,7 +190,7 @@ namespace Open.Evaluation.Arithmetic
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			in TResult multiple,
-			in IEnumerable<IEvaluate<TResult>> children)
+			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			return ProductOf(catalog, catalog.GetConstant(multiple), children);

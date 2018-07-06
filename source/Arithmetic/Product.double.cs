@@ -26,15 +26,15 @@ namespace Open.Evaluation.Arithmetic
 		{ }
 
 		public override IEvaluate NewUsing(
-			in ICatalog<IEvaluate> catalog,
+			ICatalog<IEvaluate> catalog,
 			in IEnumerable<IEvaluate<double>> param)
 		{
 			return catalog.Register(new Product(param));
 		}
 
 		internal new static Product Create(
-			in ICatalog<IEvaluate<double>> catalog,
-			in IEnumerable<IEvaluate<double>> param)
+			ICatalog<IEvaluate<double>> catalog,
+			IEnumerable<IEvaluate<double>> param)
 		{
 			return catalog.Register(new Product(param));
 		}
@@ -44,7 +44,7 @@ namespace Open.Evaluation.Arithmetic
 	{
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			in IEnumerable<IEvaluate<double>> children)
+			IEnumerable<IEvaluate<double>> children)
 		{
 			var childList = children.ToList();
 			if (childList.Count == 0)
@@ -74,15 +74,15 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			in IEvaluate<double> multiple,
-			in IEnumerable<IEvaluate<double>> children)
+			IEvaluate<double> multiple,
+			IEnumerable<IEvaluate<double>> children)
 		{
 			return ProductOf(catalog, children.Concat(multiple));
 		}
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			in IEvaluate<double> multiple,
+			IEvaluate<double> multiple,
 			params IEvaluate<double>[] rest)
 		{
 			return ProductOf(catalog, rest.Concat(multiple));
@@ -91,9 +91,9 @@ namespace Open.Evaluation.Arithmetic
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			in double multiple,
-			in IEnumerable<IEvaluate<double>> children)
+			IEnumerable<IEvaluate<double>> children)
 		{
-			return ProductOf(catalog, catalog.GetConstant(in multiple), in children);
+			return ProductOf(catalog, catalog.GetConstant(in multiple), children);
 		}
 
 		public static IEvaluate<double> ProductOf(

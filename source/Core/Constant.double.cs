@@ -3,7 +3,6 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -14,13 +13,13 @@ namespace Open.Evaluation.Core
 		Constant(double value) : base(value)
 		{ }
 
-		internal new static Constant Create(in ICatalog<IEvaluate<double>> catalog, in double value)
+		internal new static Constant Create(ICatalog<IEvaluate<double>> catalog, in double value)
 		{
 			var v = value;
 			return catalog.Register(value.ToString(), k => new Constant(v));
 		}
 
-		public override IEvaluate NewUsing(in ICatalog<IEvaluate> catalog, in double value)
+		public override IEvaluate NewUsing(ICatalog<IEvaluate> catalog, in double value)
 		{
 			var v = value;
 			return catalog.Register(value.ToString(), k => new Constant(v));
@@ -39,7 +38,7 @@ namespace Open.Evaluation.Core
 
 		public static Constant SumOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			in IEnumerable<IConstant<double>> constants)
+			IEnumerable<IConstant<double>> constants)
 		{
 			return GetConstant(catalog, constants.Sum(s => s.Value));
 		}
@@ -60,7 +59,7 @@ namespace Open.Evaluation.Core
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			in IEnumerable<IConstant<double>> constants)
+			IEnumerable<IConstant<double>> constants)
 		{
 			return ProductOfConstants(catalog, 1, constants);
 		}

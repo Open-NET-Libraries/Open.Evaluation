@@ -19,7 +19,7 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 
-		protected OperatorBase(in char symbol, in string separator, in IEnumerable<TChild> children = null, in bool reorderChildren = false) : base(symbol, separator)
+		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null, in bool reorderChildren = false) : base(symbol, separator)
 		{
 			ChildrenInternal = children == null ? new List<TChild>() : new List<TChild>(children);
 			if (reorderChildren) ChildrenInternal.Sort(Compare);
@@ -36,7 +36,7 @@ namespace Open.Evaluation.Core
 
 		IReadOnlyList<object> IParent.Children => Children;
 
-		protected override string ToStringInternal(in object contents)
+		protected override string ToStringInternal(object contents)
 		{
 			if (!(contents is IEnumerable collection))
 				return base.ToStringInternal(contents);
@@ -53,16 +53,15 @@ namespace Open.Evaluation.Core
 			return result.ToString();
 		}
 
-		public override string ToString(in object context)
+		public override string ToString(object context)
 		{
-			var co = context;
-			return ToStringInternal(Children.Select(c => c.ToString(co)));
+			return ToStringInternal(Children.Select(c => c.ToString(context)));
 		}
 
 		protected IEnumerable<object> ChildResults(object context)
 		{
 			foreach (var child in ChildrenInternal)
-				yield return child.Evaluate(in context);
+				yield return child.Evaluate(context);
 		}
 
 		protected IEnumerable<string> ChildRepresentations()
@@ -81,24 +80,32 @@ namespace Open.Evaluation.Core
 		// Need a standardized way to order so that comparisons are easier.
 		protected virtual int Compare(TChild a, TChild b)
 		{
+			if (a is Constant<TResult> aC)
+			{
+				if (b is Constant<TResult> bC)
+					return bC.Value.CompareTo(aC.Value); // Descending...
+				else
+					return +1 * ConstantPriority;
+			}
+			else
+			{
+				if (b is Constant<TResult>)
+					return -1 * ConstantPriority;
+			}
 
-			if (a is Constant<TResult> && !(b is Constant<TResult>))
-				return +1 * ConstantPriority;
+			if (a is Parameter<TResult> aP)
+			{
 
-			if (b is Constant<TResult> && !(a is Constant<TResult>))
-				return -1 * ConstantPriority;
-
-			if (a is Constant<TResult> aC && b is Constant<TResult> bC)
-				return bC.Value.CompareTo(aC.Value); // Descending...
-
-			if (a is Parameter<TResult> && !(b is Parameter<TResult>))
-				return +1;
-
-			if (b is Parameter<TResult> && !(a is Parameter<TResult>))
-				return -1;
-
-			if (a is Parameter<TResult> aP && b is Parameter<TResult> bP)
-				return aP.ID.CompareTo(bP.ID);
+				if (b is Parameter<TResult> bP)
+					return aP.ID.CompareTo(bP.ID);
+				else
+					return +1;
+			}
+			else
+			{
+				if (b is Parameter<TResult>)
+					return -1;
+			}
 
 			var aChildCount = (a as IParent)?.Children.Count ?? 1;
 			var bChildCount = (b as IParent)?.Children.Count ?? 1;
@@ -118,10 +125,10 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 		protected OperatorBase(
-			in char symbol,
-			in string separator,
-			in IEnumerable<IEvaluate<TResult>> children = null,
-			in bool reorderChildren = false) : base(in symbol, in separator, in children, in reorderChildren)
+			char symbol,
+			string separator,
+			IEnumerable<IEvaluate<TResult>> children = null,
+			in bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
 		{
 		}
 

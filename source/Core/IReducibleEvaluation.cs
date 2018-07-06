@@ -10,7 +10,7 @@ namespace Open.Evaluation.Core
 		where T : IEvaluate
 	{
 		/// <returns>Returns this instance if no reduction possible.  Otherwise returns the reduction.</returns>
-		bool TryGetReduced(in ICatalog<T> catalog, out T reduction);
+		bool TryGetReduced(ICatalog<T> catalog, out T reduction);
 	}
 
 }

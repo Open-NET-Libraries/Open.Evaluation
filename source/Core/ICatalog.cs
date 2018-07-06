@@ -13,10 +13,10 @@ namespace Open.Evaluation.Core
 		void Register<TItem>(ref TItem item)
 			where TItem : T;
 
-		TItem Register<TItem>(in string id, Func<string, TItem> factory)
+		TItem Register<TItem>(string id, Func<string, TItem> factory)
 			where TItem : T;
 
-		bool TryGetItem<TItem>(in string id, out TItem item)
+		bool TryGetItem<TItem>(string id, out TItem item)
 			where TItem : T;
 
 		T GetReduced(in T source);

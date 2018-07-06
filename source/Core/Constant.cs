@@ -34,23 +34,23 @@ namespace Open.Evaluation.Core
 			return string.Empty + Value;
 		}
 
-		protected override TValue EvaluateInternal(in object context)
+		protected override TValue EvaluateInternal(object context)
 		{
 			return Value;
 		}
 
-		protected override string ToStringInternal(in object context)
+		protected override string ToStringInternal(object context)
 		{
 			return ToStringRepresentation();
 		}
 
-		internal static Constant<TValue> Create(in ICatalog<IEvaluate<TValue>> catalog, in TValue value)
+		internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, in TValue value)
 		{
 			var v = value;
 			return catalog.Register(value.ToString(), k => new Constant<TValue>(v));
 		}
 
-		public virtual IEvaluate NewUsing(in ICatalog<IEvaluate> catalog, in TValue value)
+		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, in TValue value)
 		{
 			var v = value;
 			return catalog.Register(value.ToString(), k => new Constant<TValue>(v));
@@ -64,12 +64,12 @@ namespace Open.Evaluation.Core
 			in TValue value)
 			where TValue : IComparable
 		{
-			return Constant<TValue>.Create(in catalog, in value);
+			return Constant<TValue>.Create(catalog, in value);
 		}
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in TValue c1, in IEnumerable<IConstant<TValue>> constants)
+			in TValue c1, IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
 			if (typeof(TValue) == typeof(float))
@@ -94,7 +94,7 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in IEnumerable<IConstant<TValue>> constants)
+			IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
 			return SumOfConstants(catalog, (TValue)(dynamic)0, constants);
@@ -118,7 +118,7 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in TValue c1, in IEnumerable<IConstant<TValue>> constants)
+			in TValue c1, IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
 			if (typeof(TValue) == typeof(float))
@@ -146,7 +146,7 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in IEnumerable<IConstant<TValue>> constants)
+			IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
 			return ProductOfConstants(catalog, (TValue)(dynamic)1, constants);
