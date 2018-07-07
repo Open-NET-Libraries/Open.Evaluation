@@ -20,15 +20,9 @@ namespace Open.Evaluation.Core
 		public char Symbol { get; private set; }
 		public string SymbolString { get; private set; }
 
-		protected override string ToStringInternal(object contents)
-		{
-			return $"{SymbolString}({contents})";
-		}
+		protected override string ToStringInternal(object contents) => $"{SymbolString}({contents})";
 
-		protected virtual IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
-		{
-			return this;
-		}
+		protected virtual IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog) => this;
 
 		// Override this if reduction is possible.  Return null if you can't reduce.
 		public bool TryGetReduced(ICatalog<IEvaluate<TResult>> catalog, out IEvaluate<TResult> reduction)

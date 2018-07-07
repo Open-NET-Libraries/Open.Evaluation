@@ -112,16 +112,12 @@ namespace Open.Evaluation.Arithmetic
 		public static Product<TResult> Create(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-		{
-			return catalog.Register(new Product<TResult>(param));
-		}
+			=> catalog.Register(new Product<TResult>(param));
 
 		public virtual IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in IEnumerable<IEvaluate<TResult>> param)
-		{
-			return catalog.Register(new Product<TResult>(param));
-		}
+			IEnumerable<IEvaluate<TResult>> param)
+			=> catalog.Register(new Product<TResult>(param));
 
 	}
 
@@ -175,35 +171,27 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> multiple,
 			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
-		{
-			return ProductOf(catalog, children.Concat(multiple));
-		}
+			=> ProductOf(catalog, children.Concat(multiple));
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			params IEvaluate<TResult>[] children)
 			where TResult : struct, IComparable
-		{
-			return ProductOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
-		}
+			=> ProductOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			in TResult multiple,
 			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
-		{
-			return ProductOf(catalog, catalog.GetConstant(multiple), children);
-		}
+			=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			in TResult multiple,
 			params IEvaluate<TResult>[] rest)
 			where TResult : struct, IComparable
-		{
-			return ProductOf(catalog, catalog.GetConstant(multiple), rest);
-		}
+			=> ProductOf(catalog, catalog.GetConstant(multiple), rest);
 
 	}
 }

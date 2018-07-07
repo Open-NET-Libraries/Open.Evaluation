@@ -38,10 +38,7 @@ namespace Open.Evaluation.Arithmetic
 			private set;
 		}
 
-		protected static double ConvertToDouble(in dynamic value)
-		{
-			return (double)value;
-		}
+		protected static double ConvertToDouble(in dynamic value) => (double)value;
 
 		protected override TResult EvaluateInternal(object context)
 		{
@@ -68,16 +65,12 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEvaluate<TResult> @base,
 			IEvaluate<TResult> power)
-		{
-			return catalog.Register(new Exponent<TResult>(@base, power));
-		}
+			=> catalog.Register(new Exponent<TResult>(@base, power));
 
 		public virtual IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in (IEvaluate<TResult>, IEvaluate<TResult>) param)
-		{
-			return catalog.Register(new Exponent<TResult>(param.Item1, param.Item2));
-		}
+			(IEvaluate<TResult>, IEvaluate<TResult>) param)
+			=> catalog.Register(new Exponent<TResult>(param.Item1, param.Item2));
 	}
 
 	public static partial class ExponentExtensions
@@ -87,9 +80,7 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> @base,
 			IEvaluate<TResult> power)
 			where TResult : struct, IComparable
-		{
-			return Exponent<TResult>.Create(catalog, @base, power);
-		}
+			=> Exponent<TResult>.Create(catalog, @base, power);
 	}
 
 }

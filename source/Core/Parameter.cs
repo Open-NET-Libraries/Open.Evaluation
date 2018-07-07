@@ -13,7 +13,7 @@ namespace Open.Evaluation.Core
 		where TValue : IComparable
 	{
 
-		protected Parameter(in ushort id, Func<object, ushort, TValue> evaluator = null) : base()
+		protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null) : base()
 		{
 			_evaluator = evaluator ?? GetParamValueFrom;
 			ID = id;
@@ -36,37 +36,22 @@ namespace Open.Evaluation.Core
 			private set;
 		}
 
-		public static string ToStringRepresentation(ushort id)
-		{
-			return "{" + id + "}";
-		}
+		public static string ToStringRepresentation(ushort id) => "{" + id + "}";
 
 		protected override string ToStringRepresentationInternal()
-		{
-			return ToStringRepresentation(ID);
-		}
+			=> ToStringRepresentation(ID);
 
 		protected override TValue EvaluateInternal(object context)
-		{
-			return _evaluator(context is ParameterContext p ? p.Context : context, ID);
-		}
+			=> _evaluator(context is ParameterContext p ? p.Context : context, ID);
 
 		protected override string ToStringInternal(object context)
-		{
-			return string.Empty + Evaluate(context);
-		}
+			=> string.Empty + Evaluate(context);
 
 		internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
-		{
-			var i = id;
-			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(i));
-		}
+			=> catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
 
-		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, in ushort id)
-		{
-			var i = id;
-			return catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(i));
-		}
+		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, ushort id)
+			=> catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
 	}
 
 	public static partial class ParameterExtensions
@@ -74,9 +59,7 @@ namespace Open.Evaluation.Core
 		public static Parameter<TValue> GetParameter<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog, ushort id)
 			where TValue : IComparable
-		{
-			return Parameter<TValue>.Create(catalog, id);
-		}
-	}
+			=> Parameter<TValue>.Create(catalog, id);
 
+	}
 }

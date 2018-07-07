@@ -106,7 +106,7 @@ namespace Open.Evaluation.Arithmetic
 
 		public virtual IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in IEnumerable<IEvaluate<TResult>> param)
+			IEnumerable<IEvaluate<TResult>> param)
 		{
 			return catalog.Register(new Sum<TResult>(param));
 		}

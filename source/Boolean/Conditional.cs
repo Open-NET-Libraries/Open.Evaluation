@@ -42,36 +42,28 @@ namespace Open.Evaluation.Boolean
 
 
 		protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
-		{
-			return $"{condition} ? {ifTrue} : {ifFalse}";
-		}
+			=> $"{condition} ? {ifTrue} : {ifFalse}";
 
 		public override string ToString(object context)
-		{
-			return ToStringInternal(
+			=> ToStringInternal(
 				Condition.Evaluate(context),
 				IfTrue.Evaluate(context),
 				IfFalse.Evaluate(context));
-		}
 
 		protected override string ToStringRepresentationInternal()
-		{
-			return ToStringInternal(
+			=> ToStringInternal(
 				Condition.ToStringRepresentation(),
 				IfTrue.ToStringRepresentation(),
 				IfFalse.ToStringRepresentation());
-		}
 
 		protected override TResult EvaluateInternal(object context)
-		{
-			return Condition.Evaluate(context)
-			? IfTrue.Evaluate(context)
-			: IfFalse.Evaluate(context);
-		}
+			=> Condition.Evaluate(context)
+				? IfTrue.Evaluate(context)
+				: IfFalse.Evaluate(context);
 
 		public IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in (IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
+			(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
 			return catalog.Register(
 				new Conditional<TResult>(

@@ -16,22 +16,17 @@ namespace Open.Evaluation.Boolean
 		public const string SYMBOL_STRING = "!";
 
 		internal Not(IEvaluate<bool> contents)
-			: base(SYMBOL, SYMBOL_STRING, Enumerable.Repeat(contents, 1))
-		{
-			if (contents == null) throw new ArgumentNullException(nameof(contents));
-		}
+			: base(SYMBOL, SYMBOL_STRING,
+				  Enumerable.Repeat(contents ?? throw new ArgumentNullException(nameof(contents)), 1))
+		{ }
 
 		public IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in IEvaluate<bool> param)
-		{
-			return catalog.Register(new Not(param));
-		}
+			IEvaluate<bool> param)
+			=> catalog.Register(new Not(param));
 
 		protected override bool EvaluateInternal(object context)
-		{
-			return !ChildResults(context).Cast<bool>().Single();
-		}
+			=> !ChildResults(context).Cast<bool>().Single();
 
 	}
 

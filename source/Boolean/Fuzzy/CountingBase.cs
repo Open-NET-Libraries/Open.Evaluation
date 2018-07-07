@@ -32,9 +32,7 @@ namespace Open.Evaluation.Boolean
 		}
 
 		protected override string ToStringInternal(object contents)
-		{
-			return $"{Prefix}({Count}, {base.ToStringInternal(contents)})";
-		}
+			=> $"{Prefix}({Count}, {base.ToStringInternal(contents)})";
 
 	}
 

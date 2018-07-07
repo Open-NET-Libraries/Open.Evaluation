@@ -30,16 +30,12 @@ namespace Open.Evaluation.Arithmetic
 		internal new static Sum Create(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
-		{
-			return catalog.Register(new Sum(param));
-		}
+			=> catalog.Register(new Sum(param));
 
 		public override IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in IEnumerable<IEvaluate<double>> param)
-		{
-			return catalog.Register(new Sum(param));
-		}
+			IEnumerable<IEvaluate<double>> param)
+			=> catalog.Register(new Sum(param));
 	}
 
 	public static partial class SumExtensions
@@ -73,9 +69,7 @@ namespace Open.Evaluation.Arithmetic
 		public static IEvaluate<double> SumOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			params IEvaluate<double>[] children)
-		{
-			return SumOf(catalog, (IEnumerable<IEvaluate<double>>)children);
-		}
+			=> SumOf(catalog, (IEnumerable<IEvaluate<double>>)children);
 
 
 	}

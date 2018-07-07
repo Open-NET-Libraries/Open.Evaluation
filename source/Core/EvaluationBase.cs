@@ -30,10 +30,7 @@ namespace Open.Evaluation.Core
 
 		protected abstract string ToStringInternal(object context);
 
-		object IEvaluate.Evaluate(object context)
-		{
-			return Evaluate(context);
-		}
+		object IEvaluate.Evaluate(object context) => Evaluate(context);
 
 		public TResult Evaluate(object context)
 		{
@@ -46,10 +43,7 @@ namespace Open.Evaluation.Core
 				return Evaluate(newPc);
 		}
 
-		public virtual string ToString(object context)
-		{
-			return ToStringInternal(Evaluate(context));
-		}
+		public virtual string ToString(object context) => ToStringInternal(Evaluate(context));
 
 	}
 

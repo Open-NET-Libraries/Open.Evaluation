@@ -27,17 +27,13 @@ namespace Open.Evaluation.Arithmetic
 
 		public override IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in IEnumerable<IEvaluate<double>> param)
-		{
-			return catalog.Register(new Product(param));
-		}
+			IEnumerable<IEvaluate<double>> param)
+			=> catalog.Register(new Product(param));
 
 		internal new static Product Create(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
-		{
-			return catalog.Register(new Product(param));
-		}
+			=> catalog.Register(new Product(param));
 	}
 
 	public static partial class ProductExtensions
@@ -76,32 +72,24 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> multiple,
 			IEnumerable<IEvaluate<double>> children)
-		{
-			return ProductOf(catalog, children.Concat(multiple));
-		}
+			=> ProductOf(catalog, children.Concat(multiple));
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> multiple,
 			params IEvaluate<double>[] rest)
-		{
-			return ProductOf(catalog, rest.Concat(multiple));
-		}
+			=> ProductOf(catalog, rest.Concat(multiple));
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			in double multiple,
 			IEnumerable<IEvaluate<double>> children)
-		{
-			return ProductOf(catalog, catalog.GetConstant(in multiple), children);
-		}
+			=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			in double multiple,
 			params IEvaluate<double>[] rest)
-		{
-			return ProductOf(catalog, catalog.GetConstant(in multiple), rest);
-		}
+			=> ProductOf(catalog, catalog.GetConstant(multiple), rest);
 	}
 }

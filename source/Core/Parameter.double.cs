@@ -19,7 +19,7 @@ namespace Open.Evaluation.Core
 			return catalog.Register(ToStringRepresentation(i), k => new Parameter(i));
 		}
 
-		public override IEvaluate NewUsing(ICatalog<IEvaluate> catalog, in ushort id)
+		public override IEvaluate NewUsing(ICatalog<IEvaluate> catalog, ushort id)
 		{
 			var i = id;
 			return catalog.Register(ToStringRepresentation(i), k => new Parameter(i));

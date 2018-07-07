@@ -34,10 +34,8 @@ namespace Open.Evaluation.Boolean
 
 		public IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in IEnumerable<IEvaluate<bool>> param)
-		{
-			return catalog.Register(new And(param));
-		}
+			IEnumerable<IEvaluate<bool>> param)
+			=> catalog.Register(new And(param));
 
 	}
 

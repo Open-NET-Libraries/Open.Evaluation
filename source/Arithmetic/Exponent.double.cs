@@ -14,9 +14,7 @@ namespace Open.Evaluation.Arithmetic
 		public const string SEPARATOR = "^";
 
 		protected override double EvaluateInternal(object context)
-		{
-			return Math.Pow(Base.Evaluate(context), Power.Evaluate(context));
-		}
+			=> Math.Pow(Base.Evaluate(context), Power.Evaluate(context));
 
 		Exponent(IEvaluate<double> evaluation, IEvaluate<double> power)
 			: base(evaluation, power)
@@ -26,16 +24,12 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> @base,
 			IEvaluate<double> power)
-		{
-			return catalog.Register(new Exponent(@base, power));
-		}
+			=> catalog.Register(new Exponent(@base, power));
 
 		public override IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in (IEvaluate<double>, IEvaluate<double>) param)
-		{
-			return catalog.Register(new Exponent(param.Item1, param.Item2));
-		}
+			(IEvaluate<double>, IEvaluate<double>) param)
+			=> catalog.Register(new Exponent(param.Item1, param.Item2));
 	}
 
 	public static partial class ExponentExtensions
@@ -44,17 +38,13 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> @base,
 			IEvaluate<double> power)
-		{
-			return Exponent.Create(catalog, @base, power);
-		}
+			=> Exponent.Create(catalog, @base, power);
 
 		public static Exponent GetExponent(
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> @base,
-			in double power)
-		{
-			return Exponent.Create(catalog, @base, catalog.GetConstant(in power));
-		}
+			double power)
+			=> Exponent.Create(catalog, @base, catalog.GetConstant(power));
 	}
 
 }

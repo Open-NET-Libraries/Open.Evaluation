@@ -22,10 +22,8 @@ namespace Open.Evaluation.Boolean
 
 		public IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in (int, IEnumerable<IEvaluate<bool>>) param)
-		{
-			return catalog.Register(new AtLeast(param.Item1, param.Item2));
-		}
+			(int, IEnumerable<IEvaluate<bool>>) param)
+			=> catalog.Register(new AtLeast(param.Item1, param.Item2));
 
 		protected override bool EvaluateInternal(object context)
 		{

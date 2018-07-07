@@ -18,7 +18,7 @@ namespace Open.Evaluation.Boolean
 
 		public IEvaluate NewUsing(
 			ICatalog<IEvaluate> catalog,
-			in (int, IEnumerable<IEvaluate<bool>>) param)
+			(int, IEnumerable<IEvaluate<bool>>) param)
 		{
 			return catalog.Register(new AtMost(param.Item1, param.Item2));
 		}
