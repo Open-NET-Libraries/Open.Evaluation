@@ -19,7 +19,7 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 
-		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null, in bool reorderChildren = false) : base(symbol, separator)
+		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null, bool reorderChildren = false) : base(symbol, separator)
 		{
 			ChildrenInternal = children == null ? new List<TChild>() : new List<TChild>(children);
 			if (reorderChildren) ChildrenInternal.Sort(Compare);
@@ -128,7 +128,7 @@ namespace Open.Evaluation.Core
 			char symbol,
 			string separator,
 			IEnumerable<IEvaluate<TResult>> children = null,
-			in bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
+			bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
 		{
 		}
 
