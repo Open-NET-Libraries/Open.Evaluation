@@ -18,7 +18,6 @@ namespace Open.Evaluation.Core
 
 		public override IEvaluate NewUsing(ICatalog<IEvaluate> catalog, double value)
 			=> catalog.Register(value.ToString(), k => new Constant(value));
-
 	}
 
 	public static partial class ConstantExtensions

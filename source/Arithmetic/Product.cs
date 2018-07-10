@@ -90,23 +90,31 @@ namespace Open.Evaluation.Arithmetic
 
 		}
 
+		public IEvaluate<TResult> ExtractMultiple(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
+		{
+			multiple = null;
+
+			if(ChildrenInternal.OfType<IConstant<TResult>>().Any())
+			{
+				var children = ChildrenInternal.ToList(); // Make a copy to be worked on...
+				var constants = children.ExtractType<IConstant<TResult>>();
+				if (constants.Count != 0)
+				{
+					multiple = catalog.ProductOfConstants(constants);
+					return new Product<TResult>(children);
+				}
+			}
+
+			return this;
+		}
+
 		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
 		{
 			multiple = null;
 			var reduced = catalog.GetReduced(this);
-			if (reduced is Product<TResult> product)
-			{
-				var children = product.ChildrenInternal.ToList(); // Make a copy to be worked on...
-				var constants = children.ExtractType<IConstant<TResult>>();
-				Debug.Assert(constants.Count <= 1, "Reduction should have collapsed constants.");
-				if (constants.Count == 0)
-				{
-					return product;
-				}
-				multiple = constants.Single();
-				return new Product<TResult>(children);
-			}
-			return reduced;
+			return reduced is Product<TResult> product
+				? product.ExtractMultiple(catalog, out multiple)
+				: reduced;
 		}
 
 		public static Product<TResult> Create(
