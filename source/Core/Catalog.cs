@@ -57,7 +57,7 @@ namespace Open.Evaluation.Core
 
 		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
 
-		public T GetReduced(in T source)
+		public T GetReduced(T source)
 		{
 			var src = Register(source);
 			return src is IReducibleEvaluation<T> s
@@ -65,7 +65,7 @@ namespace Open.Evaluation.Core
 				: src;
 		}
 
-		public bool TryGetReduced(in T source, out T reduction)
+		public bool TryGetReduced(T source, out T reduction)
 		{
 			reduction = GetReduced(source);
 			return !reduction.Equals(source);

@@ -19,9 +19,9 @@ namespace Open.Evaluation.Core
 		bool TryGetItem<TItem>(string id, out TItem item)
 			where TItem : T;
 
-		T GetReduced(in T source);
+		T GetReduced(T source);
 
-		bool TryGetReduced(in T source, out T reduction);
+		bool TryGetReduced(T source, out T reduction);
 
 		IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)
 			where TFlat : IParent<T>;
