@@ -1,4 +1,5 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Open.Evaluation.Catalogs;
 using Open.Evaluation.Core;
 using System;
 using System.Linq;

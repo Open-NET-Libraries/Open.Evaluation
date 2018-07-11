@@ -115,11 +115,24 @@ namespace Open.Evaluation.Catalogs
 		public Node<IEvaluate<T>> RemoveNode(
 			Node<IEvaluate<T>> node)
 		{
-			if (node == null || node.Parent == null) return null;
+			if (node?.Parent == null) return null;
 			var root = node.Root;
 			node.Parent.Remove(node);
-			return FixHierarchy(root, true);
+			return FixHierarchy(root, true); 
 		}
+
+		/// <summary>
+		/// Removes a node from a hierarchy by it's descendant index.
+		/// </summary>
+		/// <param name="node">The node to remove from the tree.</param>
+		/// <returns>The resultant root node corrected by .FixHierarchy()</returns>
+		public IEvaluate<T> RemoveDescendantAt(
+			Node<IEvaluate<T>> sourceNode, int descendantIndex)
+			=> ApplyClone(sourceNode,
+				newNode => RemoveNode(
+					newNode
+						.GetDescendantsOfType()
+						.ElementAt(descendantIndex)));
 
 		/// <summary>
 		/// If possible, adds a constant to this node's children.
