@@ -19,7 +19,7 @@ namespace Open.Evaluation.Arithmetic
 				  Exponent.SYMBOL,
 				  Exponent.SEPARATOR,
 				  // Need to provide to children so a node tree can be built.
-				  new IEvaluate<TResult>[] { @base, power }
+				  new[] { @base, power }
 			)
 		{
 			Base = @base;

@@ -15,10 +15,6 @@ namespace Open.Evaluation.Core
 
 	public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 	{
-		protected EvaluationBase()
-		{
-		}
-
 		protected abstract string ToStringRepresentationInternal();
 		string _toStringRepresentation; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
 		public string ToStringRepresentation()

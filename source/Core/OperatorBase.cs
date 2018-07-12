@@ -43,7 +43,7 @@ namespace Open.Evaluation.Core
 
 			var result = new StringBuilder();
 			result.Append('(');
-			int index = -1;
+			var index = -1;
 			foreach (var o in collection)
 			{
 				if (++index != 0) result.Append(SymbolString);

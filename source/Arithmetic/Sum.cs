@@ -60,7 +60,7 @@ namespace Open.Evaluation.Arithmetic
 			{
 				if (c is Product<TResult> p)
 				{
-					var reduced = p.ReductionWithMutlipleExtracted(catalog, out IConstant<TResult> multiple);
+					var reduced = p.ReductionWithMutlipleExtracted(catalog, out var multiple);
 					if (multiple == null) multiple = one;
 
 					return (

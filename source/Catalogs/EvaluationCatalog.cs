@@ -20,6 +20,7 @@ namespace Open.Evaluation.Catalogs
 		/// Uses .NewUsing methods to reconstruct the tree.
 		/// </summary>
 		/// <param name="target">The node tree to correct.</param>
+		/// <param name="operateDirectly">If true will modify the target instead of a clone.</param>
 		/// <returns>The updated tree.</returns>
 		public Node<IEvaluate<T>> FixHierarchy(
 			Node<IEvaluate<T>> target,
@@ -43,31 +44,32 @@ namespace Open.Evaluation.Catalogs
 
 				Node<IEvaluate<T>> node;
 
-				if (value is IReproducable<IEnumerable<IEvaluate<T>>> r)
+				switch (value)
 				{
-					// This recursion technique will operate on the leaves of the tree first.
-					node = Factory.Map(
-						(IEvaluate<T>)r.NewUsing(
-							(ICatalog<IEvaluate>)this,
-							// Using new children... Rebuild using new structure and check for registration.
-							fixedChildren
-						)
-					);
-				}
-				else if (value is IReproducable<(IEvaluate<T>, IEvaluate<T>)> e) // Functions, exponent, etc...
-				{
-					Debug.Assert(target.Children.Count == 2);
-					node = Factory.Map(
-						(IEvaluate<T>)e.NewUsing(
-							(ICatalog<IEvaluate>)this,
-							(fixedChildren[0], fixedChildren[1])
-						)
-					);
+					case IReproducable<IEnumerable<IEvaluate<T>>> r:
+						// This recursion technique will operate on the leaves of the tree first.
+						node = Factory.Map(
+							(IEvaluate<T>)r.NewUsing(
+								(ICatalog<IEvaluate>)this,
+								// Using new children... Rebuild using new structure and check for registration.
+								fixedChildren
+							)
+						);
+						break;
 
-				}
-				else
-				{
-					throw new Exception("Unknown IParent / IReproducable.");
+					// Functions, exponent, etc...
+					case IReproducable<(IEvaluate<T>, IEvaluate<T>)> e:
+						Debug.Assert(target.Children.Count == 2);
+						node = Factory.Map(
+							(IEvaluate<T>)e.NewUsing(
+								(ICatalog<IEvaluate>)this,
+								(fixedChildren[0], fixedChildren[1])
+							)
+						);
+						break;
+
+					default:
+						throw new Exception("Unknown IParent / IReproducable.");
 				}
 
 				target.Parent?.Replace(target, node);
@@ -118,13 +120,14 @@ namespace Open.Evaluation.Catalogs
 			if (node?.Parent == null) return null;
 			var root = node.Root;
 			node.Parent.Remove(node);
-			return FixHierarchy(root, true); 
+			return FixHierarchy(root, true);
 		}
 
 		/// <summary>
 		/// Removes a node from a hierarchy by it's descendant index.
 		/// </summary>
-		/// <param name="node">The node to remove from the tree.</param>
+		/// <param name="sourceNode">The root node to remove a descendant from.</param>
+		/// <param name="descendantIndex">The index of the descendant in the heirarchy (breadth-first).</param>
 		/// <returns>The resultant root node corrected by .FixHierarchy()</returns>
 		public IEvaluate<T> RemoveDescendantAt(
 			Node<IEvaluate<T>> sourceNode, int descendantIndex)
@@ -139,23 +142,19 @@ namespace Open.Evaluation.Catalogs
 		/// If not possible, returns null.
 		/// </summary>
 		/// <param name="sourceNode">The node to attempt adding a constant to.</param>
+		/// <param name="value">The constant value to add.</param>
 		/// <returns>A new node within a new tree containing the updated evaluation.</returns>
 		public IEvaluate<T> AddConstant(Node<IEvaluate<T>> sourceNode, T value)
 			=> sourceNode.Value is IParent<IEvaluate<T>>
 				? ApplyClone(
 					sourceNode,
-					newNode => newNode.Add(Factory.Map(this.GetConstant(value))))
+					newNode => newNode.Add(Factory.Map<Constant<T>>(this.GetConstant(value))))
 				: null;
 
 	}
 
 	public class EvaluateDoubleCatalog : EvaluationCatalog<double>
 	{
-
-		public EvaluateDoubleCatalog()
-		{
-		}
-
 	}
 
 }

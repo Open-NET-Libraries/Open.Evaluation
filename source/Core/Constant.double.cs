@@ -56,7 +56,7 @@ namespace Open.Evaluation.Core
 			this ICatalog<IEvaluate<double>> catalog,
 			double c1, IEnumerable<IConstant<double>> others)
 		{
-			double result = c1;
+			var result = c1;
 			foreach (var c in others)
 			{
 				result *= c.Value;

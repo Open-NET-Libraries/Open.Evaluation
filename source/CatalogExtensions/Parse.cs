@@ -3,7 +3,6 @@ using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation
@@ -36,7 +35,7 @@ namespace Open.Evaluation
 				.Select(c => c.Value)
 				.Select(v =>
 			{
-				if (double.TryParse(v, out double constant)) return catalog.GetConstant(constant);
+				if (double.TryParse(v, out var constant)) return catalog.GetConstant(constant);
 
 				v = v.Trim();
 				var negative = v.Length != 0 && v[0] == '-';
@@ -49,13 +48,13 @@ namespace Open.Evaluation
 
 					if (negative)
 					{
-						if (registry.TryGetValue(v, out IEvaluate<double> result)) return catalog.ProductOf(-1, result);
-						if (ushort.TryParse(v, out ushort p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
+						if (registry.TryGetValue(v, out var result)) return catalog.ProductOf(-1, result);
+						if (ushort.TryParse(v, out var p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
 					}
 					else
 					{
-						if (registry.TryGetValue(v, out IEvaluate<double> result)) return result;
-						if (ushort.TryParse(v, out ushort p)) return catalog.GetParameter(p);
+						if (registry.TryGetValue(v, out var result)) return result;
+						if (ushort.TryParse(v, out var p)) return catalog.GetParameter(p);
 					}
 				}
 				throw new InvalidOperationException($"Unrecognized evaluation sequence: {v}");
@@ -85,7 +84,7 @@ namespace Open.Evaluation
 
 				evaluation = unnecessaryParaenthesis.Replace(evaluation, "$1");
 
-				if (double.TryParse(evaluation, out double constantOnly))
+				if (double.TryParse(evaluation, out var constantOnly))
 					return catalog.GetConstant(constantOnly);
 
 				var checkParamOnly = paramOnly.Match(evaluation);

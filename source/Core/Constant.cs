@@ -10,13 +10,13 @@ using System.Linq;
 
 namespace Open.Evaluation.Core
 {
-	[DebuggerDisplay("Value = {Value}")]
+	[DebuggerDisplay("Value = {nameof(Value)}")]
 	public class Constant<TValue>
 		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue>
 		where TValue : IComparable
 	{
 
-		protected Constant(TValue value) : base()
+		protected Constant(TValue value)
 		{
 			Value = value;
 		}
@@ -24,7 +24,6 @@ namespace Open.Evaluation.Core
 		public TValue Value
 		{
 			get;
-			private set;
 		}
 
 		IComparable IConstant.Value => Value;
@@ -57,17 +56,21 @@ namespace Open.Evaluation.Core
 		{
 			if (typeof(TValue) == typeof(float))
 			{
+				// ReSharper disable once PossibleMultipleEnumeration
 				if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
 					return catalog.GetConstant((TValue)(dynamic)float.NaN);
 			}
 
 			if (typeof(TValue) == typeof(double))
 			{
+				// ReSharper disable once PossibleMultipleEnumeration
 				if (double.IsNaN((double)(dynamic)c1) || constants.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
 					return catalog.GetConstant((TValue)(dynamic)double.NaN);
 			}
 
 			dynamic result = c1;
+			// ReSharper disable once PossibleMultipleEnumeration
+			// ReSharper disable once LoopCanBeConvertedToQuery
 			foreach (var c in constants)
 			{
 				result += c.Value;
@@ -100,18 +103,21 @@ namespace Open.Evaluation.Core
 		{
 			if (typeof(TValue) == typeof(float))
 			{
+				// ReSharper disable once PossibleMultipleEnumeration
 				if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
 					return catalog.GetConstant((TValue)(dynamic)float.NaN);
 			}
 
 			if (typeof(TValue) == typeof(double))
 			{
+				// ReSharper disable once PossibleMultipleEnumeration
 				if (double.IsNaN((double)(dynamic)c1) || constants.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
 					return catalog.GetConstant((TValue)(dynamic)double.NaN);
 			}
 
 			dynamic zero = (TValue)(dynamic)0;
 			dynamic result = c1;
+			// ReSharper disable once PossibleMultipleEnumeration
 			foreach (var c in constants)
 			{
 				var val = c.Value;
@@ -131,7 +137,7 @@ namespace Open.Evaluation.Core
 			this ICatalog<IEvaluate<TValue>> catalog,
 			IConstant<TValue> c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
-			=> ProductOfConstants(catalog, (TValue)(dynamic)1, (IEnumerable<IConstant<TValue>>)rest);
+			=> ProductOfConstants(catalog, c1.Value, (IEnumerable<IConstant<TValue>>)rest);
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,

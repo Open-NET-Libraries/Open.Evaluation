@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Open.Evaluation.Core
 {
-	public interface IReproducable<TParam> : IEvaluate
+	public interface IReproducable<in TParam> : IEvaluate
 	{
 		IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TParam param);
 	}

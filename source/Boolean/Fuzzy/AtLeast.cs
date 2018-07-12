@@ -27,7 +27,7 @@ namespace Open.Evaluation.Boolean
 
 		protected override bool EvaluateInternal(object context)
 		{
-			int count = 0;
+			var count = 0;
 			foreach (var result in ChildResults(context))
 			{
 				if ((bool)result) count++;

@@ -10,8 +10,6 @@ namespace Open.Evaluation.Core
 	public class Catalog<T> : DisposableBase, ICatalog<T>
 		where T : class, IEvaluate
 	{
-		public Catalog() { }
-
 		protected override void OnDispose(bool calledExplicitly)
 		{
 			if (calledExplicitly)
@@ -48,7 +46,7 @@ namespace Open.Evaluation.Core
 		public bool TryGetItem<TItem>(string id, out TItem item)
 			where TItem : T
 		{
-			var result = Registry.TryGetValue(id, out T e);
+			var result = Registry.TryGetValue(id, out var e);
 			item = (TItem)e;
 			return result;
 		}
@@ -61,7 +59,7 @@ namespace Open.Evaluation.Core
 		{
 			var src = Register(source);
 			return src is IReducibleEvaluation<T> s
-				? Reductions.GetValue(s, k => s.TryGetReduced(this, out T r) ? Register(r) : src)
+				? Reductions.GetValue(s, k => s.TryGetReduced(this, out var r) ? Register(r) : src)
 				: src;
 		}
 
