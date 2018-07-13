@@ -3,16 +3,16 @@ using Open.Hierarchy;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Open.Evaluation.Catalogs
 {
-	public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
+	[SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
+	[SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
+	public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		where T : IComparable
 	{
-		public EvaluationCatalog()
-		{
-		}
 
 		/// <summary>
 		/// For any evaluation node, correct the hierarchy to match.
@@ -31,7 +31,7 @@ namespace Open.Evaluation.Catalogs
 
 			var value = target.Value;
 			// Does this node's value contain children?
-			if (value is IParent<IEnumerable<IEvaluate<T>>> p)
+			if (value is IParent<IEnumerable<IEvaluate<T>>>)
 			{
 				var fixedChildren = target
 					.Select(n =>
@@ -76,18 +76,17 @@ namespace Open.Evaluation.Catalogs
 				return node;
 
 			}
+			// else
 			// No children? Then clear any child notes.
-			else
-			{
-				target.Clear();
 
-				var old = target.Value;
-				var registered = Register(target.Value);
-				if (old != registered)
-					target.Value = registered;
+			target.Clear();
 
-				return target;
-			}
+			var old = target.Value;
+			var registered = Register(target.Value);
+			if (old != registered)
+				target.Value = registered;
+
+			return target;
 		}
 
 		/// <summary>
@@ -153,8 +152,8 @@ namespace Open.Evaluation.Catalogs
 
 	}
 
-	public class EvaluateDoubleCatalog : EvaluationCatalog<double>
-	{
-	}
+	//public class EvaluateDoubleCatalog : EvaluationCatalog<double>
+	//{
+	//}
 
 }
