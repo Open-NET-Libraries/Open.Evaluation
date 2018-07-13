@@ -91,13 +91,13 @@ namespace Open.Evaluation.Core
 		public abstract class SubmoduleBase<TCatalog>
 			where TCatalog : Catalog<T>
 		{
-			internal readonly TCatalog Source;
+			internal readonly TCatalog Catalog;
 			internal readonly Node<T>.Factory Factory;
 
-			protected SubmoduleBase(in TCatalog source)
+			protected SubmoduleBase(in TCatalog catalog)
 			{
-				Source = source;
-				Factory = source.Factory;
+				Catalog = catalog;
+				Factory = catalog.Factory;
 			}
 		}
 	}

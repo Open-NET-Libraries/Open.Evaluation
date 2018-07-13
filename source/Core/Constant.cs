@@ -39,6 +39,9 @@ namespace Open.Evaluation.Core
 
 		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TValue value)
 			=> catalog.Register(value.ToString(), k => new Constant<TValue>(value));
+
+		public static implicit operator TValue(Constant<TValue> c)
+			=> c.Value;
 	}
 
 	public static partial class ConstantExtensions

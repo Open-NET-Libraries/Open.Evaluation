@@ -8,6 +8,7 @@ using System;
 
 namespace Open.Evaluation.Arithmetic
 {
+	// ReSharper disable once PossibleInfiniteInheritance
 	public class Exponent<TResult> : OperatorBase<TResult>,
 		IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>)>
 		where TResult : struct, IComparable
@@ -29,13 +30,11 @@ namespace Open.Evaluation.Arithmetic
 		public IEvaluate<TResult> Base
 		{
 			get;
-			private set;
 		}
 
 		public IEvaluate<TResult> Power
 		{
 			get;
-			private set;
 		}
 
 		protected static double ConvertToDouble(in dynamic value) => (double)value;
@@ -51,11 +50,16 @@ namespace Open.Evaluation.Arithmetic
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
 			var pow = catalog.GetReduced(Power);
-			if (pow is Constant<TResult> cPow)
+			if (!(pow is Constant<TResult> cPow))
+				return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
+
+			dynamic p = cPow.Value;
+			switch (p)
 			{
-				dynamic p = cPow.Value;
-				if (p == 0) return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)1);
-				if (p == 1) return catalog.GetReduced(Base);
+				case 0:
+					return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)1);
+				case 1:
+					return catalog.GetReduced(Base);
 			}
 
 			return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
@@ -81,6 +85,14 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> power)
 			where TResult : struct, IComparable
 			=> Exponent<TResult>.Create(catalog, @base, power);
+
+		public static bool IsPowerOf(this Exponent<double> exponent, double power)
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			=> exponent.Power is Constant<double> p && p.Value == power;
+
+		public static bool IsSquareRoot(this Exponent<double> exponent)
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			=> exponent.IsPowerOf(0.5);
 	}
 
 }
