@@ -32,48 +32,55 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> MutateSign(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			Node<IEvaluate<double>> node, byte options = 3)
+			in Node<IEvaluate<double>> node, byte options = 3)
 		{
 			if (node == null) throw new ArgumentNullException(nameof(node));
 			if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
 			Contract.EndContractBlock();
 
-			var root = node.Root;
-			var isRoot = root == node;
+			var n = node;
+			var isRoot = n == n.Root;
 			// ReSharper disable once ImplicitlyCapturedClosure
-			bool parentIsSquareRoot() => !isRoot && node.Parent.Value is Exponent<double> ex && ex.IsSquareRoot();
+			bool parentIsSquareRoot() => !isRoot && n.Parent.Value is Exponent<double> ex && ex.IsSquareRoot();
 
 			// ReSharper disable once AccessToModifiedClosure
-			var modifier = new Lazy<double>(() => catalog.Catalog.GetMultiple(node.Value));
+			var modifier = new Lazy<double>(() => catalog.Catalog.GetMultiple(n.Value));
 
-			switch (RandomUtilities.Random.Next(options))
+			try
 			{
-				case 0:
-					// Alter Sign
-					var result = catalog.Catalog.MultiplyNode(node, -1);
-					if (!parentIsSquareRoot()) return result;
+				switch (RandomUtilities.Random.Next(options))
+				{
+					case 0:
+						// Alter Sign
+						var result = catalog.Catalog.MultiplyNode(n, -1);
+						if (!parentIsSquareRoot()) return result;
 
-					node = catalog.Factory.Map(result);
-					// Sorry, not gonna mess with unreal (sqrt neg numbers yet).
-					if (RandomUtilities.Random.Next(2) == 0)
-						goto case 1;
+						n = catalog.Factory.Map(result);
+						// Sorry, not gonna mess with unreal (sqrt neg numbers yet).
+						if (RandomUtilities.Random.Next(2) == 0)
+							goto case 1;
 
-					goto case 2;
-
-				case 1:
-					// Don't zero the root or make the internal multiple negative.
-					if (isRoot && modifier.Value == +1 || parentIsSquareRoot() && modifier.Value <= 0)
 						goto case 2;
 
-					// Decrease multiple.
-					return catalog.Catalog.AdjustNodeMultiple(node, -1);
+					case 1:
+						// Don't zero the root or make the internal multiple negative.
+						if (isRoot && modifier.Value == +1 || parentIsSquareRoot() && modifier.Value <= 0)
+							goto case 2;
 
-				case 2:
-					// Don't zero the root. (makes no sense)
-					if (isRoot && modifier.Value == -1)
-						goto case 1;
-					// Increase multiple.
-					return catalog.Catalog.AdjustNodeMultiple(node, +1);
+						// Decrease multiple.
+						return catalog.Catalog.AdjustNodeMultiple(n, -1);
+
+					case 2:
+						// Don't zero the root. (makes no sense)
+						if (isRoot && modifier.Value == -1)
+							goto case 1;
+						// Increase multiple.
+						return catalog.Catalog.AdjustNodeMultiple(n, +1);
+				}
+			}
+			finally
+			{
+				if (n != node) catalog.Factory.Recycle(n);
 			}
 
 			throw new ArgumentOutOfRangeException(nameof(options));

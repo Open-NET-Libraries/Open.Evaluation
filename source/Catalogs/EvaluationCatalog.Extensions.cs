@@ -55,6 +55,11 @@ namespace Open.Evaluation.Catalogs
 			});
 		}
 
+		public static IEvaluate<double> MultiplyNodeDescendant(
+			this EvaluationCatalog<double> catalog,
+			Node<IEvaluate<double>> sourceNode, int descendantIndex, double multiple)
+			=> catalog.MultiplyNode(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), multiple);
+
 		public static Constant GetMultiple<TParent>(this EvaluationCatalog<double> catalog, TParent n)
 			where TParent : IParent<IEvaluate<double>>
 			=> catalog.ProductOfConstants(n.Children.OfType<IConstant<double>>());
@@ -95,6 +100,11 @@ namespace Open.Evaluation.Catalogs
 
 		}
 
+
+		public static IEvaluate<double> AdjustNodeMultipleOfDescendant(
+			this EvaluationCatalog<double> catalog,
+			Node<IEvaluate<double>> sourceNode, int descendantIndex, double delta)
+			=> catalog.AdjustNodeMultiple(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), delta);
 
 		public static bool IsValidForRemoval(this Node<IEvaluate> gene, bool ifRoot = false)
 		{

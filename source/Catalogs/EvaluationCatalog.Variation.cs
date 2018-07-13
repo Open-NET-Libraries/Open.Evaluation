@@ -1,6 +1,7 @@
 ﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
+using System.Linq;
 using System.Threading;
 
 namespace Open.Evaluation.Catalogs
@@ -27,78 +28,30 @@ namespace Open.Evaluation.Catalogs
 	public static partial class EvaluationCatalogExtensions
 	{
 
-		public static IEvaluate<double> ReduceMultipleMagnitude(
+		static bool CheckPromoteChildrenValidity(
+			IParent parent)
+			// Validate worthyness.
+			=> parent?.Children.Count == 1;
+
+
+
+
+		public static IEvaluate<double> PromoteChildren(
 			this EvalDoubleVariationCatalog catalog,
-			Node<IEvaluate<double>> source, int geneIndex)
-		{
-			return catalog.Catalog.ApplyClone(source, geneIndex, g =>
-			{
-				var absMultiple = Math.Abs(g.Modifier);
-				g.Modifier -= g.Modifier / absMultiple;
-			});
-		}
-
-
-
-		public static IEvaluate<double> RemoveGene(
-			this EvalDoubleVariationCatalog catalog,
-			Node<IEvaluate> source, Node<IEvaluate> gene)
-		{
-			if (IsValidForRemoval(gene))
-			{
-				return catalog.Catalog.ApplyClone(source, geneIndex, (g, newGenome) =>
-				{
-					var parent = newGenome.FindParent(g);
-					parent.Remove(g);
-				});
-			}
-			return null;
-
-		}
-		public static IEvaluate<double> RemoveGene(
-			this EvalDoubleVariationCatalog catalog,
-			Genome source, IGene gene)
-		{
-			return RemoveGene(source, source.Genes.IndexOf(gene));
-		}
-
-		public static bool CheckPromoteChildrenValidity(
-			this EvalDoubleVariationCatalog catalog,
-			Genome source, IGene gene)
+			Node<IEvaluate<double>> gene)
 		{
 			// Validate worthyness.
-			var op = gene as GeneNode;
-			return op != null && op.Count == 1;
+			if (!CheckPromoteChildrenValidity(gene)) return null;
+
+			return catalog.Catalog.ApplyClone(gene,
+				newGene => newGene.Value = newGene.Children.Single().Value);
 		}
 
 		// This should handle the case of demoting a function.
 		public static IEvaluate<double> PromoteChildren(
 			this EvalDoubleVariationCatalog catalog,
-			Genome source, int geneIndex)
-		{
-			// Validate worthyness.
-			var gene = source.Genes[geneIndex];
-
-			if (CheckPromoteChildrenValidity(source, gene))
-			{
-				return catalog.Catalog.ApplyClone(source, geneIndex, (g, newGenome) =>
-				{
-					var op = (GeneNode)g;
-					var child = op.Children.Single();
-					op.Remove(child);
-					newGenome.Replace(g, child);
-				});
-			}
-			return null;
-
-		}
-
-		public static IEvaluate<double> PromoteChildren(
-			this EvalDoubleVariationCatalog catalog,
-			Genome source, IGene gene)
-		{
-			return PromoteChildren(source, source.Genes.IndexOf(gene));
-		}
+			Node<IEvaluate<double>> root, int descendantIndex)
+			=> PromoteChildren(catalog, root.GetDescendantsOfType().ElementAt(descendantIndex));
 
 		public static IEvaluate<double> ApplyFunction(
 			this EvalDoubleVariationCatalog catalog,
