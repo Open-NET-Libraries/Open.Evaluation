@@ -116,7 +116,7 @@ namespace Open.Evaluation.Core
 			var ats = a.ToStringRepresentation();
 			var bts = b.ToStringRepresentation();
 
-			return String.Compare(ats, bts);
+			return string.Compare(ats, bts);
 
 		}
 	}

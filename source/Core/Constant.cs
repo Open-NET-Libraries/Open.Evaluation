@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Open.Evaluation.Core
 {
-	[DebuggerDisplay("Value = {nameof(Value)}")]
+	[DebuggerDisplay("Value = {Value}")]
 	public class Constant<TValue>
 		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue>
 		where TValue : IComparable

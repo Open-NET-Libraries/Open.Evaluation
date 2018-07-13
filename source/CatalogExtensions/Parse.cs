@@ -64,7 +64,7 @@ namespace Open.Evaluation
 		public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
 		{
 			var original = evaluation;
-			if (String.IsNullOrWhiteSpace(evaluation))
+			if (string.IsNullOrWhiteSpace(evaluation))
 				return null;
 
 			evaluation = evaluation.Trim();
