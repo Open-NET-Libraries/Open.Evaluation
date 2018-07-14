@@ -32,6 +32,14 @@ namespace Open.Evaluation.Core
 		public static Parameter GetParameter(
 			this ICatalog<IEvaluate<double>> catalog, ushort id)
 			=> Parameter.Create(catalog, id);
+
+		public static Parameter GetParameter(
+			this ICatalog<IEvaluate<double>> catalog, int id)
+		{
+			if (id < 0 || id > ushort.MaxValue)
+				throw new System.ArgumentOutOfRangeException(nameof(id));
+			return Parameter.Create(catalog, (ushort)id);
+		}
 	}
 
 }

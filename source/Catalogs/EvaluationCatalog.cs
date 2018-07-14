@@ -99,13 +99,99 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> sourceNode,
 			Action<Node<IEvaluate<T>>> clonedNodeHandler)
 		{
-			var newGene = Factory.CloneTree(sourceNode); // * new 1
-			clonedNodeHandler(newGene);
-			var newRoot = FixHierarchy(newGene.Root); // * new 2
-			var value = newRoot.Value;
-			Factory.Recycle(newGene.Root); // * 1
-			Factory.Recycle(newRoot); // * 2
-			return value;
+			var node = Factory.CloneTree(sourceNode); // * new 1
+			var root = node.Root;
+			try
+			{
+				clonedNodeHandler(node);
+				return FixHierarchy(root)
+					.Recycle(Factory);
+			}
+			finally
+			{
+				Factory.Recycle(root); // * 1
+			}
+		}
+
+
+		/// <summary>
+		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
+		/// </summary>
+		/// <param name="sourceNode">The node to clone.</param>
+		/// <param name="clonedNodeHandler">the handler to pass the cloned node to.</param>
+		/// <returns>The resultant root evaluation corrected by .FixHierarchy()</returns>
+		public IEvaluate<T> ApplyClone(
+			Node<IEvaluate<T>> sourceNode,
+			Func<Node<IEvaluate<T>>, IEvaluate<T>> clonedNodeHandler)
+		{
+			var node = Factory.CloneTree(sourceNode); // * new 1
+			var root = node.Root;
+			var parent = node.Parent;
+			try
+			{
+				var replacement = clonedNodeHandler(node);
+				if (parent == null) return replacement;
+
+				var rn = Factory.Map(replacement);
+				try
+				{
+					parent.Replace(node, rn);
+					Factory.Recycle(node);
+
+					return FixHierarchy(root)
+						.Recycle(Factory);
+				}
+				finally
+				{
+
+					Factory.Recycle(rn);
+				}
+			}
+			finally
+			{
+				Factory.Recycle(root); // * 1
+			}
+		}
+
+		/// <summary>
+		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
+		/// </summary>
+		/// <param name="sourceNode">The node to clone.</param>
+		/// <param name="clonedNodeHandler">the handler to pass the cloned node to.</param>
+		/// <returns>The resultant root evaluation corrected by .FixHierarchy()</returns>
+		public IEvaluate<T> ApplyClone(
+			Node<IEvaluate<T>> sourceNode,
+			Func<Node<IEvaluate<T>>, Node<IEvaluate<T>>> clonedNodeHandler)
+		{
+			var node = Factory.CloneTree(sourceNode); // * new 1
+			var root = node.Root;
+			var parent = node.Parent;
+			try
+			{
+				var replacement = clonedNodeHandler(node); // * new 2
+				try
+				{
+					if (parent == null)
+						return FixHierarchy(replacement).Recycle(Factory);
+
+					if (node != replacement)
+					{
+						parent.Replace(node, replacement);
+						Factory.Recycle(node);
+					}
+
+					return FixHierarchy(root)
+						.Recycle(Factory);
+				}
+				finally
+				{
+					replacement.Recycle(Factory); // * 2
+				}
+			}
+			finally
+			{
+				Factory.Recycle(root); // * 1
+			}
 		}
 
 		/// <summary>

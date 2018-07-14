@@ -5,6 +5,7 @@ using Open.Numeric;
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Linq;
 using System.Threading;
 
 namespace Open.Evaluation.Catalogs
@@ -89,14 +90,23 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> MutateParameter(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			IEvaluate<double> root, Parameter gene)
+			Node<IEvaluate<double>> node)
 		{
-			var inputParamCount = root.Genes.OfType<Parameter>().GroupBy(p => p.ToString()).Count();
-			return catalog.Catalog.ApplyClone(root, gene, (g, newGenome) =>
+			if (!(node.Value is IParameter<double> p))
+				throw new ArgumentException("Does not contain a Parameter.", nameof(node));
+
+			var inputParamCount = node.Root
+				.GetDescendantsOfType()
+				.Select(n=>n.Value)
+				.OfType<IParameter<double>>()
+				.Select(n => n.ToString())
+				.Distinct()
+				.Count();
+
+			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
-				var parameter = (Parameter)g;
-				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(inputParamCount + 1, parameter.ID);
-				newGenome.Replace(g, GetParameterGene(nextParameter, parameter.Modifier));
+				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(inputParamCount + 1, p.ID);
+				newNode.Value = catalog.Catalog.GetParameter(nextParameter);
 			});
 		}
 
@@ -189,19 +199,20 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> Square(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			Node<IEvaluate<double>> gene)
-		{
-			if (root.FindParent(gene) is SquareRootGene)
-				return null;
-
-			return ApplyClone(root, gene, (g, newGenome) =>
+			Node<IEvaluate<double>> node)
+			=> catalog.Catalog.ApplyClone(node, newNode =>
 			{
-				var newFn = new ProductGene(g.Modifier);
-				g.Modifier = 1;
-				newFn.Add(g);
-				newFn.Add(g.Clone());
-				newGenome.Replace(g, newFn);
+				if(node.Value is Exponent<double>)
+				{
+					var power = newNode.Children[1];
+					newNode.Replace(power,
+						catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value)));
+				} else
+				{
+					var sq = catalog.Catalog.GetExponent(node.Value, 2);
+					newNode = catalog.Factory.Map(sq);
+				}
+				return newNode;
 			});
-		}
 	}
 }
