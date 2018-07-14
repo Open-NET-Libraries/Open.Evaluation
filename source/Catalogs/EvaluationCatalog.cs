@@ -38,7 +38,7 @@ namespace Open.Evaluation.Catalogs
 					{
 						var f = FixHierarchy(n, true);
 						var v = f.Value;
-						if (f != n) Factory.Recycle(f); // Only the owner of the target node should do the recycling.
+						if (f != n) f.Recycle(); // Only the owner of the target node should do the recycling.
 						return Register(v);
 					}).ToArray();
 
@@ -105,11 +105,11 @@ namespace Open.Evaluation.Catalogs
 			{
 				clonedNodeHandler(node);
 				return FixHierarchy(root)
-					.Recycle(Factory);
+					.Recycle();
 			}
 			finally
 			{
-				Factory.Recycle(root); // * 1
+				root.Recycle(); // * 1
 			}
 		}
 
@@ -136,20 +136,20 @@ namespace Open.Evaluation.Catalogs
 				try
 				{
 					parent.Replace(node, rn);
-					Factory.Recycle(node);
+					node.Recycle();
 
 					return FixHierarchy(root)
-						.Recycle(Factory);
+						.Recycle();
 				}
 				finally
 				{
 
-					Factory.Recycle(rn);
+					rn.Recycle();
 				}
 			}
 			finally
 			{
-				Factory.Recycle(root); // * 1
+				root.Recycle(); // * 1
 			}
 		}
 
@@ -172,25 +172,27 @@ namespace Open.Evaluation.Catalogs
 				try
 				{
 					if (parent == null)
-						return FixHierarchy(replacement).Recycle(Factory);
+						return FixHierarchy(replacement)
+							.Recycle();
 
+					// ReSharper disable once InvertIf
 					if (node != replacement)
 					{
 						parent.Replace(node, replacement);
-						Factory.Recycle(node);
+						node.Recycle();
 					}
 
 					return FixHierarchy(root)
-						.Recycle(Factory);
+						.Recycle();
 				}
 				finally
 				{
-					replacement.Recycle(Factory); // * 2
+					replacement.Recycle(); // * 2
 				}
 			}
 			finally
 			{
-				Factory.Recycle(root); // * 1
+				root.Recycle(); // * 1
 			}
 		}
 
@@ -233,7 +235,7 @@ namespace Open.Evaluation.Catalogs
 			=> sourceNode.Value is IParent<IEvaluate<T>>
 				? ApplyClone(
 					sourceNode,
-					newNode => newNode.Add(Factory.Map<Constant<T>>(this.GetConstant(value))))
+					newNode => newNode.Add(Factory.Map(this.GetConstant(value))))
 				: null;
 
 	}

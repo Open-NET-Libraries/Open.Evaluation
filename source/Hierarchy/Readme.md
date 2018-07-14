@@ -12,4 +12,4 @@ Calling ```.Map(root)``` generates node hierarchy map based upon if the root or 
 Calling ```.Clone(node)``` creates a copy of the node map.
 
 ### Recycling
-```Node<T>``` instances can be recycled by calling the ```.Recycle(node)``` method.  The node itself and its children are torn down and recycled to an object pool.
+```Node<T>``` instances can be recycled by calling the ```.Recycle()``` method.  The node itself and its children are torn down and recycled to an object pool.

@@ -60,7 +60,9 @@ namespace Open.Evaluation.Catalogs
 			if (node == null) throw new ArgumentNullException(nameof(node));
 			if (IsValidForRemoval(node))
 			{
-				newRoot = catalog.Factory.Recycle(catalog.Catalog.RemoveNode(node)); ;
+				newRoot = catalog.Catalog
+					.RemoveNode(node)
+					.Recycle();
 				return true;
 			}
 			newRoot = default;
@@ -85,7 +87,7 @@ namespace Open.Evaluation.Catalogs
 			if (!CheckPromoteChildrenValidity(node)) return null;
 
 			return catalog.Catalog.ApplyClone(node,
-				newNode => newNode.Value = newNode.Children.Single().Value);
+				newNode => newNode.Children.Single());
 		}
 
 		// This should handle the case of demoting a function.
@@ -114,7 +116,7 @@ namespace Open.Evaluation.Catalogs
 				throw new ArgumentException("Invalid function operator.", nameof(fn));
 
 			return catalog.Catalog.ApplyClone(node, newNode =>
-				newNode.Value = catalog.Catalog.GetFunction(fn, newNode.Value));
+				catalog.Catalog.GetFunction(fn, newNode.Value));
 		}
 
 		public static IEvaluate<double> ApplyFunctionAt(

@@ -81,7 +81,7 @@ namespace Open.Evaluation.Catalogs
 			}
 			finally
 			{
-				if (n != node) catalog.Factory.Recycle(n);
+				if (n != node) n.Recycle();
 			}
 
 			throw new ArgumentOutOfRangeException(nameof(options));
@@ -97,7 +97,7 @@ namespace Open.Evaluation.Catalogs
 
 			var inputParamCount = node.Root
 				.GetDescendantsOfType()
-				.Select(n=>n.Value)
+				.Select(n => n.Value)
 				.OfType<IParameter<double>>()
 				.Select(n => n.ToString())
 				.Distinct()
@@ -202,16 +202,12 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<double>> node)
 			=> catalog.Catalog.ApplyClone(node, newNode =>
 			{
-				if(node.Value is Exponent<double>)
-				{
-					var power = newNode.Children[1];
-					newNode.Replace(power,
-						catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value)));
-				} else
-				{
-					var sq = catalog.Catalog.GetExponent(node.Value, 2);
-					newNode = catalog.Factory.Map(sq);
-				}
+				if (!(node.Value is Exponent<double>))
+					return catalog.Factory.Map(catalog.Catalog.GetExponent(node.Value, 2));
+
+				var power = newNode.Children[1];
+				newNode.Replace(power,
+					catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value)));
 				return newNode;
 			});
 	}
