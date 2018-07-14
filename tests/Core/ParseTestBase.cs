@@ -10,7 +10,7 @@ namespace Open.Evaluation.Tests
 	public abstract class ParseTestBase
 	{
 		protected readonly double[] PV = new double[] { 2, 3, 4, 5 };
-		protected readonly EvaluateDoubleCatalog Catalog;
+		protected readonly EvaluationCatalog<double> Catalog;
 		protected readonly string Format;
 		protected readonly string Representation;
 		protected readonly string Reduction;
@@ -23,7 +23,7 @@ namespace Open.Evaluation.Tests
 			Format = format ?? throw new ArgumentNullException(nameof(format));
 			Representation = representation ?? format;
 			Reduction = reduction ?? Representation;
-			Catalog = new EvaluateDoubleCatalog();
+			Catalog = new EvaluationCatalog<double>();
 			Evaluation = Catalog.Parse(format);
 			EvaluationReduced = Catalog.GetReduced(Evaluation);
 		}

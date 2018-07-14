@@ -10,7 +10,7 @@ namespace Open.Evaluation.Tests
 		[TestMethod]
 		public void Instantiation()
 		{
-			using (var catalog = new EvaluateDoubleCatalog())
+			using (var catalog = new EvaluationCatalog<double>())
 			{
 				Assert.AreEqual((ushort)5, catalog.GetParameter(5).ID);
 			}

@@ -1,6 +1,8 @@
 ﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 
@@ -28,53 +30,106 @@ namespace Open.Evaluation.Catalogs
 	public static partial class EvaluationCatalogExtensions
 	{
 
+		public static bool IsValidForRemoval<TEval>(this Node<TEval> gene, bool ifRoot = false)
+			where TEval : IEvaluate
+		{
+			if (gene == gene.Root) return ifRoot;
+			// Validate worthyness.
+			var parent = gene.Parent;
+			Debug.Assert(parent != null);
+
+			// Search for potential futility...
+			// Basically, if there is no dynamic nodes left after reduction then it's not worth removing.
+			return !parent.Any(g => g != gene && !(g.Value is IConstant))
+				   && parent.IsValidForRemoval(true);
+		}
+
+		/// <summary>
+		/// Removes a node from its parent.
+		/// </summary>
+		/// <param name="catalog">The catalog to use.</param>
+		/// <param name="node">The node to remove from the tree.</param>
+		/// <param name="newRoot">The resultant root node corrected by .FixHierarchy()</param>
+		/// <returns>true if sucessful</returns>
+		public static bool TryRemoveValid(
+			this EvalDoubleVariationCatalog catalog,
+			Node<IEvaluate<double>> node,
+			out IEvaluate<double> newRoot)
+		{
+			Debug.Assert(catalog != null);
+			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (IsValidForRemoval(node))
+			{
+				newRoot = catalog.Factory.Recycle(catalog.Catalog.RemoveNode(node)); ;
+				return true;
+			}
+			newRoot = default;
+			return false;
+		}
+
+
 		static bool CheckPromoteChildrenValidity(
 			IParent parent)
 			// Validate worthyness.
 			=> parent?.Children.Count == 1;
 
-
-
-
 		public static IEvaluate<double> PromoteChildren(
 			this EvalDoubleVariationCatalog catalog,
-			Node<IEvaluate<double>> gene)
+			Node<IEvaluate<double>> node)
 		{
-			// Validate worthyness.
-			if (!CheckPromoteChildrenValidity(gene)) return null;
+			Debug.Assert(catalog != null);
+			if (node == null) throw new ArgumentNullException(nameof(node));
+			Contract.EndContractBlock();
 
-			return catalog.Catalog.ApplyClone(gene,
-				newGene => newGene.Value = newGene.Children.Single().Value);
+			// Validate worthyness.
+			if (!CheckPromoteChildrenValidity(node)) return null;
+
+			return catalog.Catalog.ApplyClone(node,
+				newNode => newNode.Value = newNode.Children.Single().Value);
 		}
 
 		// This should handle the case of demoting a function.
-		public static IEvaluate<double> PromoteChildren(
+		public static IEvaluate<double> PromoteChildrenAt(
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> root, int descendantIndex)
-			=> PromoteChildren(catalog, root.GetDescendantsOfType().ElementAt(descendantIndex));
+		{
+			Debug.Assert(catalog != null);
+			if (root == null) throw new ArgumentNullException(nameof(root));
+			Contract.EndContractBlock();
+
+			return PromoteChildren(catalog,
+				root.GetDescendantsOfType()
+					.ElementAt(descendantIndex));
+		}
 
 		public static IEvaluate<double> ApplyFunction(
 			this EvalDoubleVariationCatalog catalog,
-			Genome source, int geneIndex, char fn)
+			Node<IEvaluate<double>> node, char fn)
 		{
-			if (!Operators.Available.Functions.Contains(fn))
+			Debug.Assert(catalog != null);
+			if (node == null) throw new ArgumentNullException(nameof(node));
+			Contract.EndContractBlock();
+
+			if (!Registry.Arithmetic.Functions.Contains(fn))
 				throw new ArgumentException("Invalid function operator.", nameof(fn));
 
-			// Validate worthyness.
-			return catalog.Catalog.ApplyClone(source, geneIndex, (g, newGenome) =>
-			{
-				var newFn = Operators.New(fn);
-				newGenome.Replace(g, newFn);
-				newFn.Add(g);
-			});
-
+			return catalog.Catalog.ApplyClone(node, newNode =>
+				newNode.Value = catalog.Catalog.GetFunction(fn, newNode.Value));
 		}
 
-		public static IEvaluate<double> ApplyFunction(
+		public static IEvaluate<double> ApplyFunctionAt(
 			this EvalDoubleVariationCatalog catalog,
-			Genome source, IGene gene, char fn)
+			Node<IEvaluate<double>> root, int descendantIndex, char fn)
 		{
-			return ApplyFunction(source, source.Genes.IndexOf(gene), fn);
+			Debug.Assert(catalog != null);
+			if (root == null) throw new ArgumentNullException(nameof(root));
+			Contract.EndContractBlock();
+
+			return ApplyFunction(catalog,
+				root.GetDescendantsOfType()
+					.ElementAt(descendantIndex).Parent, fn);
 		}
+
+
 	}
 }

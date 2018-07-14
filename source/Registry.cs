@@ -21,7 +21,6 @@ namespace Open.Evaluation
 				= (new List<char> { ADD, MULTIPLY });
 			public static readonly IReadOnlyList<char> Functions
 				= (new List<char> { EXPONENT });
-
 		}
 
 		public static class Boolean
@@ -49,7 +48,7 @@ namespace Open.Evaluation
 		}
 
 
-		public static IEvaluate<double> GetOperator<TResult>(
+		public static IEvaluate<double> GetOperator(
 			this ICatalog<IEvaluate<double>> catalog, char op, IEnumerable<IEvaluate<double>> children)
 		{
 			switch (op)
@@ -63,7 +62,7 @@ namespace Open.Evaluation
 			throw new ArgumentException("Invalid operator.", nameof(op));
 		}
 
-		public static IEvaluate<double> GetFunction<TResult>(
+		public static IEvaluate<double> GetFunction(
 			this ICatalog<IEvaluate<double>> catalog, char op, params IEvaluate<double>[] children)
 		{
 			switch (op)

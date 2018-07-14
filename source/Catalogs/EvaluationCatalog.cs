@@ -93,14 +93,14 @@ namespace Open.Evaluation.Catalogs
 		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
 		/// </summary>
 		/// <param name="sourceNode">The node to clone.</param>
-		/// <param name="handler">the handler to pass the cloned node to.</param>
-		/// <returns>The resultant value corrected by .FixHierarchy()</returns>
+		/// <param name="clonedNodeHandler">the handler to pass the cloned node to.</param>
+		/// <returns>The resultant root evaluation corrected by .FixHierarchy()</returns>
 		public IEvaluate<T> ApplyClone(
 			Node<IEvaluate<T>> sourceNode,
-			Action<Node<IEvaluate<T>>> handler)
+			Action<Node<IEvaluate<T>>> clonedNodeHandler)
 		{
 			var newGene = Factory.CloneTree(sourceNode); // * new 1
-			handler(newGene);
+			clonedNodeHandler(newGene);
 			var newRoot = FixHierarchy(newGene.Root); // * new 2
 			var value = newRoot.Value;
 			Factory.Recycle(newGene.Root); // * 1

@@ -7,7 +7,7 @@ using System.Text.RegularExpressions;
 
 namespace Open.Evaluation
 {
-	public static partial class CatalogExtensions
+	public static class CatalogExtensions
 	{
 		static readonly Regex openParen = new Regex(@"[(]");
 		static readonly Regex closeParen = new Regex(@"[)]");
@@ -42,21 +42,22 @@ namespace Open.Evaluation
 				v = v.Trim('+', '-');
 
 				var len = v.Length;
-				if (len != 0 && v[0] == '{' && v[len - 1] == '}')
-				{
-					v = v.TrimStart('{').TrimEnd('}');
+				if (len == 0 || v[0] != '{' || v[len - 1] != '}')
+					throw new InvalidOperationException($"Unrecognized evaluation sequence: {v}");
 
-					if (negative)
-					{
-						if (registry.TryGetValue(v, out var result)) return catalog.ProductOf(-1, result);
-						if (ushort.TryParse(v, out var p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
-					}
-					else
-					{
-						if (registry.TryGetValue(v, out var result)) return result;
-						if (ushort.TryParse(v, out var p)) return catalog.GetParameter(p);
-					}
+				v = v.TrimStart('{').TrimEnd('}');
+
+				if (negative)
+				{
+					if (registry.TryGetValue(v, out var result)) return catalog.ProductOf(-1, result);
+					if (ushort.TryParse(v, out var p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
 				}
+				else
+				{
+					if (registry.TryGetValue(v, out var result)) return result;
+					if (ushort.TryParse(v, out var p)) return catalog.GetParameter(p);
+				}
+
 				throw new InvalidOperationException($"Unrecognized evaluation sequence: {v}");
 			});
 		}
@@ -108,7 +109,7 @@ namespace Open.Evaluation
 				{
 					var key = $"X{++count}";
 					var sm = SubMatches(catalog, registry, m).ToArray();
-					if (sm.Length != 2) throw new FormatException(string.Format("Exponent with {0} elements defined.", sm.Length));
+					if (sm.Length != 2) throw new FormatException($"Exponent with {sm.Length} elements defined.");
 					registry.Add(key, catalog.GetExponent(sm.First(), sm.Last()));
 					return '{' + key + '}';
 				});
@@ -119,7 +120,7 @@ namespace Open.Evaluation
 			var checkRegisteredOnly = registeredOnly.Match(evaluation);
 			if (checkRegisteredOnly.Success) return registry[checkRegisteredOnly.Groups[1].Value];
 
-			throw new FormatException(string.Format("Could not parse sequence: {0}", original));
+			throw new FormatException($"Could not parse sequence: {original}");
 		}
 	}
 }

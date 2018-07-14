@@ -32,7 +32,7 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> MutateSign(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			in Node<IEvaluate<double>> node, byte options = 3)
+			Node<IEvaluate<double>> node, byte options = 3)
 		{
 			if (node == null) throw new ArgumentNullException(nameof(node));
 			if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
@@ -108,13 +108,13 @@ namespace Open.Evaluation.Catalogs
 			if (isFn)
 			{
 				// Functions with no other options?
-				if (Operators.Available.Functions.Count < 2)
+				if (Registry.Arithmetic.Functions.Count < 2)
 					return null;
 			}
 			else
 			{
 				// Never will happen, but logic states that this is needed.
-				if (Operators.Available.Operators.Count < 2)
+				if (Registry.Arithmetic.Operators.Count < 2)
 					return null;
 			}
 
@@ -189,7 +189,7 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> Square(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			IEvaluate<double> root, IGene gene)
+			Node<IEvaluate<double>> gene)
 		{
 			if (root.FindParent(gene) is SquareRootGene)
 				return null;

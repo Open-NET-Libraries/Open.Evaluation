@@ -11,7 +11,7 @@ namespace Open.Evaluation.Tests
 		[TestMethod]
 		public void Instantiation()
 		{
-			using (var catalog = new EvaluateDoubleCatalog())
+			using (var catalog = new EvaluationCatalog<double>())
 			{
 				catalog.GetConstant(5).ValidateValue(5);
 			}
@@ -20,7 +20,7 @@ namespace Open.Evaluation.Tests
 		[TestMethod]
 		public void Sum()
 		{
-			using (var catalog = new EvaluateDoubleCatalog())
+			using (var catalog = new EvaluationCatalog<double>())
 			{
 				catalog
 					.SumOfConstants(5, catalog.GetConstant(4))
@@ -36,7 +36,7 @@ namespace Open.Evaluation.Tests
 		[TestMethod]
 		public void Product()
 		{
-			using (var catalog = new EvaluateDoubleCatalog())
+			using (var catalog = new EvaluationCatalog<double>())
 			{
 				catalog
 					.ProductOfConstants(5, catalog.GetConstant(4))

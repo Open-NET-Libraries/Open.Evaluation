@@ -2,7 +2,6 @@
 using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
@@ -31,9 +30,7 @@ namespace Open.Evaluation.Catalogs
 			if (multiple == 0 || double.IsNaN(multiple)) // Neutralized.
 			{
 				return catalog.ApplyClone(sourceNode, newNode =>
-				{
-					newNode.Value = catalog.GetConstant(multiple);
-				});
+					newNode.Value = catalog.GetConstant(multiple));
 			}
 
 			if (sourceNode.Value is Product<double> p)
@@ -105,18 +102,5 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double> catalog,
 			Node<IEvaluate<double>> sourceNode, int descendantIndex, double delta)
 			=> catalog.AdjustNodeMultiple(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), delta);
-
-		public static bool IsValidForRemoval(this Node<IEvaluate> gene, bool ifRoot = false)
-		{
-			if (gene == gene.Root) return ifRoot;
-			// Validate worthyness.
-			var parent = gene.Parent;
-			Debug.Assert(parent != null);
-
-			// Search for potential futility...
-			// Basically, if there is no dynamic nodes left after reduction then it's not worth removing.
-			return !parent.Any(g => g != gene && !(g.Value is IConstant))
-				&& parent.IsValidForRemoval(true);
-		}
 	}
 }

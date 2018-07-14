@@ -78,33 +78,31 @@ namespace Open.Evaluation.Core
 		protected virtual int ConstantPriority => +1;
 
 		// Need a standardized way to order so that comparisons are easier.
+		// ReSharper disable once VirtualMemberNeverOverridden.Global
 		protected virtual int Compare(TChild a, TChild b)
 		{
-			if (a is Constant<TResult> aC)
+			switch (a)
 			{
-				if (b is Constant<TResult> bC)
+				case Constant<TResult> aC when b is Constant<TResult> bC:
 					return bC.Value.CompareTo(aC.Value); // Descending...
-				else
+				case Constant<TResult> _:
 					return +1 * ConstantPriority;
-			}
-			else
-			{
-				if (b is Constant<TResult>)
-					return -1 * ConstantPriority;
+				default:
+					if (b is Constant<TResult>)
+						return -1 * ConstantPriority;
+					break;
 			}
 
-			if (a is Parameter<TResult> aP)
+			switch (a)
 			{
-
-				if (b is Parameter<TResult> bP)
+				case Parameter<TResult> aP when b is Parameter<TResult> bP:
 					return aP.ID.CompareTo(bP.ID);
-				else
+				case Parameter<TResult> _:
 					return +1;
-			}
-			else
-			{
-				if (b is Parameter<TResult>)
-					return -1;
+				default:
+					if (b is Parameter<TResult>)
+						return -1;
+					break;
 			}
 
 			var aChildCount = (a as IParent)?.Children.Count ?? 1;
@@ -116,7 +114,7 @@ namespace Open.Evaluation.Core
 			var ats = a.ToStringRepresentation();
 			var bts = b.ToStringRepresentation();
 
-			return string.Compare(ats, bts);
+			return string.CompareOrdinal(ats, bts);
 
 		}
 	}
