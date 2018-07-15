@@ -27,7 +27,11 @@ namespace Open.Evaluation.Catalogs
 			bool operateDirectly = false)
 		{
 			if (!operateDirectly)
-				target = Factory.Clone(target);
+				target = target.Clone();
+
+			// Is the node unmapped (nothing changed) then return it.
+			if (target.Unmapped)
+				return target;
 
 			var value = target.Value;
 			// Does this node's value contain children?
@@ -99,7 +103,7 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> sourceNode,
 			Action<Node<IEvaluate<T>>> clonedNodeHandler)
 		{
-			var node = Factory.CloneTree(sourceNode); // * new 1
+			var node = sourceNode.CloneTree(); // * new 1
 			var root = node.Root;
 			try
 			{
@@ -124,7 +128,7 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> sourceNode,
 			Func<Node<IEvaluate<T>>, IEvaluate<T>> clonedNodeHandler)
 		{
-			var node = Factory.CloneTree(sourceNode); // * new 1
+			var node = sourceNode.CloneTree(); // * new 1
 			var root = node.Root;
 			var parent = node.Parent;
 			try
@@ -163,7 +167,7 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> sourceNode,
 			Func<Node<IEvaluate<T>>, Node<IEvaluate<T>>> clonedNodeHandler)
 		{
-			var node = Factory.CloneTree(sourceNode); // * new 1
+			var node = sourceNode.CloneTree(); // * new 1
 			var root = node.Root;
 			var parent = node.Parent;
 			try
@@ -239,9 +243,4 @@ namespace Open.Evaluation.Catalogs
 				: null;
 
 	}
-
-	//public class EvaluateDoubleCatalog : EvaluationCatalog<double>
-	//{
-	//}
-
 }

@@ -1,5 +1,6 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
+using Open.Evaluation.Hierarchy;
 using Open.Hierarchy;
 using Open.Numeric;
 using System;
@@ -95,24 +96,20 @@ namespace Open.Evaluation.Catalogs
 			if (!(node.Value is IParameter<double> p))
 				throw new ArgumentException("Does not contain a Parameter.", nameof(node));
 
-			var inputParamCount = node.Root
-				.GetDescendantsOfType()
-				.Select(n => n.Value)
-				.OfType<IParameter<double>>()
-				.Select(n => n.ToString())
-				.Distinct()
-				.Count();
-
 			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
-				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(inputParamCount + 1, p.ID);
+				var rv = node.Root.Value;
+				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(
+					p==rv ? p.ID : (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count()) + 1,
+					p.ID);
+
 				newNode.Value = catalog.Catalog.GetParameter(nextParameter);
 			});
 		}
 
 		public static IEvaluate<double> ChangeOperation(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			IEvaluate<double> root, IOperator<,> gene)
+			Node<IEvaluate<double>> node)
 		{
 			bool isFn = gene is IFunction;
 			if (isFn)
@@ -142,30 +139,29 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> AddParameter(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			IEvaluate<double> root, IOperator gene)
+			Node<IEvaluate<double>> node)
 		{
-			bool isFn = gene is IFunction;
-			if (isFn)
+			switch (node.Value)
 			{
-				// Functions with no other options?
-				if (gene is SquareRootGene || gene is DivisionGene)
+				case Exponent<double> _:
 					return null;
-			}
+				case IParent p:
+					return catalog.Catalog.ApplyClone(node, newNode =>
+						newNode.AddValue(catalog.Catalog.GetParameter(
+							RandomUtilities.Random.Next(
+								p.Children.OfType<IParameter>().Select(n => n.ID).Count() + 1))));
 
-			var inputParamCount = root.Genes.OfType<Parameter>().GroupBy(p => p.ToString()).Count();
-			return ApplyClone(root, gene, (g, newGenome) =>
-			{
-				var og = (IOperator)g;
-				og.Add(GetParameterGene(RandomUtilities.Random.Next(inputParamCount + 1)));
-			});
+				default:
+					throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node));
+			}
 		}
 
 		public static IEvaluate<double> BranchOperation(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
-			IEvaluate<double> root, IOperator gene)
+			Node<IEvaluate<double>> node)
 		{
 			var inputParamCount = root.Genes.OfType<Parameter>().GroupBy(p => p.ToString()).Count();
-			return ApplyClone(root, gene, (g, newGenome) =>
+			return catalog.Catalog.ApplyClone(gene, g =>
 			{
 				var n = GetParameterGene(RandomUtilities.Random.Next(inputParamCount));
 				var newOp = Operators.GetRandomOperationGene();

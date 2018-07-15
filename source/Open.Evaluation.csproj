@@ -24,7 +24,7 @@
     <PackageReference Include="Open.Cloneable" Version="1.1.0" />
     <PackageReference Include="Open.Disposable" Version="1.1.0" />
     <PackageReference Include="Open.Disposable.ObjectPools" Version="2.1.1" />
-    <PackageReference Include="Open.Hierarchy" Version="1.4.0" />
+    <PackageReference Include="Open.Hierarchy" Version="1.4.4" />
   </ItemGroup>
 
 </Project>

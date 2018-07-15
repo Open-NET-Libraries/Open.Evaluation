@@ -1,5 +1,6 @@
 ﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
+using System;
 using System.Linq;
 
 namespace Open.Evaluation.Hierarchy
@@ -36,6 +37,24 @@ namespace Open.Evaluation.Hierarchy
 			return true;
 		}
 
+		public static int CountDistinctDescendantValuesOfType<T, TType, TSelect>(this Node<T> node, Func<TType, TSelect> selector)
+			=> node
+				.GetDescendantsOfType()
+				.Select(n => n.Value)
+				.OfType<TType>()
+				.Select(selector)
+				.Distinct()
+				.Count();
 
+		public static int CountDistinctDescendantValuesOfType<T, TType>(this Node<T> node)
+			=> node
+				.GetDescendantsOfType()
+				.Select(n => n.Value)
+				.OfType<TType>()
+				.Distinct()
+				.Count();
+
+		public static int CountDistinctParameters<T>(this Node<T> node)
+			=> node.CountDistinctDescendantValuesOfType<T, Parameter, ushort>(p => p.ID);
 	}
 }
