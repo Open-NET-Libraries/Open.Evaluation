@@ -31,7 +31,6 @@ namespace Open.Evaluation.Core
 		public IReadOnlyList<TChild> Children
 		{
 			get;
-			private set;
 		}
 
 		IReadOnlyList<object> IParent.Children => Children;

@@ -6,7 +6,6 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -94,7 +93,7 @@ namespace Open.Evaluation.Arithmetic
 		{
 			multiple = null;
 
-			if(ChildrenInternal.OfType<IConstant<TResult>>().Any())
+			if (ChildrenInternal.OfType<IConstant<TResult>>().Any())
 			{
 				var children = ChildrenInternal.ToList(); // Make a copy to be worked on...
 				var constants = children.ExtractType<IConstant<TResult>>();
@@ -147,11 +146,13 @@ namespace Open.Evaluation.Arithmetic
 				if (childList.Count == 0)
 					return c;
 
-				if (c is IConstant<float> f && float.IsNaN(f.Value))
-					return catalog.GetConstant((TResult)(dynamic)float.NaN);
-
-				if (c is IConstant<double> d && double.IsNaN(d.Value))
-					return catalog.GetConstant((TResult)(dynamic)double.NaN);
+				switch (c)
+				{
+					case IConstant<float> f when float.IsNaN(f.Value):
+						return catalog.GetConstant((TResult)(dynamic)float.NaN);
+					case IConstant<double> d when double.IsNaN(d.Value):
+						return catalog.GetConstant((TResult)(dynamic)double.NaN);
+				}
 
 				var zero = catalog.GetConstant((TResult)(dynamic)0);
 
@@ -161,14 +162,16 @@ namespace Open.Evaluation.Arithmetic
 				if (c != catalog.GetConstant((TResult)(dynamic)1))
 					childList.Add(c);
 			}
-			else if (childList.Count == 0)
+			else
 			{
-				Debug.Fail("Extraction failure.", "Should not have occured.");
-				throw new Exception("Extraction failure.");
-			}
-			else if (childList.Count == 1)
-			{
-				return childList.Single();
+				switch (childList.Count)
+				{
+					case 0:
+						//Debug.Fail("Extraction failure.", "Should not have occured.");
+						throw new Exception("Extraction failure.");
+					case 1:
+						return childList.Single();
+				}
 			}
 
 			return Product<TResult>.Create(catalog, childList);

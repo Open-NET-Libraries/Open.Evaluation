@@ -51,15 +51,10 @@ namespace Open.Evaluation.Tests
 			public ProductCollapse() : base(FORMAT, REP, RED) { }
 
 			protected override double Expected
-			{
-				get
-				{
-					return Math.Pow(PV[0] + PV[1], 2)
-						* Math.Pow(PV[2], 2)
-						* PV[3]
-						* 2;
-				}
-			}
+				=> Math.Pow(PV[0] + PV[1], 2)
+				  * Math.Pow(PV[2], 2)
+				  * PV[3]
+				  * 2;
 		}
 
 		[TestClass]

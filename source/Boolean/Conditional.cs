@@ -7,6 +7,7 @@ using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Boolean
 {
+	// ReSharper disable once PossibleInfiniteInheritance
 	public class Conditional<TResult> : OperationBase<TResult>,
 		IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>)>
 	{
@@ -25,19 +26,16 @@ namespace Open.Evaluation.Boolean
 		public IEvaluate<bool> Condition
 		{
 			get;
-			private set;
 		}
 
 		public IEvaluate<TResult> IfTrue
 		{
 			get;
-			private set;
 		}
 
 		public IEvaluate<TResult> IfFalse
 		{
 			get;
-			private set;
 		}
 
 

@@ -11,14 +11,14 @@ namespace Open.Evaluation.Core
 		: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<IEvaluate<TResult>>
 	{
 
-		protected OperationBase(char symbol, string symbolString) : base()
+		protected OperationBase(char symbol, string symbolString)
 		{
 			SymbolString = symbolString ?? throw new ArgumentNullException(nameof(symbolString));
 			Symbol = symbol;
 		}
 
-		public char Symbol { get; private set; }
-		public string SymbolString { get; private set; }
+		public char Symbol { get; }
+		public string SymbolString { get; }
 
 		protected override string ToStringInternal(object contents) => $"{SymbolString}({contents})";
 

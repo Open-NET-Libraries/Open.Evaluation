@@ -13,7 +13,7 @@ namespace Open.Evaluation.Core
 		where TValue : IComparable
 	{
 
-		protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null) : base()
+		protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null)
 		{
 			_evaluator = evaluator ?? GetParamValueFrom;
 			ID = id;
@@ -33,7 +33,6 @@ namespace Open.Evaluation.Core
 		public ushort ID
 		{
 			get;
-			private set;
 		}
 
 		public static string ToStringRepresentation(ushort id) => "{" + id + "}";

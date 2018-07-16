@@ -6,7 +6,6 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -55,15 +54,14 @@ namespace Open.Evaluation.Arithmetic
 
 				childList.Add(c);
 			}
-			else if (childList.Count == 0)
-			{
-				Debug.Fail("Extraction failure.", "Should not have occured.");
-				throw new Exception("Extraction failure.");
-			}
-			else if (childList.Count == 1)
-			{
-				return childList.Single();
-			}
+			else switch (childList.Count)
+				{
+					case 0:
+						//Debug.Fail("Extraction failure.", "Should not have occured.");
+						throw new Exception("Extraction failure.");
+					case 1:
+						return childList.Single();
+				}
 
 			return Product.Create(catalog, childList);
 		}

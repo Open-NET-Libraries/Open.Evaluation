@@ -9,8 +9,9 @@ namespace Open.Evaluation.Tests
 
 	public abstract class ParseTestBase
 	{
-		protected readonly double[] PV = new double[] { 2, 3, 4, 5 };
+		protected readonly double[] PV = { 2, 3, 4, 5 };
 		protected readonly EvaluationCatalog<double> Catalog;
+		// ReSharper disable once NotAccessedField.Global
 		protected readonly string Format;
 		protected readonly string Representation;
 		protected readonly string Reduction;

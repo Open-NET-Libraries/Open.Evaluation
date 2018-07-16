@@ -25,10 +25,10 @@ namespace Open.Evaluation.Boolean
 
 		protected readonly string Prefix;
 
+		// ReSharper disable once MemberCanBeProtected.Global
 		public int Count
 		{
 			get;
-			private set;
 		}
 
 		protected override string ToStringInternal(object contents)
