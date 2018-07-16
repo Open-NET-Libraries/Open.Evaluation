@@ -104,8 +104,8 @@ namespace Open.Evaluation.Core
 					break;
 			}
 
-			var aChildCount = (a as IParent)?.Children.Count ?? 1;
-			var bChildCount = (b as IParent)?.Children.Count ?? 1;
+			var aChildCount = ((a as IParent)?.GetDescendants().Count(d => !(d is IConstant)) ?? 0) + 1;
+			var bChildCount = ((b as IParent)?.GetDescendants().Count(d => !(d is IConstant)) ?? 0) + 1;
 
 			if (aChildCount > bChildCount) return -1;
 			if (aChildCount < bChildCount) return +1;

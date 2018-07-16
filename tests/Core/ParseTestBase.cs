@@ -41,11 +41,13 @@ namespace Open.Evaluation.Tests
 
 			if (Reduction == Representation)
 			{
-				Assert.AreEqual(Evaluation, EvaluationReduced, "The same format string has produced a reduction.");
+				Assert.AreEqual(Evaluation, EvaluationReduced,
+					"The same format string has produced a reduction.");
 			}
 			else
 			{
-				Assert.AreNotEqual(Evaluation, EvaluationReduced, "No reduction occurred but there was one expected.");
+				Assert.AreNotEqual(Evaluation, EvaluationReduced,
+					"No reduction occurred but there was one expected.");
 
 				Assert.AreEqual(
 					Expected,

@@ -5,6 +5,7 @@
 
 using Open.Evaluation.Core;
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Arithmetic
 {
@@ -47,6 +48,7 @@ namespace Open.Evaluation.Arithmetic
 			return (TResult)(dynamic)Math.Pow(evaluation, power);
 		}
 
+		[SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
 			var pow = catalog.GetReduced(Power);
@@ -54,15 +56,12 @@ namespace Open.Evaluation.Arithmetic
 				return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
 
 			dynamic p = cPow.Value;
-			switch (p)
-			{
-				case 0:
-					return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)1);
-				case 1:
-					return catalog.GetReduced(Base);
-			}
+			if (p == 0)
+				return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)1);
 
-			return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
+			return p == 1
+				? catalog.GetReduced(Base)
+				: catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
 		}
 
 		internal static Exponent<TResult> Create(

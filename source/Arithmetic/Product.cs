@@ -30,13 +30,9 @@ namespace Open.Evaluation.Arithmetic
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve product of empty set.");
 
-			dynamic result = 1;
-			foreach (var r in ChildResults(context).Cast<TResult>())
-			{
-				result *= r;
-			}
-
-			return result;
+			return ChildResults(context)
+				.Cast<TResult>()
+				.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
 		}
 
 		protected override IEvaluate<TResult> Reduction(
@@ -81,8 +77,9 @@ namespace Open.Evaluation.Arithmetic
 				{
 					var @base = g.First().Item1;
 					var power = cat.GetReduced(cat.SumOf(g.Select(t => t.Power)));
-					if (power == one) return @base;
-					return cat.GetExponent(@base, power);
+					return power == one
+						? @base
+						: cat.GetExponent(@base, power);
 				}).ToList();
 
 			return children.Count == 1 ? children[0] : catalog.ProductOf(children);
@@ -93,18 +90,15 @@ namespace Open.Evaluation.Arithmetic
 		{
 			multiple = null;
 
-			if (ChildrenInternal.OfType<IConstant<TResult>>().Any())
-			{
-				var children = ChildrenInternal.ToList(); // Make a copy to be worked on...
-				var constants = children.ExtractType<IConstant<TResult>>();
-				if (constants.Count != 0)
-				{
-					multiple = catalog.ProductOfConstants(constants);
-					return new Product<TResult>(children);
-				}
-			}
+			if (!ChildrenInternal.OfType<IConstant<TResult>>().Any()) return this;
 
-			return this;
+			var children = ChildrenInternal.ToList(); // Make a copy to be worked on...
+			var constants = children.ExtractType<IConstant<TResult>>();
+			if (constants.Count == 0) return this;
+
+			multiple = catalog.ProductOfConstants(constants);
+			return new Product<TResult>(children);
+
 		}
 
 		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
