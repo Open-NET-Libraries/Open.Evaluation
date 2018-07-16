@@ -1,6 +1,7 @@
 ﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -106,7 +107,7 @@ namespace Open.Evaluation.Catalogs
 
 		public static IEvaluate<double> ApplyFunction(
 			this EvalDoubleVariationCatalog catalog,
-			Node<IEvaluate<double>> node, char fn)
+			Node<IEvaluate<double>> node, char fn, IEnumerable<IEvaluate<double>> parameters)
 		{
 			Debug.Assert(catalog != null);
 			if (node == null) throw new ArgumentNullException(nameof(node));
@@ -115,13 +116,27 @@ namespace Open.Evaluation.Catalogs
 			if (!Registry.Arithmetic.Functions.Contains(fn))
 				throw new ArgumentException("Invalid function operator.", nameof(fn));
 
-			return catalog.Catalog.ApplyClone(node, newNode =>
-				catalog.Catalog.GetFunction(fn, newNode.Value));
+			var c = catalog.Catalog;
+			return c.ApplyClone(node, newNode =>
+				Registry.Arithmetic.GetFunction(c, fn, parameters.ToArray()));
+		}
+
+		public static IEvaluate<double> ApplyRandomFunction(
+			this EvalDoubleVariationCatalog catalog,
+			Node<IEvaluate<double>> node)
+		{
+			Debug.Assert(catalog != null);
+			if (node == null) throw new ArgumentNullException(nameof(node));
+			Contract.EndContractBlock();
+
+			var c = catalog.Catalog;
+			return c.ApplyClone(node, newNode =>
+				Registry.Arithmetic.GetRandomFunction(c, node.Value));
 		}
 
 		public static IEvaluate<double> ApplyFunctionAt(
 			this EvalDoubleVariationCatalog catalog,
-			Node<IEvaluate<double>> root, int descendantIndex, char fn)
+			Node<IEvaluate<double>> root, int descendantIndex, char fn, IEnumerable<IEvaluate<double>> parameters)
 		{
 			Debug.Assert(catalog != null);
 			if (root == null) throw new ArgumentNullException(nameof(root));
@@ -129,7 +144,7 @@ namespace Open.Evaluation.Catalogs
 
 			return ApplyFunction(catalog,
 				root.GetDescendantsOfType()
-					.ElementAt(descendantIndex).Parent, fn);
+					.ElementAt(descendantIndex).Parent, fn, parameters);
 		}
 
 

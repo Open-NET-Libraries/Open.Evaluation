@@ -1,6 +1,5 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
-using Open.Evaluation.Hierarchy;
 using Open.Hierarchy;
 using Open.Numeric;
 using System;
@@ -11,6 +10,9 @@ using System.Threading;
 
 namespace Open.Evaluation.Catalogs
 {
+	using IFunction = IFunction<double>;
+	using IOperator = IOperator<IEvaluate<double>, double>;
+
 	public partial class EvaluationCatalog<T>
 		where T : IComparable
 	{
@@ -93,14 +95,14 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
-			if (!(node.Value is IParameter<double> p))
+			if (!(node.Value is IParameter p))
 				throw new ArgumentException("Does not contain a Parameter.", nameof(node));
 
 			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
 				var rv = node.Root.Value;
 				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(
-					p==rv ? p.ID : (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count()) + 1,
+					p == rv ? p.ID : (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count()) + 1,
 					p.ID);
 
 				newNode.Value = catalog.Catalog.GetParameter(nextParameter);
@@ -111,7 +113,11 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
-			bool isFn = gene is IFunction;
+			if (!(node.Value is IOperator o))
+				throw new ArgumentException("Does not contain an Operation.", nameof(node));
+
+			var symbol = o.Symbol;
+			var isFn = Registry.Arithmetic.Functions.Contains(symbol);
 			if (isFn)
 			{
 				// Functions with no other options?
@@ -125,16 +131,10 @@ namespace Open.Evaluation.Catalogs
 					return null;
 			}
 
-			return ApplyClone(root, gene, (g, newGenome) =>
-			{
-				var og = (IOperator)g;
-				IOperator replacement = isFn
-					? Operators.GetRandomFunctionGene(og.Operator)
-					: Operators.GetRandomOperationGene(og.Operator);
-				replacement.AddThese(og.Children);
-				og.Clear();
-				newGenome.Replace(g, replacement);
-			});
+			var c = catalog.Catalog;
+			return c.ApplyClone(node, _ => isFn
+				? Registry.Arithmetic.GetRandomFunction(c, o.Children.ToArray(), symbol)
+				: Registry.Arithmetic.GetRandomOperator(c, o.Children, symbol));
 		}
 
 		public static IEvaluate<double> AddParameter(
@@ -149,7 +149,7 @@ namespace Open.Evaluation.Catalogs
 					return catalog.Catalog.ApplyClone(node, newNode =>
 						newNode.AddValue(catalog.Catalog.GetParameter(
 							RandomUtilities.Random.Next(
-								p.Children.OfType<IParameter>().Select(n => n.ID).Count() + 1))));
+								p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1))));
 
 				default:
 					throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node));
@@ -160,36 +160,26 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
-			var inputParamCount = root.Genes.OfType<Parameter>().GroupBy(p => p.ToString()).Count();
-			return catalog.Catalog.ApplyClone(gene, g =>
+			var rv = node.Root.Value;
+			var inputParamCount = rv is IParent p ? p.GetDescendants().OfType<IParameter>().Distinct().Count() : rv is IParameter ? 1 : 0;
+			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
-				var n = GetParameterGene(RandomUtilities.Random.Next(inputParamCount));
-				var newOp = Operators.GetRandomOperationGene();
+				var parameter = catalog.Catalog.GetParameter(RandomUtilities.Random.Next(inputParamCount));
+				IEvaluate<double>[] children;
 
-				if (gene is IFunction || RandomUtilities.Random.Next(4) == 0)
+				var nv = newNode.Value;
+				if (newNode.Value is IFunction || RandomUtilities.Random.Next(4) == 0)
 				{
-					var index = RandomUtilities.Random.Next(2);
-					if (index == 1)
-					{
-						newOp.Add(n);
-						newOp.Add(g);
-					}
-					else
-					{
-						newOp.Add(g);
-						newOp.Add(n);
-					}
-					newGenome.Replace(g, newOp);
+					children = RandomUtilities.Random.Next(2) == 1
+						? new[] { parameter, nv }
+						: new[] { nv, parameter };
 				}
 				else
 				{
-					newOp.Add(n);
-					// Useless to divide a param by itself, avoid...
-					newOp.Add(GetParameterGene(RandomUtilities.Random.Next(inputParamCount)));
-
-					((IOperator)g).Add(newOp);
+					children = new[] { parameter, nv };
 				}
 
+				return Registry.Arithmetic.GetRandomOperator(catalog, children);
 			});
 		}
 

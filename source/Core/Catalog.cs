@@ -88,16 +88,27 @@ namespace Open.Evaluation.Core
 			}
 		}
 
-		public abstract class SubmoduleBase<TCatalog>
-			where TCatalog : Catalog<T>
+		public abstract class SubmoduleBase
 		{
-			internal readonly TCatalog Catalog;
+			// ReSharper disable once UnusedAutoPropertyAccessor.Global
+			internal ICatalog<T> Catalog { get; }
 			internal readonly Node<T>.Factory Factory;
 
-			protected SubmoduleBase(in TCatalog catalog)
+			protected SubmoduleBase(ICatalog<T> catalog, Node<T>.Factory factory)
 			{
 				Catalog = catalog;
-				Factory = catalog.Factory;
+				Factory = factory;
+			}
+		}
+
+		public abstract class SubmoduleBase<TCatalog> : SubmoduleBase
+			where TCatalog : Catalog<T>
+		{
+			internal new TCatalog Catalog { get; }
+
+			protected SubmoduleBase(TCatalog catalog) : base(catalog, catalog.Factory)
+			{
+				Catalog = catalog;
 			}
 		}
 	}

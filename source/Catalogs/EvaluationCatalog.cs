@@ -242,5 +242,6 @@ namespace Open.Evaluation.Catalogs
 					newNode => newNode.Add(Factory.Map(this.GetConstant(value))))
 				: null;
 
+
 	}
 }
