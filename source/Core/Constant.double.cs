@@ -17,7 +17,7 @@ namespace Open.Evaluation.Core
 		internal new static Constant Create(ICatalog<IEvaluate<double>> catalog, double value)
 			=> catalog.Register(value.ToString(CultureInfo.InvariantCulture), k => new Constant(value));
 
-		public override IEvaluate NewUsing(ICatalog<IEvaluate> catalog, double value)
+		public override IEvaluate<double> NewUsing(ICatalog<IEvaluate<double>> catalog, double value)
 			=> catalog.Register(value.ToString(CultureInfo.InvariantCulture), k => new Constant(value));
 	}
 

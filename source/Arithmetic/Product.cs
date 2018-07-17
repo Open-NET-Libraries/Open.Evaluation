@@ -12,7 +12,7 @@ namespace Open.Evaluation.Arithmetic
 {
 	public class Product<TResult> :
 		OperatorBase<IEvaluate<TResult>, TResult>,
-		IReproducable<IEnumerable<IEvaluate<TResult>>>
+		IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
 		where TResult : struct, IComparable
 	{
 		protected Product(IEnumerable<IEvaluate<TResult>> children = null)
@@ -115,8 +115,8 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<TResult>> param)
 			=> catalog.Register(new Product<TResult>(param));
 
-		public virtual IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public virtual IEvaluate<TResult> NewUsing(
+			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 			=> catalog.Register(new Product<TResult>(param));
 

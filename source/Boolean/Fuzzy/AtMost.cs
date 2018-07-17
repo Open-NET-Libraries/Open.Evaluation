@@ -9,15 +9,15 @@ using System.Collections.Generic;
 namespace Open.Evaluation.Boolean
 {
 	public class AtMost : CountingBase,
-		IReproducable<(int, IEnumerable<IEvaluate<bool>>)>
+		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
 		public const string PREFIX = "AtMost";
 		internal AtMost(int count, IEnumerable<IEvaluate<bool>> children)
 			: base(PREFIX, count, children)
 		{ }
 
-		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public IEvaluate<bool> NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)
 		{
 			return catalog.Register(new AtMost(param.Item1, param.Item2));

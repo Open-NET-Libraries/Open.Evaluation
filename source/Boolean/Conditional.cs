@@ -9,7 +9,7 @@ namespace Open.Evaluation.Boolean
 {
 	// ReSharper disable once PossibleInfiniteInheritance
 	public class Conditional<TResult> : OperationBase<TResult>,
-		IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>)>
+		IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
 	{
 
 		public Conditional(
@@ -59,8 +59,8 @@ namespace Open.Evaluation.Boolean
 				? IfTrue.Evaluate(context)
 				: IfFalse.Evaluate(context);
 
-		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public IEvaluate<TResult> NewUsing(
+			ICatalog<IEvaluate<TResult>> catalog,
 			(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
 			return catalog.Register(

@@ -35,9 +35,9 @@ namespace Open.Evaluation.Catalogs
 
 			var value = target.Value;
 			// Does this node's value contain children?
-			if (value is IParent<IEnumerable<IEvaluate<T>>>)
+			if (value is IParent<IEvaluate<T>>)
 			{
-				var fixedChildren = target
+				var fixedChildren = target.Children.ToArray()
 					.Select(n =>
 					{
 						var f = FixHierarchy(n, true);
@@ -50,11 +50,11 @@ namespace Open.Evaluation.Catalogs
 
 				switch (value)
 				{
-					case IReproducable<IEnumerable<IEvaluate<T>>> r:
+					case IReproducable<IEnumerable<IEvaluate<T>>, IEvaluate<T>> r:
 						// This recursion technique will operate on the leaves of the tree first.
 						node = Factory.Map(
-							(IEvaluate<T>)r.NewUsing(
-								(ICatalog<IEvaluate>)this,
+							r.NewUsing(
+								this,
 								// Using new children... Rebuild using new structure and check for registration.
 								fixedChildren
 							)
@@ -62,11 +62,11 @@ namespace Open.Evaluation.Catalogs
 						break;
 
 					// Functions, exponent, etc...
-					case IReproducable<(IEvaluate<T>, IEvaluate<T>)> e:
+					case IReproducable<(IEvaluate<T>, IEvaluate<T>), IEvaluate<T>> e:
 						Debug.Assert(target.Children.Count == 2);
 						node = Factory.Map(
-							(IEvaluate<T>)e.NewUsing(
-								(ICatalog<IEvaluate>)this,
+							e.NewUsing(
+								this,
 								(fixedChildren[0], fixedChildren[1])
 							)
 						);

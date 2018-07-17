@@ -12,7 +12,7 @@ namespace Open.Evaluation.Core
 {
 	[DebuggerDisplay("Value = {Value}")]
 	public class Constant<TValue>
-		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue>
+		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
 		where TValue : IComparable
 	{
 
@@ -37,7 +37,7 @@ namespace Open.Evaluation.Core
 		internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
 			=> catalog.Register(value.ToString(), k => new Constant<TValue>(value));
 
-		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TValue value)
+		public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue value)
 			=> catalog.Register(value.ToString(), k => new Constant<TValue>(value));
 
 		public static implicit operator TValue(Constant<TValue> c)

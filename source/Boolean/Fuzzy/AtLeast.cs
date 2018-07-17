@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace Open.Evaluation.Boolean
 {
 	public class AtLeast : CountingBase,
-		IReproducable<(int, IEnumerable<IEvaluate<bool>>)>
+		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
 		public const string PREFIX = "AtLeast";
 		internal AtLeast(int count, IEnumerable<IEvaluate<bool>> children = null)
@@ -20,8 +20,8 @@ namespace Open.Evaluation.Boolean
 				throw new ArgumentOutOfRangeException("count", count, "Count must be at least 1.");
 		}
 
-		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public IEvaluate<bool> NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)
 			=> catalog.Register(new AtLeast(param.Item1, param.Item2));
 

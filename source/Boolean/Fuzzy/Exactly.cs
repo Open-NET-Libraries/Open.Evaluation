@@ -9,15 +9,15 @@ using System.Collections.Generic;
 namespace Open.Evaluation.Boolean
 {
 	public class Exactly : CountingBase,
-		IReproducable<(int, IEnumerable<IEvaluate<bool>>)>
+		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
 		public const string PREFIX = "Exactly";
 		internal Exactly(int count, IEnumerable<IEvaluate<bool>> children = null)
 			: base(PREFIX, count, children)
 		{ }
 
-		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public IEvaluate<bool> NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)
 			=> catalog.Register(new Exactly(param.Item1, param.Item2));
 

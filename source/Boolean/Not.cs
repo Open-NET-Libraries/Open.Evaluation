@@ -10,7 +10,7 @@ using System.Linq;
 namespace Open.Evaluation.Boolean
 {
 	public class Not : OperatorBase<bool>,
-		IReproducable<IEvaluate<bool>>
+		IReproducable<IEvaluate<bool>, IEvaluate<bool>>
 	{
 		public const char SYMBOL = '!';
 		public const string SYMBOL_STRING = "!";
@@ -20,8 +20,8 @@ namespace Open.Evaluation.Boolean
 				  Enumerable.Repeat(contents ?? throw new ArgumentNullException(nameof(contents)), 1))
 		{ }
 
-		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public IEvaluate<bool> NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
 			IEvaluate<bool> param)
 			=> catalog.Register(new Not(param));
 

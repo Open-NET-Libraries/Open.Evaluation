@@ -9,7 +9,7 @@ using System.Collections.Generic;
 namespace Open.Evaluation.Core
 {
 	public class Parameter<TValue>
-		: EvaluationBase<TValue>, IParameter<TValue>, IReproducable<ushort>
+		: EvaluationBase<TValue>, IParameter<TValue>, IReproducable<ushort, IEvaluate<TValue>>
 		where TValue : IComparable
 	{
 
@@ -23,9 +23,16 @@ namespace Open.Evaluation.Core
 
 		static TValue GetParamValueFrom(object source, ushort id)
 		{
-			if (source is IReadOnlyList<TValue> list) return list[id];
-			if (source is IDictionary<ushort, TValue> d) return d[id];
-			if (source is TValue v) return v;
+			switch (source)
+			{
+				case IReadOnlyList<TValue> list:
+					return list[id];
+				case IDictionary<ushort, TValue> d:
+					return d[id];
+				case TValue v:
+					return v;
+			}
+
 			throw new ArgumentException("Unknown type.", nameof(source));
 		}
 
@@ -49,7 +56,7 @@ namespace Open.Evaluation.Core
 		internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
 			=> catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
 
-		public virtual IEvaluate NewUsing(ICatalog<IEvaluate> catalog, ushort id)
+		public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, ushort id)
 			=> catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
 	}
 

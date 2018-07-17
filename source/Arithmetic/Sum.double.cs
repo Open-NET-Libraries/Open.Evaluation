@@ -32,8 +32,8 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<double>> param)
 			=> catalog.Register(new Sum(param));
 
-		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public override IEvaluate<double> NewUsing(
+			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
 			=> catalog.Register(new Sum(param));
 	}

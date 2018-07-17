@@ -12,7 +12,7 @@ namespace Open.Evaluation.Arithmetic
 {
 	public class Sum<TResult> :
 		OperatorBase<IEvaluate<TResult>, TResult>,
-		IReproducable<IEnumerable<IEvaluate<TResult>>>
+		IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
 		where TResult : struct, IComparable
 	{
 		protected Sum(IEnumerable<IEvaluate<TResult>> children = null)
@@ -104,8 +104,8 @@ namespace Open.Evaluation.Arithmetic
 			return catalog.Register(new Sum<TResult>(param));
 		}
 
-		public virtual IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public virtual IEvaluate<TResult> NewUsing(
+			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
 			return catalog.Register(new Sum<TResult>(param));

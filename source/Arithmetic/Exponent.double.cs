@@ -26,8 +26,8 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<double> power)
 			=> catalog.Register(new Exponent(@base, power));
 
-		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public override IEvaluate<double> NewUsing(
+			ICatalog<IEvaluate<double>> catalog,
 			(IEvaluate<double>, IEvaluate<double>) param)
 			=> catalog.Register(new Exponent(param.Item1, param.Item2));
 	}

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 namespace Open.Evaluation.Boolean
 {
 	public class And : OperatorBase<IEvaluate<bool>, bool>,
-		IReproducable<IEnumerable<IEvaluate<bool>>>
+		IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 	{
 		public const char SYMBOL = '&';
 		public const string SEPARATOR = " & ";
@@ -32,8 +32,8 @@ namespace Open.Evaluation.Boolean
 			return true;
 		}
 
-		public IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public IEvaluate<bool> NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
 			IEnumerable<IEvaluate<bool>> param)
 			=> catalog.Register(new And(param));
 

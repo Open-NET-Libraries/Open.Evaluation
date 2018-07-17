@@ -7,6 +7,7 @@ using Open.Hierarchy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -49,7 +50,11 @@ namespace Open.Evaluation.Core
 				result.Append(o);
 			}
 			result.Append(')');
-			return result.ToString();
+			var r = result.ToString();
+			var isEmpty = r == "()";
+			Debug.Assert(!isEmpty, "Operator has no children.");
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+			return isEmpty ? $"({Symbol})" : r;
 		}
 
 		public override string ToString(object context)

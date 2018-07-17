@@ -24,8 +24,8 @@ namespace Open.Evaluation.Arithmetic
 			: this(Enumerable.Repeat(first, 1).Concat(rest))
 		{ }
 
-		public override IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public override IEvaluate<double> NewUsing(
+			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
 			=> catalog.Register(new Product(param));
 

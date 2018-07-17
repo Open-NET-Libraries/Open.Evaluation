@@ -11,7 +11,7 @@ namespace Open.Evaluation.Arithmetic
 {
 	// ReSharper disable once PossibleInfiniteInheritance
 	public class Exponent<TResult> : OperatorBase<TResult>,
-		IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>)>
+		IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
 		where TResult : struct, IComparable
 	{
 		protected Exponent(
@@ -70,8 +70,8 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> power)
 			=> catalog.Register(new Exponent<TResult>(@base, power));
 
-		public virtual IEvaluate NewUsing(
-			ICatalog<IEvaluate> catalog,
+		public virtual IEvaluate<TResult> NewUsing(
+			ICatalog<IEvaluate<TResult>> catalog,
 			(IEvaluate<TResult>, IEvaluate<TResult>) param)
 			=> catalog.Register(new Exponent<TResult>(param.Item1, param.Item2));
 	}

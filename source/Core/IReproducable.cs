@@ -4,41 +4,49 @@ using System.Linq;
 
 namespace Open.Evaluation.Core
 {
-	public interface IReproducable<in TParam> : IEvaluate
+	public interface IReproducable<in TParam, TEval> : IEvaluate
+		where TEval : IEvaluate
 	{
-		IEvaluate NewUsing(ICatalog<IEvaluate> catalog, TParam param);
+		TEval NewUsing(ICatalog<TEval> catalog, TParam param);
 	}
 
 	public static class ReproductionExtensions
 	{
-		public static IEvaluate NewUsing<T, TChild>(
+		public static TEval NewUsing<T, TChild, TEval>(
 			this T target,
-			ICatalog<IEvaluate> catalog, TChild child, params TChild[] rest)
-			where T : IReproducable<IEnumerable<TChild>>
+			ICatalog<TEval> catalog,
+			TChild child,
+			params TChild[] rest)
+			where T : IReproducable<IEnumerable<TChild>, TEval>
+			where TEval : IEvaluate
 			=> target.NewUsing(catalog, Enumerable.Repeat(child, 1).Concat(rest));
 
-		public static IEvaluate NewWithIndexRemoved<T, TChild>(
+		public static TEval NewWithIndexRemoved<T, TChild, TEval>(
 			this T target,
-			ICatalog<IEvaluate> catalog, in int index)
-			where T : IReproducable<IEnumerable<TChild>>, IParent<TChild>
+			ICatalog<TEval> catalog, in int index)
+			where T : IReproducable<IEnumerable<TChild>, TEval>, IParent<TChild>
+			where TEval : IEvaluate
 			=> target.NewUsing(catalog, target.Children.SkipAt(index));
 
-		public static IEvaluate NewWithIndexReplaced<T, TChild>(
+		public static TEval NewWithIndexReplaced<T, TChild, TEval>(
 			this T target,
-			ICatalog<IEvaluate> catalog, in int index, in TChild repacement)
-			where T : IReproducable<IEnumerable<TChild>>, IParent<TChild>
+			ICatalog<TEval> catalog, in int index, in TChild repacement)
+			where T : IReproducable<IEnumerable<TChild>, TEval>, IParent<TChild>
+			where TEval : IEvaluate
 			=> target.NewUsing(catalog, target.Children.ReplaceAt(index, repacement));
 
-		public static IEvaluate NewWithAppended<T, TChild>(
+		public static TEval NewWithAppended<T, TChild, TEval>(
 			this T target,
-			ICatalog<IEvaluate> catalog, IEnumerable<TChild> appended)
-			where T : IReproducable<IEnumerable<TChild>>, IParent<TChild>
+			ICatalog<TEval> catalog, IEnumerable<TChild> appended)
+			where T : IReproducable<IEnumerable<TChild>, TEval>, IParent<TChild>
+			where TEval : IEvaluate
 			=> target.NewUsing(catalog, target.Children.Concat(appended));
 
-		public static IEvaluate NewWithAppended<T, TChild>(
+		public static TEval NewWithAppended<T, TChild, TEval>(
 			this T target,
-			ICatalog<IEvaluate> catalog, TChild child, params TChild[] rest)
-			where T : IReproducable<IEnumerable<TChild>>, IParent<TChild>
+			ICatalog<TEval> catalog, TChild child, params TChild[] rest)
+			where T : IReproducable<IEnumerable<TChild>, TEval>, IParent<TChild>
+			where TEval : IEvaluate
 			=> target.NewWithAppended(catalog, Enumerable.Repeat(child, 1).Concat(rest));
 
 
