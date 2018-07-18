@@ -30,7 +30,7 @@ namespace Open.Evaluation.Catalogs
 			if (multiple == 0 || double.IsNaN(multiple)) // Neutralized.
 			{
 				return catalog.ApplyClone(sourceNode, newNode =>
-					newNode.Value = catalog.GetConstant(multiple));
+					catalog.GetConstant(multiple));
 			}
 
 			if (sourceNode.Value is Product<double> p)
@@ -45,11 +45,8 @@ namespace Open.Evaluation.Catalogs
 					: catalog.AddConstant(sourceNode, multiple);
 			}
 
-			return catalog.ApplyClone(sourceNode, newNode =>
-			{
-				var e = newNode.Value;
-				newNode.Value = catalog.ProductOf(multiple, e);
-			});
+			return catalog.ApplyClone(sourceNode,
+				newNode => catalog.ProductOf(multiple, newNode.Value));
 		}
 
 		public static IEvaluate<double> MultiplyNodeDescendant(
@@ -81,10 +78,12 @@ namespace Open.Evaluation.Catalogs
 			if (delta == 0) // No change... 
 				return sourceNode.Root.Value;
 
-			if (!(sourceNode.Value is Product<double> p)) return MultiplyNode(catalog, sourceNode, delta + 1);
+			if (!(sourceNode.Value is Product<double> p))
+				return MultiplyNode(catalog, sourceNode, delta + 1);
 
 			var multiple = catalog.GetMultiple(p);
-			if (multiple.Value == 1) MultiplyNode(catalog, sourceNode, delta + 1);
+			if (multiple.Value == 1)
+				return MultiplyNode(catalog, sourceNode, delta + 1);
 
 			return catalog.ApplyClone(sourceNode, newNode =>
 			{

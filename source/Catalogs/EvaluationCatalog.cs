@@ -43,6 +43,7 @@ namespace Open.Evaluation.Catalogs
 						var f = FixHierarchy(n, true);
 						var v = f.Value;
 						if (f != n) f.Recycle(); // Only the owner of the target node should do the recycling.
+						Debug.Assert(v != null);
 						return Register(v);
 					}).ToArray();
 
