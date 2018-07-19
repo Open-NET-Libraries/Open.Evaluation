@@ -22,9 +22,9 @@ namespace Open.Evaluation
 			public const char EXPONENT = Exponent.SYMBOL;
 
 			public static readonly IReadOnlyList<char> Operators
-				= (new List<char> { ADD, MULTIPLY });
+				= (new List<char> { ADD, MULTIPLY }).AsReadOnly();
 			public static readonly IReadOnlyList<char> Functions
-				= (new List<char> { EXPONENT });
+				= (new List<char> { EXPONENT }).AsReadOnly();
 
 			public static IEvaluate<double> GetOperator(
 				ICatalog<IEvaluate<double>> catalog,
