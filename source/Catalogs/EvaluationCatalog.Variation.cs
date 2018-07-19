@@ -130,8 +130,8 @@ namespace Open.Evaluation.Catalogs
 			Contract.EndContractBlock();
 
 			var c = catalog.Catalog;
-			return c.ApplyClone(node, newNode =>
-				Registry.Arithmetic.GetRandomFunction(c, node.Value));
+			var n = Registry.Arithmetic.GetRandomFunction(c, node.Value);
+			return n == null ? null : c.ApplyClone(node, newNode => n);
 		}
 
 		public static IEvaluate<double> ApplyFunctionAt(

@@ -43,7 +43,7 @@ namespace Open.Evaluation
 						return catalog.ProductOf(children);
 				}
 
-				throw new ArgumentException("Invalid operator.", nameof(op));
+				throw new ArgumentException($"Invalid operator: {op}", nameof(op));
 			}
 
 			public static IEvaluate<double> GetOperator(
@@ -132,7 +132,7 @@ namespace Open.Evaluation
 
 				char op;
 				if (except == null || except.Length == 0)
-					op = Operators.RandomSelectOne();
+					op = Functions.RandomSelectOne();
 				else
 					Functions.TryRandomSelectOne(out op, new HashSet<char>(except));
 
@@ -140,8 +140,7 @@ namespace Open.Evaluation
 				{
 					case EXPONENT:
 						var powerOrDivide = RandomUtilities.Random.Next(2) == 0 ? 2 : -1;
-						GetFunction(catalog, op, new[] { child, catalog.GetConstant(powerOrDivide) });
-						break;
+						return GetFunction(catalog, op, new[] { child, catalog.GetConstant(powerOrDivide) });
 				}
 
 				return null;
