@@ -56,14 +56,9 @@ namespace Open.Evaluation.Core
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
 			double c1, IEnumerable<IConstant<double>> others)
-		{
-			var result = c1;
-			foreach (var c in others)
-			{
-				result *= c.Value;
-			}
-			return GetConstant(catalog, result);
-		}
+			=> GetConstant(catalog,
+				others.Aggregate(c1, (current, c) => current * c.Value));
+
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,

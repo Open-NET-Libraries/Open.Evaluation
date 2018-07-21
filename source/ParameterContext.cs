@@ -9,7 +9,7 @@ namespace Open.Evaluation
 	{
 		public object Context { get; private set; }
 
-		public ParameterContext(in object context)
+		public ParameterContext(object context)
 		{
 			Context = context;
 		}

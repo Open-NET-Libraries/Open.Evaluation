@@ -61,7 +61,7 @@ namespace Open.Evaluation.Arithmetic
 
 			return p == 1
 				? catalog.GetReduced(Base)
-				: catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
+				: catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
 		}
 
 		internal static Exponent<TResult> Create(

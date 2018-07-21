@@ -50,13 +50,14 @@ namespace Open.Evaluation.Arithmetic
 					return children[0];
 			}
 
+
 			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
 				return GetConstant(catalog, (TResult)(dynamic)float.NaN);
 
 			if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
 				return GetConstant(catalog, (TResult)(dynamic)double.NaN);
 
-			var zero = catalog.GetConstant((TResult)(dynamic)0);
+			var zero = catalog.GetConstant((TResult)(dynamic)0); // This could be a problem in the future. What zero?  0d?  0f? :/
 			if (children.Any(c => c == zero)) return zero;
 
 			var one = catalog.GetConstant((TResult)(dynamic)1);
@@ -76,15 +77,22 @@ namespace Open.Evaluation.Arithmetic
 				.Select(g =>
 				{
 					var @base = g.First().Item1;
-					var power = cat.GetReduced(cat.SumOf(g.Select(t => t.Power)));
+					var sumPower = cat.SumOf(g.Select(t => t.Power));
+					var power = cat.GetReduced(sumPower);
+					if (power == zero) return one;
 					return power == one
 						? @base
-						: cat.GetExponent(@base, power);
+						: GetExponent(catalog, @base, power);
 				}).ToList();
 
 			return children.Count == 1 ? children[0] : catalog.ProductOf(children);
 
 		}
+
+		protected virtual Exponent<TResult> GetExponent(ICatalog<IEvaluate<TResult>> catalog,
+			IEvaluate<TResult> @base,
+			IEvaluate<TResult> power)
+			=> Exponent<TResult>.Create(catalog, @base, power);
 
 		public IEvaluate<TResult> ExtractMultiple(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
 		{
@@ -141,7 +149,9 @@ namespace Open.Evaluation.Arithmetic
 			var constants = childList.ExtractType<IConstant<TResult>>();
 			if (constants.Count > 0)
 			{
-				var c = constants.Count == 1 ? constants.Single() : catalog.ProductOfConstants(constants);
+				var c = constants.Count == 1
+					? constants.Single()
+					: catalog.ProductOfConstants(constants);
 				if (childList.Count == 0)
 					return c;
 
@@ -152,10 +162,6 @@ namespace Open.Evaluation.Arithmetic
 					case IConstant<double> d when double.IsNaN(d.Value):
 						return catalog.GetConstant((TResult)(dynamic)double.NaN);
 				}
-
-				var zero = catalog.GetConstant((TResult)(dynamic)0);
-
-				if (c == zero) return zero;
 
 				// No need to multiply by 1.
 				if (c != catalog.GetConstant((TResult)(dynamic)1))

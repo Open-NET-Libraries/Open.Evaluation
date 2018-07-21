@@ -24,6 +24,11 @@ namespace Open.Evaluation.Arithmetic
 			: this(Enumerable.Repeat(first, 1).Concat(rest))
 		{ }
 
+		protected override Exponent<double> GetExponent(ICatalog<IEvaluate<double>> catalog,
+			IEvaluate<double> @base,
+			IEvaluate<double> power)
+			=> Exponent.Create(catalog, @base, power);
+
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
@@ -48,13 +53,20 @@ namespace Open.Evaluation.Arithmetic
 			var constants = childList.ExtractType<IConstant<double>>();
 			if (constants.Count > 0)
 			{
-				var c = constants.Count == 1 ? constants.Single() : catalog.ProductOfConstants(constants);
+				var c = constants.Count == 1
+					? constants.Single() :
+					catalog.ProductOfConstants(constants);
+
 				if (childList.Count == 0)
 					return c;
 
-				childList.Add(c);
+				// No need to multiply by 1.
+				if (c != catalog.GetConstant(1))
+					childList.Add(c);
 			}
-			else switch (childList.Count)
+			else
+			{
+				switch (childList.Count)
 				{
 					case 0:
 						//Debug.Fail("Extraction failure.", "Should not have occured.");
@@ -62,6 +74,7 @@ namespace Open.Evaluation.Arithmetic
 					case 1:
 						return childList.Single();
 				}
+			}
 
 			return Product.Create(catalog, childList);
 		}

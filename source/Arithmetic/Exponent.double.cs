@@ -29,7 +29,7 @@ namespace Open.Evaluation.Arithmetic
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
 			(IEvaluate<double>, IEvaluate<double>) param)
-			=> catalog.Register(new Exponent(param.Item1, param.Item2));
+			=> Create(catalog, param.Item1, param.Item2);
 	}
 
 	public static partial class ExponentExtensions

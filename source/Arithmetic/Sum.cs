@@ -6,6 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -116,9 +117,11 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
-			var childList = children.ToList();
-			var constants = childList.ExtractType<IConstant<TResult>>();
+			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+			if (children == null) throw new ArgumentNullException(nameof(children));
+			Contract.EndContractBlock();
 
+			var childList = children.ToList();
 			switch (childList.Count)
 			{
 				case 0:
@@ -126,15 +129,22 @@ namespace Open.Evaluation.Arithmetic
 				case 1:
 					return childList.Single();
 				default:
-					var c = constants.Count == 1 ? constants.Single() : catalog.SumOfConstants(constants);
+					var constants = childList.ExtractType<IConstant<TResult>>();
+
+					if (constants.Count == 0)
+						return Sum<TResult>.Create(catalog, childList);
+
+					var c = constants.Count == 1
+						? constants[0]
+						: catalog.SumOfConstants(constants);
+
 					if (childList.Count == 0)
 						return c;
 
 					childList.Add(c);
-					break;
-			}
 
-			return Sum<TResult>.Create(catalog, childList);
+					return Sum<TResult>.Create(catalog, childList);
+			}
 		}
 
 		public static IEvaluate<TResult> SumOf<TResult>(
