@@ -24,13 +24,7 @@ namespace Open.Evaluation.Arithmetic
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve sum of empty set.");
 
-			dynamic result = 0;
-			foreach (var r in ChildResults(context).Cast<TResult>())
-			{
-				result += r;
-			}
-
-			return result;
+			return ChildResults(context).Cast<TResult>().Aggregate<TResult, dynamic>(0, (current, r) => current + r);
 		}
 
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
@@ -42,18 +36,18 @@ namespace Open.Evaluation.Arithmetic
 			switch (children.Count)
 			{
 				case 0:
-					return catalog.GetConstant((TResult)(dynamic)0);
+					return GetConstant(catalog, (TResult)(dynamic)0);
 				case 1:
 					return children[0];
 			}
 
 			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-				return catalog.GetConstant((TResult)(dynamic)float.NaN);
+				return GetConstant(catalog, (TResult)(dynamic)float.NaN);
 
 			if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-				return catalog.GetConstant((TResult)(dynamic)double.NaN);
+				return GetConstant(catalog, (TResult)(dynamic)double.NaN);
 
-			var one = catalog.GetConstant((TResult)(dynamic)1);
+			var one = GetConstant(catalog, (TResult)(dynamic)1);
 
 			// Phase 3: Look for groupings by "multiples".
 			var withMultiples = children.Select(c =>
@@ -79,7 +73,7 @@ namespace Open.Evaluation.Arithmetic
 				}
 			});
 
-			var zero = catalog.GetConstant((TResult)(dynamic)0);
+			var zero = GetConstant(catalog, (TResult)(dynamic)0);
 
 			// Phase 4: Replace multipliable products with single merged version.
 			return catalog.SumOf(
@@ -101,15 +95,18 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
+				return (dynamic)Sum.Create(dCat, p);
+
 			return catalog.Register(new Sum<TResult>(param));
 		}
 
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-		{
-			return catalog.Register(new Sum<TResult>(param));
-		}
+			=> Create(catalog, param);
+
 	}
 
 	public static partial class SumExtensions
@@ -121,21 +118,20 @@ namespace Open.Evaluation.Arithmetic
 		{
 			var childList = children.ToList();
 			var constants = childList.ExtractType<IConstant<TResult>>();
-			if (constants.Count > 0)
-			{
-				var c = constants.Count == 1 ? constants.Single() : catalog.SumOfConstants(constants);
-				if (childList.Count == 0)
-					return c;
 
-				childList.Add(c);
-			}
-			else if (childList.Count == 0)
+			switch (childList.Count)
 			{
-				return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
-			}
-			else if (childList.Count == 1)
-			{
-				return childList.Single();
+				case 0:
+					return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
+				case 1:
+					return childList.Single();
+				default:
+					var c = constants.Count == 1 ? constants.Single() : catalog.SumOfConstants(constants);
+					if (childList.Count == 0)
+						return c;
+
+					childList.Add(c);
+					break;
 			}
 
 			return Sum<TResult>.Create(catalog, childList);

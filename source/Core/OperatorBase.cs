@@ -8,6 +8,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
@@ -20,9 +21,15 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 
-		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children = null, bool reorderChildren = false) : base(symbol, separator)
+		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false) : base(symbol, separator)
 		{
-			ChildrenInternal = children == null ? new List<TChild>() : new List<TChild>(children);
+			if (children == null) throw new ArgumentNullException(nameof(children));
+			Contract.EndContractBlock();
+
+			ChildrenInternal = new List<TChild>(children);
+			if (ChildrenInternal.Count == 0)
+				throw new ArgumentException("Operators must be constructed with at least 1 child.");
+
 			if (reorderChildren) ChildrenInternal.Sort(Compare);
 			Children = ChildrenInternal.AsReadOnly();
 		}
@@ -121,6 +128,9 @@ namespace Open.Evaluation.Core
 			return string.CompareOrdinal(ats, bts);
 
 		}
+
+		protected virtual Constant<TResult> GetConstant(ICatalog<IEvaluate<TResult>> catalog, TResult value)
+			=> catalog.GetConstant(value);
 	}
 
 	public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, TResult>
@@ -129,7 +139,7 @@ namespace Open.Evaluation.Core
 		protected OperatorBase(
 			char symbol,
 			string separator,
-			IEnumerable<IEvaluate<TResult>> children = null,
+			IEnumerable<IEvaluate<TResult>> children,
 			bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
 		{
 		}

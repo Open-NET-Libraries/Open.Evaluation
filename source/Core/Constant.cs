@@ -50,7 +50,13 @@ namespace Open.Evaluation.Core
 			this ICatalog<IEvaluate<TValue>> catalog,
 			TValue value)
 			where TValue : IComparable
-			=> Constant<TValue>.Create(catalog, value);
+		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (catalog is ICatalog<IEvaluate<double>> dCat && value is double d)
+				return (dynamic)Constant.Create(dCat, d);
+
+			return Constant<TValue>.Create(catalog, value);
+		}
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,

@@ -54,11 +54,11 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<double>> sourceNode, int descendantIndex, double multiple)
 			=> catalog.MultiplyNode(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), multiple);
 
-		public static Constant GetMultiple<TParent>(this EvaluationCatalog<double> catalog, TParent n)
+		public static Constant<double> GetMultiple<TParent>(this EvaluationCatalog<double> catalog, TParent n)
 			where TParent : IParent<IEvaluate<double>>
 			=> catalog.ProductOfConstants(n.Children.OfType<IConstant<double>>());
 
-		public static Constant GetMultiple(this EvaluationCatalog<double> catalog, IEvaluate<double> node)
+		public static Constant<double> GetMultiple(this EvaluationCatalog<double> catalog, IEvaluate<double> node)
 			=> node is IParent<IEvaluate<double>> n ? catalog.GetMultiple(n) : catalog.GetConstant(1);
 
 		/// <summary>

@@ -27,6 +27,9 @@ namespace Open.Evaluation.Arithmetic
 			return ChildResults(context).Cast<double>().Sum();
 		}
 
+		protected override Constant<double> GetConstant(ICatalog<IEvaluate<double>> catalog, double value)
+			=> Constant.Create(catalog, value);
+
 		internal new static Sum Create(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
@@ -46,21 +49,19 @@ namespace Open.Evaluation.Arithmetic
 		{
 			var childList = children.ToList();
 			var constants = childList.ExtractType<IConstant<double>>();
-			if (constants.Count > 0)
+			switch (childList.Count)
 			{
-				var c = constants.Count == 1 ? constants.Single() : catalog.SumOfConstants(constants);
-				if (childList.Count == 0)
-					return c;
+				case 0:
+					return catalog.GetConstant(0);
+				case 1:
+					return childList.Single();
+				default:
+					var c = constants.Count == 1 ? constants.Single() : catalog.SumOfConstants(constants);
+					if (childList.Count == 0)
+						return c;
 
-				childList.Add(c);
-			}
-			else if (childList.Count == 0)
-			{
-				return catalog.GetConstant(0);
-			}
-			else if (childList.Count == 1)
-			{
-				return childList.Single();
+					childList.Add(c);
+					break;
 			}
 
 			return Sum.Create(catalog, childList);

@@ -5,6 +5,7 @@ using Open.Evaluation.Core;
 using Open.Numeric;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation
@@ -34,7 +35,7 @@ namespace Open.Evaluation
 				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
 				if (children == null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
-
+				Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
 				switch (op)
 				{
 					case Sum.SYMBOL:

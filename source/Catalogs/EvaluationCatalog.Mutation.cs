@@ -105,7 +105,7 @@ namespace Open.Evaluation.Catalogs
 					p == rv ? p.ID : (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count()) + 1,
 					p.ID);
 
-				newNode.Value = catalog.Catalog.GetParameter(nextParameter);
+				return catalog.Catalog.GetParameter(nextParameter);
 			});
 		}
 

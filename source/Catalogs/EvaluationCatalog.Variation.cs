@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Core;
+﻿using Open.Evaluation.Arithmetic;
+using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
 using System.Collections.Generic;
@@ -31,13 +32,16 @@ namespace Open.Evaluation.Catalogs
 	public static partial class EvaluationCatalogExtensions
 	{
 
-		public static bool IsValidForRemoval<TEval>(this Node<TEval> gene, bool ifRoot = false)
-			where TEval : IEvaluate
+		public static bool IsValidForRemoval<T>(this Node<IEvaluate<T>> gene, bool ifRoot = false)
+			where T : struct, IComparable
 		{
 			if (gene == gene.Root) return ifRoot;
 			// Validate worthyness.
 			var parent = gene.Parent;
 			Debug.Assert(parent != null);
+
+			if (parent.Value is Exponent<T>)
+				return false;
 
 			// Search for potential futility...
 			// Basically, if there is no dynamic nodes left after reduction then it's not worth removing.
@@ -69,6 +73,33 @@ namespace Open.Evaluation.Catalogs
 			newRoot = default;
 			return false;
 		}
+
+		/// <summary>
+		/// Removes a node from its parent.
+		/// </summary>
+		/// <param name="catalog">The catalog to use.</param>
+		/// <param name="sourceNode">The root node to remove a descendant from.</param>
+		/// <param name="descendantIndex">The index of the descendant in the heirarchy (breadth-first).</param>
+		/// <param name="newRoot">The resultant root node corrected by .FixHierarchy()</param>
+		/// <returns>true if sucessful</returns>
+		public static bool TryRemoveValidAt(
+			this EvalDoubleVariationCatalog catalog,
+			Node<IEvaluate<double>> sourceNode,
+			int descendantIndex,
+			out IEvaluate<double> newRoot)
+		{
+			Debug.Assert(catalog != null);
+			if (sourceNode == null) throw new ArgumentNullException(nameof(sourceNode));
+
+			return TryRemoveValid(
+				catalog,
+				sourceNode
+					.GetDescendantsOfType()
+					.ElementAt(descendantIndex),
+				out newRoot);
+		}
+
+
 
 
 		static bool CheckPromoteChildrenValidity(

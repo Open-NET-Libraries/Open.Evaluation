@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Open.Evaluation.Catalogs
@@ -26,6 +27,10 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> target,
 			bool operateDirectly = false)
 		{
+			if (target == null) throw new ArgumentNullException(nameof(target));
+			Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() != null);
+			Contract.EndContractBlock();
+
 			if (!operateDirectly)
 				target = target.Clone();
 
@@ -42,8 +47,8 @@ namespace Open.Evaluation.Catalogs
 					{
 						var f = FixHierarchy(n, true);
 						var v = f.Value;
-						if (f != n) f.Recycle(); // Only the owner of the target node should do the recycling.
 						Debug.Assert(v != null);
+						if (f != n) f.Recycle(); // Only the owner of the target node should do the recycling.
 						return Register(v);
 					}).ToArray();
 
@@ -64,7 +69,7 @@ namespace Open.Evaluation.Catalogs
 
 					// Functions, exponent, etc...
 					case IReproducable<(IEvaluate<T>, IEvaluate<T>), IEvaluate<T>> e:
-						Debug.Assert(target.Children.Count == 2);
+						Debug.Assert(fixedChildren.Length > 1);
 						node = Factory.Map(
 							e.NewUsing(
 								this,

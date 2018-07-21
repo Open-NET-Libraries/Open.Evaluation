@@ -51,10 +51,10 @@ namespace Open.Evaluation.Arithmetic
 			}
 
 			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-				return catalog.GetConstant((TResult)(dynamic)float.NaN);
+				return GetConstant(catalog, (TResult)(dynamic)float.NaN);
 
 			if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-				return catalog.GetConstant((TResult)(dynamic)double.NaN);
+				return GetConstant(catalog, (TResult)(dynamic)double.NaN);
 
 			var zero = catalog.GetConstant((TResult)(dynamic)0);
 			if (children.Any(c => c == zero)) return zero;
@@ -97,7 +97,7 @@ namespace Open.Evaluation.Arithmetic
 			if (constants.Count == 0) return this;
 
 			multiple = catalog.ProductOfConstants(constants);
-			return new Product<TResult>(children);
+			return NewUsing(catalog, children);
 
 		}
 
@@ -113,13 +113,18 @@ namespace Open.Evaluation.Arithmetic
 		public static Product<TResult> Create(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-			=> catalog.Register(new Product<TResult>(param));
+		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
+				return (dynamic)Product.Create(dCat, p);
+
+			return catalog.Register(new Product<TResult>(param));
+		}
 
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-			=> catalog.Register(new Product<TResult>(param));
-
+			=> Create(catalog, param);
 	}
 
 	public static partial class ProductExtensions

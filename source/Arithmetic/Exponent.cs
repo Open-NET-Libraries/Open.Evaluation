@@ -24,8 +24,8 @@ namespace Open.Evaluation.Arithmetic
 				  new[] { @base, power }
 			)
 		{
-			Base = @base;
-			Power = power;
+			Base = @base ?? throw new ArgumentNullException(nameof(@base));
+			Power = power ?? throw new ArgumentNullException(nameof(power));
 		}
 
 		public IEvaluate<TResult> Base
@@ -57,7 +57,7 @@ namespace Open.Evaluation.Arithmetic
 
 			dynamic p = cPow.Value;
 			if (p == 0)
-				return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)1);
+				return GetConstant(catalog, (dynamic)1);
 
 			return p == 1
 				? catalog.GetReduced(Base)
@@ -68,12 +68,20 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEvaluate<TResult> @base,
 			IEvaluate<TResult> power)
-			=> catalog.Register(new Exponent<TResult>(@base, power));
+		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (catalog is ICatalog<IEvaluate<double>> dCat
+				&& @base is IEvaluate<double> b
+				&& power is IEvaluate<double> p)
+				return (dynamic)Exponent.Create(dCat, b, p);
+
+			return catalog.Register(new Exponent<TResult>(@base, power));
+		}
 
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			(IEvaluate<TResult>, IEvaluate<TResult>) param)
-			=> catalog.Register(new Exponent<TResult>(param.Item1, param.Item2));
+			=> Create(catalog, param.Item1, param.Item2);
 	}
 
 	public static partial class ExponentExtensions

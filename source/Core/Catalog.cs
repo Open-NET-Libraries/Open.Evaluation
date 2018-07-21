@@ -3,6 +3,8 @@ using Open.Hierarchy;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
 namespace Open.Evaluation.Core
@@ -24,28 +26,52 @@ namespace Open.Evaluation.Core
 		public void Register<TItem>(ref TItem item)
 			where TItem : T
 		{
-			item = (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item);
+			if (item == null) throw new ArgumentNullException(nameof(item));
+			Contract.Ensures(Contract.Result<TItem>() != null);
+			Contract.EndContractBlock();
+
+			item = Register(item);
 		}
+
+		//protected virtual TItem OnBeforeRegistration<TItem>(TItem item)
+		//	=> item;
 
 		public TItem Register<TItem>(TItem item)
 			where TItem : T
-			=> (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item);
+		{
+			if (item == null) throw new ArgumentNullException(nameof(item));
+			Contract.Ensures(Contract.Result<TItem>() != null);
+			Contract.EndContractBlock();
+			var result = (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item/*OnBeforeRegistration(item)*/);
+			Debug.Assert(result != null);
+			return result;
+		}
 
 		public TItem Register<TItem>(string id, Func<string, TItem> factory)
 			where TItem : T
 		{
+			if (id == null) throw new ArgumentNullException(nameof(id));
+			if (factory == null) throw new ArgumentNullException(nameof(factory));
+			Contract.Ensures(Contract.Result<TItem>() != null);
+			Contract.EndContractBlock();
+
 			return (TItem)Registry.GetOrAdd(id, k =>
 			{
 				var e = factory(k);
+				Debug.Assert(e != null);
 				if (e.ToStringRepresentation() != k)
 					throw new Exception("Provided ID does not match instance.ToStringRepresentation().");
-				return e;
+				return e;/* OnBeforeRegistration(e);*/
 			});
 		}
 
 		public bool TryGetItem<TItem>(string id, out TItem item)
 			where TItem : T
 		{
+			if (id == null) throw new ArgumentNullException(nameof(id));
+			Contract.Ensures(Contract.Result<TItem>() != null);
+			Contract.EndContractBlock();
+
 			var result = Registry.TryGetValue(id, out var e);
 			item = (TItem)e;
 			return result;
