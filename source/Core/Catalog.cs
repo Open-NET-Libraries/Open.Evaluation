@@ -60,8 +60,10 @@ namespace Open.Evaluation.Core
 			{
 				var e = factory(k);
 				Debug.Assert(e != null);
-				if (e.ToStringRepresentation() != k)
-					throw new Exception("Provided ID does not match instance.ToStringRepresentation().");
+				var hash = e.ToStringRepresentation();
+				Debug.Assert(hash == k);
+				if (hash != k)
+					throw new Exception($"Provided ID does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}");
 				return OnBeforeRegistration(e);
 			});
 		}

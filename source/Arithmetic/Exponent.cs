@@ -59,9 +59,11 @@ namespace Open.Evaluation.Arithmetic
 			if (p == 0)
 				return GetConstant(catalog, (dynamic)1);
 
-			return p == 1
-				? catalog.GetReduced(Base)
-				: catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
+			if (p == 1)
+				return catalog.GetReduced(Base);
+
+			var bas = catalog.GetReduced(Base);
+			return catalog.Register(NewUsing(catalog, (bas, pow)));
 		}
 
 		internal static Exponent<TResult> Create(
