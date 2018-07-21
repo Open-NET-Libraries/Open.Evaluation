@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Core;
+﻿using Open.Evaluation.Arithmetic;
+using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,16 @@ namespace Open.Evaluation.Catalogs
 	public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		where T : IComparable
 	{
+
+		protected override TItem OnBeforeRegistration<TItem>(TItem item)
+		{
+			Debug.Assert(!(item is Exponent<double>) || item is Exponent);
+			Debug.Assert(!(item is Sum<double>) || item is Sum);
+			Debug.Assert(!(item is Product<double>) || item is Product);
+			Debug.Assert(!(item is Constant<double>) || item is Constant);
+
+			return item;
+		}
 
 		/// <summary>
 		/// For any evaluation node, correct the hierarchy to match.

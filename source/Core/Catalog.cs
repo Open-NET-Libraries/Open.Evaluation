@@ -33,8 +33,8 @@ namespace Open.Evaluation.Core
 			item = Register(item);
 		}
 
-		//protected virtual TItem OnBeforeRegistration<TItem>(TItem item)
-		//	=> item;
+		protected virtual TItem OnBeforeRegistration<TItem>(TItem item)
+			=> item;
 
 		public TItem Register<TItem>(TItem item)
 			where TItem : T
@@ -42,9 +42,10 @@ namespace Open.Evaluation.Core
 			if (item == null) throw new ArgumentNullException(nameof(item));
 			Contract.Ensures(Contract.Result<TItem>() != null);
 			Contract.EndContractBlock();
-			var result = (TItem)Registry.GetOrAdd(item.ToStringRepresentation(), item/*OnBeforeRegistration(item)*/);
+			var result = Registry.GetOrAdd(item.ToStringRepresentation(), OnBeforeRegistration(item));
 			Debug.Assert(result != null);
-			return result;
+			Debug.Assert(result is TItem);
+			return (TItem)result;
 		}
 
 		public TItem Register<TItem>(string id, Func<string, TItem> factory)
@@ -61,7 +62,7 @@ namespace Open.Evaluation.Core
 				Debug.Assert(e != null);
 				if (e.ToStringRepresentation() != k)
 					throw new Exception("Provided ID does not match instance.ToStringRepresentation().");
-				return e;/* OnBeforeRegistration(e);*/
+				return OnBeforeRegistration(e);
 			});
 		}
 

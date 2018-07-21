@@ -40,8 +40,12 @@ namespace Open.Evaluation.Catalogs
 			var parent = gene.Parent;
 			Debug.Assert(parent != null);
 
-			if (parent.Value is Exponent<T>)
-				return false;
+			switch (parent.Value)
+			{
+				case OperatorBase<T> _ when parent.Count < 2:
+				case Exponent<T> _:
+					return false;
+			}
 
 			// Search for potential futility...
 			// Basically, if there is no dynamic nodes left after reduction then it's not worth removing.
@@ -66,7 +70,7 @@ namespace Open.Evaluation.Catalogs
 			if (IsValidForRemoval(node))
 			{
 				newRoot = catalog.Catalog
-					.RemoveNode(node)
+					.RemoveNode(node.CloneTree())
 					.Recycle();
 				return true;
 			}

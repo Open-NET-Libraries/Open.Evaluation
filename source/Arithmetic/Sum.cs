@@ -53,25 +53,18 @@ namespace Open.Evaluation.Arithmetic
 			// Phase 3: Look for groupings by "multiples".
 			var withMultiples = children.Select(c =>
 			{
-				if (c is Product<TResult> p)
-				{
-					var reduced = p.ReductionWithMutlipleExtracted(catalog, out var multiple);
-					if (multiple == null) multiple = one;
+				if (!(c is Product<TResult> p))
+					return (c.ToStringRepresentation(), one, c);
 
-					return (
-						reduced.ToStringRepresentation(),
-						multiple,
-						reduced
-					);
-				}
-				else
-				{
-					return (
-						c.ToStringRepresentation(),
-						one,
-						c
-					);
-				}
+				var reduced = p.ReductionWithMutlipleExtracted(catalog, out var multiple);
+				if (multiple == null) multiple = one;
+
+				return (
+					hash: reduced.ToStringRepresentation(),
+					multiple,
+					reduced
+				);
+
 			});
 
 			var zero = GetConstant(catalog, (TResult)(dynamic)0);
@@ -79,15 +72,15 @@ namespace Open.Evaluation.Arithmetic
 			// Phase 4: Replace multipliable products with single merged version.
 			return catalog.SumOf(
 				withMultiples
-					.GroupBy(g => g.Item1)
+					.GroupBy(g => g.hash)
 					.Select(g => (
-						catalog.SumOfConstants(g.Select(t => t.multiple)),
+						multiple: catalog.SumOfConstants(g.Select(t => t.multiple)),
 						g.First().reduced
 					))
-					.Where(i => i.Item1 != zero)
-					.Select(i => i.Item1 == one
+					.Where(i => i.multiple != zero)
+					.Select(i => i.multiple == one
 						? i.reduced
-						: catalog.GetReduced(catalog.ProductOf(i.Item1, i.reduced))
+						: catalog.GetReduced(catalog.ProductOf(i.multiple, i.reduced))
 					)
 			);
 		}

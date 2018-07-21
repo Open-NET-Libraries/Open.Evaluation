@@ -53,7 +53,7 @@ namespace Open.Evaluation.Arithmetic
 		{
 			var pow = catalog.GetReduced(Power);
 			if (!(pow is Constant<TResult> cPow))
-				return catalog.Register(new Exponent<TResult>(catalog.GetReduced(Base), pow));
+				return catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
 
 			dynamic p = cPow.Value;
 			if (p == 0)
