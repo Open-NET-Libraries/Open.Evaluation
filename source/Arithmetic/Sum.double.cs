@@ -6,6 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -34,12 +35,19 @@ namespace Open.Evaluation.Arithmetic
 		internal new static Sum Create(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
-			=> catalog.Register(new Sum(param));
+		{
+			Debug.Assert(catalog != null);
+			Debug.Assert(param != null);
+			return catalog.Register(new Sum(param));
+		}
 
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
-			=> catalog.Register(new Sum(param));
+		{
+			var p = param as IEvaluate<double>[] ?? param.ToArray();
+			return p.Length == 1 ? p[0] : Create(catalog, p);
+		}
 	}
 
 	public static partial class SumExtensions

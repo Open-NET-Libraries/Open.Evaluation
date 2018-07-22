@@ -4,7 +4,6 @@
  */
 
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 
 namespace Open.Evaluation.Core
@@ -15,10 +14,10 @@ namespace Open.Evaluation.Core
 		{ }
 
 		internal new static Constant Create(ICatalog<IEvaluate<double>> catalog, double value)
-			=> catalog.Register(value.ToString(CultureInfo.InvariantCulture), k => new Constant(value));
+			=> catalog.Register(ToStringRepresentation(value), k => new Constant(value));
 
 		public override IEvaluate<double> NewUsing(ICatalog<IEvaluate<double>> catalog, double value)
-			=> catalog.Register(value.ToString(CultureInfo.InvariantCulture), k => new Constant(value));
+			=> catalog.Register(ToStringRepresentation(value), k => new Constant(value));
 	}
 
 	public static partial class ConstantExtensions

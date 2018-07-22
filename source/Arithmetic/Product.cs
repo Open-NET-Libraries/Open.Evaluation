@@ -6,6 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -122,6 +123,8 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
+			Debug.Assert(catalog != null);
+			Debug.Assert(param != null);
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
 				return (dynamic)Product.Create(dCat, p);
@@ -132,7 +135,11 @@ namespace Open.Evaluation.Arithmetic
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-			=> Create(catalog, param);
+		{
+			Debug.Assert(catalog != null);
+			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
+			return p.Length == 1 ? p[0] : Create(catalog, p);
+		}
 	}
 
 	public static partial class ProductExtensions

@@ -28,17 +28,21 @@ namespace Open.Evaluation.Core
 
 		IComparable IConstant.Value => Value;
 
-		protected override string ToStringRepresentationInternal() => string.Empty + Value;
+		public static string ToStringRepresentation(TValue value)
+			=> string.Empty + value;
+
+		protected override string ToStringRepresentationInternal()
+			=> ToStringRepresentation(Value);
 
 		protected override TValue EvaluateInternal(object context) => Value;
 
 		protected override string ToStringInternal(object context) => ToStringRepresentation();
 
 		internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
-			=> catalog.Register(value.ToString(), k => new Constant<TValue>(value));
+			=> catalog.Register(ToStringRepresentation(value), k => new Constant<TValue>(value));
 
 		public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue value)
-			=> catalog.Register(value.ToString(), k => new Constant<TValue>(value));
+			=> catalog.Register(ToStringRepresentation(value), k => new Constant<TValue>(value));
 
 		public static implicit operator TValue(Constant<TValue> c)
 			=> c.Value;

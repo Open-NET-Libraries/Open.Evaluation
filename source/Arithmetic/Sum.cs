@@ -6,6 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -21,12 +22,9 @@ namespace Open.Evaluation.Arithmetic
 		{ }
 
 		protected override TResult EvaluateInternal(object context)
-		{
-			if (ChildrenInternal.Count == 0)
-				throw new InvalidOperationException("Cannot resolve sum of empty set.");
-
-			return ChildResults(context).Cast<TResult>().Aggregate<TResult, dynamic>(0, (current, r) => current + r);
-		}
+			=> ChildResults(context)
+				.Cast<TResult>()
+				.Aggregate<TResult, dynamic>(0, (current, r) => current + r);
 
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
@@ -89,6 +87,9 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
+			Debug.Assert(catalog != null);
+			Debug.Assert(param != null);
+
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
 				return (dynamic)Sum.Create(dCat, p);
@@ -99,7 +100,11 @@ namespace Open.Evaluation.Arithmetic
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-			=> Create(catalog, param);
+		{
+			Debug.Assert(param != null);
+			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
+			return p.Length == 1 ? p[0] : Create(catalog, p);
+		}
 
 	}
 

@@ -6,6 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -15,7 +16,7 @@ namespace Open.Evaluation.Arithmetic
 		public const char SYMBOL = '*';
 		public const string SEPARATOR = " * ";
 
-		internal Product(IEnumerable<IEvaluate<double>> children = null)
+		internal Product(IEnumerable<IEvaluate<double>> children)
 			: base(children)
 		{
 		}
@@ -29,15 +30,25 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<double> power)
 			=> Exponent.Create(catalog, @base, power);
 
-		public override IEvaluate<double> NewUsing(
-			ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> param)
-			=> catalog.Register(new Product(param));
-
 		internal new static Product Create(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
-			=> catalog.Register(new Product(param));
+		{
+			Debug.Assert(catalog != null);
+			Debug.Assert(param != null);
+			return catalog.Register(new Product(param));
+		}
+
+		public override IEvaluate<double> NewUsing(
+			ICatalog<IEvaluate<double>> catalog,
+			IEnumerable<IEvaluate<double>> param)
+		{
+			Debug.Assert(param != null);
+			var p = param as IEvaluate<double>[] ?? param.ToArray();
+			return p.Length == 1 ? p[0] : Create(catalog, p);
+		}
+
+
 	}
 
 	public static partial class ProductExtensions
