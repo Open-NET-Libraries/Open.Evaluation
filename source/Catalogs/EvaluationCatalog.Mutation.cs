@@ -57,10 +57,11 @@ namespace Open.Evaluation.Catalogs
 					case 0:
 						// Alter Sign
 						var result = catalog.Catalog.MultiplyNode(n, -1);
+
+						// Sorry, not gonna mess with unreal (sqrt neg numbers yet).
 						if (!parentIsSquareRoot()) return result;
 
 						n = catalog.Factory.Map(result);
-						// Sorry, not gonna mess with unreal (sqrt neg numbers yet).
 						if (RandomUtilities.Random.Next(2) == 0)
 							goto case 1;
 
