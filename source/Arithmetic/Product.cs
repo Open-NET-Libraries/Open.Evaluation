@@ -39,14 +39,19 @@ namespace Open.Evaluation.Arithmetic
 		protected override IEvaluate<TResult> Reduction(
 			ICatalog<IEvaluate<TResult>> catalog)
 		{
+			var one = catalog.GetConstant((TResult)(dynamic)1);
+
 			// Phase 1: Flatten products of products.
-			var children = catalog.Flatten<Product<TResult>>(ChildrenInternal).ToList(); // ** chidren's reduction is done here.
+			var children = catalog.Flatten<Product<TResult>>(ChildrenInternal).Where(c => c != one).ToList(); // ** chidren's reduction is done here.
 
 			// Phase 2: Can we collapse?
 			switch (children.Count)
 			{
 				case 0:
-					throw new InvalidOperationException("Cannot reduce product of empty set.");
+					if (ChildrenInternal.Count == 0)
+						throw new InvalidOperationException("Cannot reduce product of empty set.");
+
+					return one;
 				case 1:
 					return children[0];
 			}
@@ -60,8 +65,6 @@ namespace Open.Evaluation.Arithmetic
 
 			var zero = catalog.GetConstant((TResult)(dynamic)0); // This could be a problem in the future. What zero?  0d?  0f? :/
 			if (children.Any(c => c == zero)) return zero;
-
-			var one = catalog.GetConstant((TResult)(dynamic)1);
 
 			var cat = catalog;
 			// Phase 3: Convert to exponents.
