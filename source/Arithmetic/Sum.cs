@@ -28,8 +28,10 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
+			var zero = GetConstant(catalog, (TResult)(dynamic)0);
+
 			// Phase 1: Flatten sums of sums.
-			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal).ToList(); // ** chidren's reduction is done here.
+			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal).Where(c => c != zero).ToList(); // ** chidren's reduction is done here.
 
 			// Phase 2: Can we collapse?
 			switch (children.Count)
@@ -65,7 +67,7 @@ namespace Open.Evaluation.Arithmetic
 
 			});
 
-			var zero = GetConstant(catalog, (TResult)(dynamic)0);
+
 
 			// Phase 4: Replace multipliable products with single merged version.
 			return catalog.SumOf(
