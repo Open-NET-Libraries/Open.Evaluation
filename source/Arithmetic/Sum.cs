@@ -21,6 +21,41 @@ namespace Open.Evaluation.Arithmetic
 			: base(Sum.SYMBOL, Sum.SEPARATOR, children, true)
 		{ }
 
+		static (bool found, IConstant<TResult> value) IsProductWithSingleConstant(IEvaluate<TResult> a)
+		{
+			if (a is Product<TResult> aP)
+			{
+				var constants = aP.Children.OfType<IConstant<TResult>>().ToArray();
+				if (constants.Length == 1)
+					return (true, constants[0]);
+			}
+
+			return (false, null);
+		}
+
+		protected override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
+		{
+			var aC = IsProductWithSingleConstant(a);
+			var bC = IsProductWithSingleConstant(b);
+			if (aC.found && bC.found)
+			{
+				var result = base.Compare(aC.value, bC.value);
+				if (result != 0) return result;
+			}
+			else if(aC.found)
+			{
+				if (0 > (dynamic)aC.value)
+					return +1;
+			}
+			else if(bC.found)
+			{
+				if (0 > (dynamic)bC.value)
+					return -1;
+			}
+
+			return base.Compare(a, b);
+		}
+
 		protected override TResult EvaluateInternal(object context)
 			=> ChildResults(context)
 				.Cast<TResult>()
