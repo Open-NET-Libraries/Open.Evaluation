@@ -46,6 +46,12 @@ namespace Open.Evaluation.Core
 
 		public static implicit operator TValue(Constant<TValue> c)
 			=> c.Value;
+
+		public static TValue operator *(Constant<TValue> a, Constant<TValue> b)
+			=> (dynamic)a.Value * (dynamic)b.Value;
+
+		public static TValue operator +(Constant<TValue> a, Constant<TValue> b)
+			=> (dynamic)a.Value + (dynamic)b.Value;
 	}
 
 	public static partial class ConstantExtensions

@@ -36,8 +36,12 @@ namespace Open.Evaluation.Arithmetic
 				return catalog.GetReduced(Base);
 
 			var bas = catalog.GetReduced(Base);
+
 			if (bas is Constant<double> cBas)
 				return GetConstant(catalog, Math.Pow(cBas.Value, cPow.Value));
+
+			if (bas is Exponent<double> bEx && bEx.Power is Constant<double> cP)
+				pow = GetConstant(catalog, cPow.Value * cP.Value);
 
 			return catalog.Register(NewUsing(catalog, (bas, pow)));
 		}
