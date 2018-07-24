@@ -23,33 +23,28 @@ namespace Open.Evaluation.Arithmetic
 
 		static (bool found, IConstant<TResult> value) IsProductWithSingleConstant(IEvaluate<TResult> a)
 		{
-			if (a is Product<TResult> aP)
-			{
-				var constants = aP.Children.OfType<IConstant<TResult>>().ToArray();
-				if (constants.Length == 1)
-					return (true, constants[0]);
-			}
-
-			return (false, null);
+			if (!(a is Product<TResult> aP)) return (false, null);
+			var constants = aP.Children.OfType<IConstant<TResult>>().ToArray();
+			return constants.Length == 1 ? (true, constants[0]) : (false, null);
 		}
 
 		protected override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
 		{
-			var aC = IsProductWithSingleConstant(a);
-			var bC = IsProductWithSingleConstant(b);
-			if (aC.found && bC.found)
+			var (aFound, aConstant) = IsProductWithSingleConstant(a);
+			var (bFound, bConstant) = IsProductWithSingleConstant(b);
+			if (aFound && bFound)
 			{
-				var result = base.Compare(aC.value, bC.value);
+				var result = base.Compare(aConstant, bConstant);
 				if (result != 0) return result;
 			}
-			else if(aC.found)
+			else if (aFound)
 			{
-				if (0 > (dynamic)aC.value)
+				if (0 > (dynamic)aConstant)
 					return +1;
 			}
-			else if(bC.found)
+			else if (bFound)
 			{
-				if (0 > (dynamic)bC.value)
+				if (0 > (dynamic)bConstant)
 					return -1;
 			}
 
@@ -99,12 +94,11 @@ namespace Open.Evaluation.Arithmetic
 					multiple,
 					reduced
 				);
+			}).ToArray();
 
-			});
+			// Phase 4: Find common denominator:
 
-
-
-			// Phase 4: Replace multipliable products with single merged version.
+			// Phase 5: Replace multipliable products with single merged version.
 			return catalog.SumOf(
 				withMultiples
 					.GroupBy(g => g.hash)

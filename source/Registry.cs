@@ -11,6 +11,7 @@ using System.Diagnostics.Contracts;
 namespace Open.Evaluation
 {
 	using EvaluationCatalogSubmodule = EvaluationCatalog<double>.SubmoduleBase;
+
 	public static class Registry
 	{
 		public static class Arithmetic
