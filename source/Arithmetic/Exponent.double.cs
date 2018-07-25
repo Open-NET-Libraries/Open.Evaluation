@@ -37,9 +37,14 @@ namespace Open.Evaluation.Arithmetic
 			if (p == decimal.One)
 				return bas;
 
-			// Don't reduce division or fractional powers.
-			if (p > decimal.One && Math.Floor(p) == p) if (bas is Constant<double> cBas)
-					return GetConstant(catalog, Math.Pow(cBas.Value, cPow.Value));
+			if (bas is Constant<double> cBas)
+			{
+				var newPow = Math.Pow(cBas.Value, cPow.Value);
+				// ReSharper disable once CompareOfFloatsByEqualityOperator
+				if (Math.Floor(newPow) == newPow)
+					return GetConstant(catalog, newPow);
+
+			}
 
 			// ReSharper disable once InvertIf
 			if (bas is Exponent<double> bEx && bEx.Power is Constant<double> cP)

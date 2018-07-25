@@ -7,6 +7,7 @@ using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -47,19 +48,20 @@ namespace Open.Evaluation.Arithmetic
 				.Where(c => c != one)
 				.ToList(); // ** chidren's reduction is done here.
 
-			// Try to extract common multiples...
+			// Phase 3: Try to extract common multiples...
 			var len = children.Count;
 			for (var i = 0; i < len; i++)
 			{
 				var child = children[i];
 				if (!(child is Sum<TResult> sum) ||
-					!sum.TryExtractGreatestFactor(catalog, out var newSum, out var gcf)) continue;
+					!sum.TryExtractGreatestFactor(catalog, out var newSum, out var gcf))
+					continue;
 
 				children[i] = newSum; // Replace with extraction...
 				children.Add(gcf); // Append the constant..
 			}
 
-			// Phase 2: Can we collapse?
+			// Phase 3: Can we collapse?
 			switch (children.Count)
 			{
 				case 0:
@@ -71,7 +73,7 @@ namespace Open.Evaluation.Arithmetic
 					return children[0];
 			}
 
-
+			// Phase 4: Deal with special case constants.
 			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
 				return GetConstant(catalog, (TResult)(dynamic)float.NaN);
 
@@ -83,7 +85,7 @@ namespace Open.Evaluation.Arithmetic
 				return zero;
 
 			var cat = catalog;
-			// Phase 3: Convert to exponents.
+			// Phase 5: Convert to exponents.
 			var exponents = children.Select(c =>
 				c is Exponent<TResult> e
 				? (cat.GetReduced(e.Base), e.Power)
@@ -139,6 +141,39 @@ namespace Open.Evaluation.Arithmetic
 			return reduced is Product<TResult> product
 				? product.ExtractMultiple(catalog, out multiple)
 				: reduced;
+		}
+
+		static (bool found, IConstant<TResult> value) IsExponentWithConstantPower(IEvaluate<TResult> a)
+			=> (a is Exponent<TResult> aP && aP.Power is IConstant<TResult> c) ? (true, c) : (false, null);
+
+		protected override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
+		{
+			var (aFound, aConstant) = IsExponentWithConstantPower(a);
+			var (bFound, bConstant) = IsExponentWithConstantPower(b);
+			if (aFound && bFound)
+			{
+				var result = base.Compare(aConstant, bConstant);
+				if (result != 0) return result;
+			}
+			else if (aFound)
+			{
+				var v = (dynamic)aConstant;
+				if (1 > v)
+					return +1;
+				if (1 < v)
+					return -1;
+
+			}
+			else if (bFound)
+			{
+				var v = (dynamic)bConstant;
+				if (1 > v)
+					return -1;
+				if (1 < v)
+					return +1;
+			}
+
+			return base.Compare(a, b);
 		}
 
 		public static Product<TResult> Create(
@@ -253,12 +288,13 @@ namespace Open.Evaluation.Arithmetic
 			where TResult : struct, IComparable
 			=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
+		[SuppressMessage("ReSharper", "RedundantCast")]
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			in TResult multiple,
 			params IEvaluate<TResult>[] rest)
 			where TResult : struct, IComparable
-			=> ProductOf(catalog, catalog.GetConstant(multiple), rest);
+			=> ProductOf(catalog, (IEvaluate<TResult>)catalog.GetConstant(multiple), (IEnumerable<IEvaluate<TResult>>)rest);
 
 	}
 }

@@ -123,6 +123,13 @@ namespace Open.Evaluation
 				params char[] except)
 				=> GetRandomFunction(catalog?.Catalog, children, except);
 
+			private static readonly double[] ExponentOptions =
+			{
+				2, // square
+				-1, // invert
+				0.5 // square root
+			};
+
 			public static IEvaluate<double> GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
 				IEvaluate<double> child,
@@ -141,8 +148,8 @@ namespace Open.Evaluation
 				switch (op)
 				{
 					case EXPONENT:
-						var powerOrDivide = RandomUtilities.Random.Next(2) == 0 ? 2 : -1;
-						return GetFunction(catalog, op, new[] { child, catalog.GetConstant(powerOrDivide) });
+						var type = ExponentOptions[RandomUtilities.Random.Next(ExponentOptions.Length)];
+						return GetFunction(catalog, op, new[] { child, catalog.GetConstant(type) });
 				}
 
 				return null;

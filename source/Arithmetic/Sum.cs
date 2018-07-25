@@ -161,16 +161,23 @@ namespace Open.Evaluation.Arithmetic
 			var gcf = Prime.GreatestFactor(factors);
 			Debug.Assert(factors.All(f => f >= gcf));
 			if (gcf <= 1) return false;
-			return false;
+
+			bool tryGetReducedFactor(TResult value, out TResult f)
+			{
+				var r = (dynamic)value / gcf;
+				f = r;
+				return r != 1;
+			}
+
 			greatestFactor = GetConstant(catalog, (dynamic)gcf);
 			sum = catalog.SumOf(catalog.MultiplesExtracted(products)
 				.Select(e =>
 				{
 					var m = e.Multiple ?? one;
-					var r = (dynamic)m.Value / gcf;
-					return r == 1
-						? e.Entry
-						: catalog.ProductOf((TResult)r, e.Entry);
+					if (m != one && tryGetReducedFactor(m.Value, out var f))
+						return catalog.ProductOf(f, e.Entry);
+
+					return e.Entry;
 				}));
 
 			return true;
