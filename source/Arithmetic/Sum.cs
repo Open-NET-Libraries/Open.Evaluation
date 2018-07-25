@@ -4,6 +4,7 @@
  */
 
 using Open.Evaluation.Core;
+using Open.Numeric.Primes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -81,37 +82,21 @@ namespace Open.Evaluation.Arithmetic
 			var one = GetConstant(catalog, (TResult)(dynamic)1);
 
 			// Phase 3: Look for groupings by "multiples".
-			var withMultiples = children.Select(c =>
-			{
-				if (!(c is Product<TResult> p))
-					return (c.ToStringRepresentation(), one, c);
+			var withMultiples = catalog.MultiplesExtracted(children, true).ToArray();
 
-				var reduced = p.ReductionWithMutlipleExtracted(catalog, out var multiple);
-				if (multiple == null) multiple = one;
-
-				return (
-					hash: reduced.ToStringRepresentation(),
-					multiple,
-					reduced
-				);
-			}).ToArray();
-
-			// Phase 4: Find common denominator:
-
-			// Phase 5: Replace multipliable products with single merged version.
+			// Phase 4: Replace multipliable products with single merged version.
 			return catalog.SumOf(
 				withMultiples
-					.GroupBy(g => g.hash)
+					.GroupBy(g => g.Hash)
 					.Select(g => (
-						multiple: catalog.SumOfConstants(g.Select(t => t.multiple)),
-						g.First().reduced
+						multiple: catalog.SumOfConstants(g.Select(t => t.Multiple ?? one)),
+						first: g.First().Entry
 					))
 					.Where(i => i.multiple != zero)
 					.Select(i => i.multiple == one
-						? i.reduced
-						: catalog.GetReduced(catalog.ProductOf(i.multiple, i.reduced))
-					)
-			);
+						? i.first
+						: catalog.GetReduced(catalog.ProductOf(i.multiple, i.first))
+					));
 		}
 
 		internal static Sum<TResult> Create(
@@ -135,6 +120,60 @@ namespace Open.Evaluation.Arithmetic
 			Debug.Assert(param != null);
 			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
 			return p.Length == 1 ? p[0] : Create(catalog, p);
+		}
+
+		public bool TryExtractGreatestFactor(
+			ICatalog<IEvaluate<TResult>> catalog,
+			out IEvaluate<TResult> sum,
+			out IConstant<TResult> greatestFactor)
+		{
+			var one = GetConstant(catalog, (TResult)(dynamic)1);
+			greatestFactor = one;
+			sum = this;
+			// Phase 5: Try and group by GCF:
+			var products = new List<Product<TResult>>();
+			foreach (var c in Children)
+			{
+				// All of them must be products for GCF to work.
+				if (c is Product<TResult> p)
+					products.Add(p);
+				else
+					return false;
+			}
+
+			// Try and get all the constants, and if a product does not have one, then done.
+			var constants = new List<TResult>();
+			foreach (var p in products)
+			{
+				var c = p.Children.OfType<IConstant<TResult>>().ToArray();
+				if (c.Length != 1) return false;
+				constants.Add(c[0].Value);
+			}
+
+			// Convert all the constants to factors, and if any are invalid for factoring, then done.
+			var factors = new List<ulong>();
+			foreach (var v in constants)
+			{
+				var d = Math.Abs(Convert.ToDecimal(v));
+				if (d <= decimal.One || decimal.Floor(d) != d) return false;
+				factors.Add(Convert.ToUInt64(d));
+			}
+			var gcf = Prime.GreatestFactor(factors);
+			Debug.Assert(factors.All(f => f >= gcf));
+			if (gcf <= 1) return false;
+			return false;
+			greatestFactor = GetConstant(catalog, (dynamic)gcf);
+			sum = catalog.SumOf(catalog.MultiplesExtracted(products)
+				.Select(e =>
+				{
+					var m = e.Multiple ?? one;
+					var r = (dynamic)m.Value / gcf;
+					return r == 1
+						? e.Entry
+						: catalog.ProductOf((TResult)r, e.Entry);
+				}));
+
+			return true;
 		}
 
 	}
@@ -183,7 +222,6 @@ namespace Open.Evaluation.Arithmetic
 		{
 			return SumOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
 		}
-
 	}
 
 }

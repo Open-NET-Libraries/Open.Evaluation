@@ -28,20 +28,25 @@ namespace Open.Evaluation.Arithmetic
 			if (!(pow is Constant<double> cPow))
 				return catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
 
-			dynamic p = cPow.Value;
-			if (p == 0)
+			var p = Convert.ToDecimal(cPow.Value);
+			if (p == decimal.Zero)
 				return GetConstant(catalog, (dynamic)1);
-
-			if (p == 1)
-				return catalog.GetReduced(Base);
 
 			var bas = catalog.GetReduced(Base);
 
-			if (bas is Constant<double> cBas)
-				return GetConstant(catalog, Math.Pow(cBas.Value, cPow.Value));
+			if (p == decimal.One)
+				return bas;
 
+			// Don't reduce division or fractional powers.
+			if (p > decimal.One && Math.Floor(p) == p) if (bas is Constant<double> cBas)
+					return GetConstant(catalog, Math.Pow(cBas.Value, cPow.Value));
+
+			// ReSharper disable once InvertIf
 			if (bas is Exponent<double> bEx && bEx.Power is Constant<double> cP)
+			{
+				bas = bEx.Base;
 				pow = GetConstant(catalog, cPow.Value * cP.Value);
+			}
 
 			return catalog.Register(NewUsing(catalog, (bas, pow)));
 		}

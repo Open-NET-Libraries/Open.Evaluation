@@ -16,7 +16,7 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
 		where TResult : struct, IComparable
 	{
-		protected Product(IEnumerable<IEvaluate<TResult>> children = null)
+		protected Product(IEnumerable<IEvaluate<TResult>> children)
 			: base(Product.SYMBOL, Product.SEPARATOR, children, true)
 		{ }
 
@@ -42,7 +42,22 @@ namespace Open.Evaluation.Arithmetic
 			var one = catalog.GetConstant((TResult)(dynamic)1);
 
 			// Phase 1: Flatten products of products.
-			var children = catalog.Flatten<Product<TResult>>(ChildrenInternal).Where(c => c != one).ToList(); // ** chidren's reduction is done here.
+			var children = catalog
+				.Flatten<Product<TResult>>(ChildrenInternal)
+				.Where(c => c != one)
+				.ToList(); // ** chidren's reduction is done here.
+
+			// Try to extract common multiples...
+			var len = children.Count;
+			for (var i = 0; i < len; i++)
+			{
+				var child = children[i];
+				if (!(child is Sum<TResult> sum) ||
+					!sum.TryExtractGreatestFactor(catalog, out var newSum, out var gcf)) continue;
+
+				children[i] = newSum; // Replace with extraction...
+				children.Add(gcf); // Append the constant..
+			}
 
 			// Phase 2: Can we collapse?
 			switch (children.Count)
@@ -64,7 +79,8 @@ namespace Open.Evaluation.Arithmetic
 				return GetConstant(catalog, (TResult)(dynamic)double.NaN);
 
 			var zero = catalog.GetConstant((TResult)(dynamic)0); // This could be a problem in the future. What zero?  0d?  0f? :/
-			if (children.Any(c => c == zero)) return zero;
+			if (children.Any(c => c == zero))
+				return zero;
 
 			var cat = catalog;
 			// Phase 3: Convert to exponents.
@@ -73,7 +89,8 @@ namespace Open.Evaluation.Arithmetic
 				? (cat.GetReduced(e.Base), e.Power)
 				: (c, one)).ToArray();
 
-			if (exponents.Any(c => c.Item1 == zero)) return zero;
+			if (exponents.Any(c => c.Item1 == zero))
+				return zero;
 
 			children = exponents
 				.Where(e => e.Power != zero)
@@ -87,9 +104,12 @@ namespace Open.Evaluation.Arithmetic
 					return power == one
 						? @base
 						: GetExponent(catalog, @base, power);
+
 				}).ToList();
 
-			return children.Count == 1 ? children[0] : catalog.ProductOf(children);
+			return children.Count == 1
+				? children[0]
+				: catalog.ProductOf(children);
 
 		}
 
@@ -110,7 +130,6 @@ namespace Open.Evaluation.Arithmetic
 
 			multiple = catalog.ProductOfConstants(constants);
 			return NewUsing(catalog, children);
-
 		}
 
 		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
@@ -147,6 +166,28 @@ namespace Open.Evaluation.Arithmetic
 
 	public static partial class ProductExtensions
 	{
+		public static IEnumerable<(string Hash, IConstant<TResult> Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
+			where TResult : struct, IComparable
+		{
+			return source.Select(c =>
+			{
+				if (!(c is Product<TResult> p))
+					return (c.ToStringRepresentation(), null, c);
+
+				var reduced = reduce
+					? p.ReductionWithMutlipleExtracted(catalog, out var multiple)
+					: p.ExtractMultiple(catalog, out multiple);
+
+				return (
+					reduced.ToStringRepresentation(),
+					multiple,
+					reduced
+				);
+			});
+		}
+
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> children)

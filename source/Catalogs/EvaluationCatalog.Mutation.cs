@@ -101,9 +101,13 @@ namespace Open.Evaluation.Catalogs
 
 			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
+
 				var rv = node.Root.Value;
 				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(
-					p == rv ? p.ID : (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count()) + 1,
+					p == rv
+						? p.ID
+						: (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count())
+							+ (p.ID == 0 ? 1 : RandomUtilities.Random.Next(2)) /* Increase the possibility of parameter ID decrease vs increase */,
 					p.ID);
 
 				return catalog.Catalog.GetParameter(nextParameter);

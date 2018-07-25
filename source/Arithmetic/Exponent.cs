@@ -52,15 +52,15 @@ namespace Open.Evaluation.Arithmetic
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
 			var pow = catalog.GetReduced(Power);
-			if (!(pow is Constant<TResult> cPow))
-				return catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
+			if (pow is Constant<TResult> cPow)
+			{
+				dynamic p = cPow.Value;
+				if (p == 0)
+					return GetConstant(catalog, (dynamic)1);
 
-			dynamic p = cPow.Value;
-			if (p == 0)
-				return GetConstant(catalog, (dynamic)1);
-
-			if (p == 1)
-				return catalog.GetReduced(Base);
+				if (p == 1)
+					return catalog.GetReduced(Base);
+			}
 
 			var bas = catalog.GetReduced(Base);
 			return catalog.Register(NewUsing(catalog, (bas, pow)));
