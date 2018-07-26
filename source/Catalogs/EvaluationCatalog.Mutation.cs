@@ -3,6 +3,7 @@ using Open.Evaluation.Core;
 using Open.Hierarchy;
 using Open.Numeric;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -44,8 +45,9 @@ namespace Open.Evaluation.Catalogs
 
 			var n = node;
 			var isRoot = n == n.Root;
+			Debug.Assert(!isRoot || n.Parent == null);
 			// ReSharper disable once ImplicitlyCapturedClosure
-			bool parentIsSquareRoot() => !isRoot && n.Parent.Value is Exponent<double> ex && ex.IsSquareRoot();
+			bool parentIsSquareRoot() => !isRoot && n.Parent?.Value is Exponent<double> ex && ex.IsSquareRoot();
 
 			// ReSharper disable once AccessToModifiedClosure
 			var modifier = new Lazy<double>(() => catalog.Catalog.GetMultiple(n.Value));
@@ -127,9 +129,14 @@ namespace Open.Evaluation.Catalogs
 			{
 				// Functions with no other options?
 				if (Registry.Arithmetic.Functions.Count < 2)
-					return null;
+				{
+					if (node.Count < 2)
+						return null;
+					isFn = false;
+				}
 			}
-			else
+
+			if (!isFn)
 			{
 				// Never will happen, but logic states that this is needed.
 				if (Registry.Arithmetic.Operators.Count < 2)

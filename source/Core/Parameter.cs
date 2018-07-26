@@ -5,14 +5,15 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Open.Evaluation.Core
 {
+	[DebuggerDisplay("{ID}")]
 	public class Parameter<TValue>
 		: EvaluationBase<TValue>, IParameter<TValue>, IReproducable<ushort, IEvaluate<TValue>>
 		where TValue : IComparable
 	{
-
 		protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null)
 		{
 			_evaluator = evaluator ?? GetParamValueFrom;
