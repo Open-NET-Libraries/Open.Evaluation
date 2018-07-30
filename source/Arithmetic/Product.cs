@@ -4,11 +4,14 @@
  */
 
 using Open.Evaluation.Core;
+using Open.Numeric.Primes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Open.Evaluation.Arithmetic
 {
@@ -37,6 +40,7 @@ namespace Open.Evaluation.Arithmetic
 				.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
 		}
 
+		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 		protected override IEvaluate<TResult> Reduction(
 			ICatalog<IEvaluate<TResult>> catalog)
 		{
@@ -109,10 +113,94 @@ namespace Open.Evaluation.Arithmetic
 
 				}).ToList();
 
-			return children.Count == 1
-				? children[0]
-				: catalog.ProductOf(children);
+			var multiple = children.OfType<IConstant<TResult>>().FirstOrDefault();
+			// ReSharper disable once InvertIf
+			if (multiple != null)
+			{
+				var multipleValue = Convert.ToDouble(multiple.Value);
+				// ReSharper disable once InvertIf
+				if (multipleValue != 1 && Math.Floor(multipleValue) == multipleValue)
+				{
+					var oneNeg = catalog.GetConstant((TResult)(dynamic)(-1));
+					var muValue = (long)multipleValue;
+					var originalMultiple = muValue;
+					var multipleIndex = children.IndexOf(multiple);
+					var count = children.Count;
+					for (var i = 0; i < count; i++)
+					{
+						// Let's start with simple division of constants.
+						if (!(children[i] is Exponent<TResult> ex)
+							|| ex.Power != oneNeg
+							|| !(ex.Base is IConstant<TResult> expC))
+							continue;
 
+						var divisor = Convert.ToDouble(expC.Value);
+						// ReSharper disable once CompareOfFloatsByEqualityOperator
+
+						// We won't mess with factional divisors yet.
+						if (Math.Floor(divisor) != divisor)
+							continue;
+
+						var d = (long)divisor;
+						if (muValue % d == 0)
+						{
+							muValue /= d;
+							children[i] = one;
+						}
+						else
+						{
+							var f = 1L;
+							// We might have a potential divisor...
+							foreach (var factor in Prime.Factors(d, true))
+							{
+								if (muValue % factor != 0) continue;
+
+								muValue /= d;
+								f *= d;
+							}
+
+							if (f != 1L)
+							{
+								children[i] = catalog.GetExponent(
+									catalog.GetConstant((TResult)(dynamic)(d / f)),
+									catalog.GetConstant((TResult)(dynamic)(-1)));
+							}
+						}
+
+						if (muValue == 1)
+							break;
+					}
+
+					if (muValue != originalMultiple)
+					{
+						children[multipleIndex] = catalog.GetConstant((TResult)(dynamic)(muValue));
+					}
+				}
+			}
+
+			return children.Count == 1
+					? children[0]
+					: catalog.ProductOf(children);
+
+		}
+
+		// ReSharper disable once StaticMemberInGenericType
+		static readonly Regex IsInverted = new Regex(@"^\(1/(.+)\)$", RegexOptions.Compiled);
+
+		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
+		{
+			if (index != 0 && child is string c)
+			{
+				var m = IsInverted.Match(c);
+				if (m.Success)
+				{
+					result.Append(" / ");
+					result.Append(m.Groups[1].Value);
+					return;
+				}
+			}
+
+			base.ToStringInternal_OnAppendNextChild(result, index, child);
 		}
 
 		protected virtual Exponent<TResult> GetExponent(ICatalog<IEvaluate<TResult>> catalog,
@@ -148,6 +236,10 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
 		{
+			// Constants always get priority in products and are moved to the front.  They should collapse in reduction to a 'multiple'.
+			if (a is IConstant<TResult> || b is IConstant<TResult>)
+				return base.Compare(a, b);
+
 			var (aFound, aConstant) = IsExponentWithConstantPower(a);
 			var (bFound, bConstant) = IsExponentWithConstantPower(b);
 			if (aFound && bFound)

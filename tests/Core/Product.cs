@@ -47,7 +47,7 @@ namespace Open.Evaluation.Tests
 		{
 			const string FORMAT = "(({0} + {1}) * ({0} + {1}) * {2} * {2} * {3} * 2 * 1)";
 			const string REP = "(2 * ({0} + {1}) * ({0} + {1}) * {2} * {2} * {3})";
-			const string RED = "(2 * (({0} + {1})^2) * ({2}^2) * {3})";
+			const string RED = "(2 * (({0} + {1})²) * ({2}²) * {3})";
 			public ProductCollapse() : base(FORMAT, REP, RED) { }
 
 			protected override double Expected

@@ -28,7 +28,7 @@ namespace Open.Evaluation.Tests
 		{
 			const string FORMAT = "(({0} + {1})^0)";
 			const string RED = "1";
-			public OneCollapse() : base(FORMAT, null, RED) { }
+			public OneCollapse() : base(FORMAT, "(({0} + {1})⁰)", RED) { }
 
 			protected override double Expected => 1;
 		}
@@ -37,16 +37,34 @@ namespace Open.Evaluation.Tests
 		public class Division : ParseTestBase
 		{
 			const string FORMAT = "(2 * (({0} + {1})^-1))";
-			public Division() : base(FORMAT) { }
+			public Division() : base(FORMAT, "(2 / ({0} + {1}))") { }
 
 			protected override double Expected => 2 / (PV[0] + PV[1]);
+		}
+
+		[TestClass]
+		public class DivisionOfConstants : ParseTestBase
+		{
+			const string FORMAT = "(9 * (3^-1))";
+			public DivisionOfConstants() : base(FORMAT, "(9 / 3)", "3") { }
+
+			protected override double Expected => 3;
+		}
+
+		[TestClass]
+		public class DivisionOfMultiples : ParseTestBase
+		{
+			const string FORMAT = "(-9 * {0} * (-3^-1))";
+			public DivisionOfMultiples() : base(FORMAT, "(-9 * {0} / -3)", "(3 * {0})") { }
+
+			protected override double Expected => 3 * PV[0];
 		}
 
 		[TestClass]
 		public class SquareRoot : ParseTestBase
 		{
 			const string FORMAT = "(2 * (({0} + {1})^0.5))";
-			public SquareRoot() : base(FORMAT) { }
+			public SquareRoot() : base(FORMAT, "(2 * √({0} + {1}))") { }
 
 			protected override double Expected => 2 * Math.Sqrt(PV[0] + PV[1]);
 		}

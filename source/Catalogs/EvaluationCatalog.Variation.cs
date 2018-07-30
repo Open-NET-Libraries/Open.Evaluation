@@ -78,6 +78,8 @@ namespace Open.Evaluation.Catalogs
 			return false;
 		}
 
+
+
 		/// <summary>
 		/// Removes a node from its parent.
 		/// </summary>

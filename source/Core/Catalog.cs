@@ -88,7 +88,22 @@ namespace Open.Evaluation.Core
 		{
 			var src = Register(source);
 			return src is IReducibleEvaluation<T> s
-				? Reductions.GetValue(s, k => s.TryGetReduced(this, out var r) ? Register(r) : src)
+				? Reductions.GetValue(s, k =>
+				{
+					var count = 0;
+					var result = src;
+					while (result is IReducibleEvaluation<T> red && red.TryGetReduced(this, out var r) && r != result)
+					{
+						result = r;
+						count++;
+						if (count <= 10) continue;
+
+						Debugger.Break();
+						break;
+					}
+
+					return Register(result);
+				})
 				: src;
 		}
 

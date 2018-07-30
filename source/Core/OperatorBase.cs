@@ -53,8 +53,7 @@ namespace Open.Evaluation.Core
 			var index = -1;
 			foreach (var o in collection)
 			{
-				if (++index != 0) result.Append(SymbolString);
-				result.Append(o);
+				ToStringInternal_OnAppendNextChild(result, ++index, o);
 			}
 			result.Append(')');
 			var r = result.ToString();
@@ -62,6 +61,12 @@ namespace Open.Evaluation.Core
 			Debug.Assert(!isEmpty, "Operator has no children.");
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 			return isEmpty ? $"({Symbol})" : r;
+		}
+
+		protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
+		{
+			if (index != 0) result.Append(SymbolString);
+			result.Append(child);
 		}
 
 		public override string ToString(object context)

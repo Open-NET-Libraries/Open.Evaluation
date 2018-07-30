@@ -48,6 +48,7 @@ namespace Open.Evaluation.Arithmetic
 			return (TResult)(dynamic)Math.Pow(evaluation, power);
 		}
 
+
 		[SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{

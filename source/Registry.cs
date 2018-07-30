@@ -21,12 +21,14 @@ namespace Open.Evaluation
 			public const char MULTIPLY = Product.SYMBOL;
 
 			// Functions. Division is simply an 'inversion'.
-			public const char EXPONENT = Exponent.SYMBOL;
+			public const char SQUARE = '²';
+			public const char INVERT = '/';
+			public const char SQUARE_ROOT = '√';
 
 			public static readonly IReadOnlyList<char> Operators
 				= (new List<char> { ADD, MULTIPLY }).AsReadOnly();
 			public static readonly IReadOnlyList<char> Functions
-				= (new List<char> { EXPONENT }).AsReadOnly();
+				= (new List<char> { SQUARE, INVERT, SQUARE_ROOT }).AsReadOnly();
 
 			public static IEvaluate<double> GetOperator(
 				ICatalog<IEvaluate<double>> catalog,
@@ -85,6 +87,9 @@ namespace Open.Evaluation
 				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
 				Contract.EndContractBlock();
 
+				if (children.Length == 1)
+					return GetFunction(catalog, op, children[0]);
+
 				switch (op)
 				{
 					case Exponent.SYMBOL:
@@ -93,6 +98,30 @@ namespace Open.Evaluation
 				}
 
 				throw new ArgumentException("Invalid function.", nameof(op));
+			}
+
+			public static IEvaluate<double> GetFunction(
+				ICatalog<IEvaluate<double>> catalog,
+				char op,
+				IEvaluate<double> child)
+			{
+				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+				if (child == null) throw new ArgumentNullException(nameof(child));
+				Contract.EndContractBlock();
+
+				switch (op)
+				{
+					case SQUARE:
+						return catalog.GetExponent(child, 2);
+					case INVERT:
+						return catalog.GetExponent(child, -1);
+					case SQUARE_ROOT:
+						return catalog.GetExponent(child, 0.5);
+					case Exponent.SYMBOL:
+						throw new ArgumentException("Must have 2 child params for an exponent.");
+					default:
+						throw new ArgumentException("Invalid function.", nameof(op));
+				}
 			}
 
 			public static IEvaluate<double> GetFunction(
@@ -110,7 +139,7 @@ namespace Open.Evaluation
 				Contract.EndContractBlock();
 
 				if (except == null || except.Length == 0)
-					return GetFunction(catalog, Operators.RandomSelectOne(), children);
+					return GetFunction(catalog, Functions.RandomSelectOne(), children);
 
 				return Functions.TryRandomSelectOne(out var op, new HashSet<char>(except))
 					? GetFunction(catalog, op, children)
@@ -122,13 +151,6 @@ namespace Open.Evaluation
 				in ReadOnlySpan<IEvaluate<double>> children,
 				params char[] except)
 				=> GetRandomFunction(catalog?.Catalog, children, except);
-
-			private static readonly double[] ExponentOptions =
-			{
-				2, // square
-				-1, // invert
-				0.5 // square root
-			};
 
 			public static IEvaluate<double> GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
@@ -145,14 +167,8 @@ namespace Open.Evaluation
 				else
 					Functions.TryRandomSelectOne(out op, new HashSet<char>(except));
 
-				switch (op)
-				{
-					case EXPONENT:
-						var type = ExponentOptions[RandomUtilities.Random.Next(ExponentOptions.Length)];
-						return GetFunction(catalog, op, new[] { child, catalog.GetConstant(type) });
-				}
+				return GetFunction(catalog, op, child);
 
-				return null;
 			}
 
 			public static IEvaluate<double> GetRandomFunction(

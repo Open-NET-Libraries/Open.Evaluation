@@ -9,7 +9,7 @@ using System.Diagnostics;
 
 namespace Open.Evaluation.Core
 {
-	[DebuggerDisplay("{ID}")]
+	[DebuggerDisplay(@"\{{ID}\}")]
 	public class Parameter<TValue>
 		: EvaluationBase<TValue>, IParameter<TValue>, IReproducable<ushort, IEvaluate<TValue>>
 		where TValue : IComparable

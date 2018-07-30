@@ -75,16 +75,14 @@ namespace Open.Evaluation.Arithmetic
 				if (c != catalog.GetConstant(1))
 					childList.Add(c);
 			}
-			else
+
+			switch (childList.Count)
 			{
-				switch (childList.Count)
-				{
-					case 0:
-						//Debug.Fail("Extraction failure.", "Should not have occured.");
-						throw new Exception("Extraction failure.");
-					case 1:
-						return childList.Single();
-				}
+				case 0:
+					//Debug.Fail("Extraction failure.", "Should not have occured.");
+					throw new Exception("Extraction failure.");
+				case 1:
+					return childList[0];
 			}
 
 			return Product.Create(catalog, childList);

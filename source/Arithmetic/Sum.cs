@@ -10,6 +10,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Open.Evaluation.Arithmetic
 {
@@ -52,6 +54,29 @@ namespace Open.Evaluation.Arithmetic
 			return base.Compare(a, b);
 		}
 
+		// ReSharper disable once StaticMemberInGenericType
+		static readonly Regex HasNegativeMultiple = new Regex(@"^\(-(\d+)(\s*[\*\/]\s*)(.+)\)$|^-(\d+)$", RegexOptions.Compiled);
+
+		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
+		{
+			if (index != 0 && child is string c)
+			{
+				var m = HasNegativeMultiple.Match(c);
+				if (m.Success)
+				{
+					result.Append(" - ");
+					result.Append(m.Groups[4].Success
+						? m.Groups[4].Value
+						: m.Groups[1].Value == "1"
+							? $"({m.Groups[3].Value})"
+							: $"({m.Groups[1].Value}{m.Groups[2].Value}{m.Groups[3].Value})");
+					return;
+				}
+			}
+
+			base.ToStringInternal_OnAppendNextChild(result, index, child);
+		}
+
 		protected override TResult EvaluateInternal(object context)
 			=> ChildResults(context)
 				.Cast<TResult>()
@@ -62,7 +87,21 @@ namespace Open.Evaluation.Arithmetic
 			var zero = GetConstant(catalog, (TResult)(dynamic)0);
 
 			// Phase 1: Flatten sums of sums.
-			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal).Where(c => c != zero).ToList(); // ** chidren's reduction is done here.
+			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal.Select(a =>
+			{
+				// Check for products that can be flattened as well.
+				if (!(a is Product<TResult> aP) || aP.Children.Count != 2) return a;
+
+				var aS = aP.Children.OfType<Sum<TResult>>().ToArray();
+				if (aS.Length != 1) return a;
+
+				var aC = aP.Children.OfType<IConstant<TResult>>().ToArray();
+				if (aC.Length != 1) return a;
+
+				var aCv = aC[0];
+				return catalog.SumOf(aS[0].Children.Select(c => catalog.ProductOf(aCv, c)));
+
+			})).Where(c => c != zero).ToList(); // ** chidren's reduction is done here.
 
 			// Phase 2: Can we collapse?
 			switch (children.Count)
@@ -72,6 +111,7 @@ namespace Open.Evaluation.Arithmetic
 				case 1:
 					return children[0];
 			}
+
 
 			if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
 				return GetConstant(catalog, (TResult)(dynamic)float.NaN);
