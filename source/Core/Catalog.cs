@@ -96,10 +96,12 @@ namespace Open.Evaluation.Core
 					{
 						result = r;
 						count++;
-						if (count <= 10) continue;
-
-						Debugger.Break();
-						break;
+#if DEBUG
+						if (count > 3)
+							Debugger.Break();
+#endif
+						if (count > 10)
+							break;
 					}
 
 					return Register(result);

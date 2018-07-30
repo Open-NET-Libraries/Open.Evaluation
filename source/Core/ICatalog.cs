@@ -21,6 +21,7 @@ namespace Open.Evaluation.Core
 
 		T GetReduced(T source);
 
+		// ReSharper disable once UnusedMemberInSuper.Global
 		bool TryGetReduced(T source, out T reduction);
 
 		IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)

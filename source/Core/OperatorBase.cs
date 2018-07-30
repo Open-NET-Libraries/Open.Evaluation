@@ -21,14 +21,14 @@ namespace Open.Evaluation.Core
 		where TResult : IComparable
 	{
 
-		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false) : base(symbol, separator)
+		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1) : base(symbol, separator)
 		{
 			if (children == null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
 			ChildrenInternal = new List<TChild>(children);
-			if (ChildrenInternal.Count == 0)
-				throw new ArgumentException("Operators must be constructed with at least 1 child.");
+			if (ChildrenInternal.Count < minimumChildren)
+				throw new ArgumentException($"{GetType()} must be constructed with at least {minimumChildren} child(ren).");
 
 			if (reorderChildren) ChildrenInternal.Sort(Compare);
 			Children = ChildrenInternal.AsReadOnly();

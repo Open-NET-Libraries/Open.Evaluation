@@ -21,7 +21,7 @@ namespace Open.Evaluation.Arithmetic
 		where TResult : struct, IComparable
 	{
 		protected Product(IEnumerable<IEvaluate<TResult>> children)
-			: base(Product.SYMBOL, Product.SEPARATOR, children, true)
+			: base(Product.SYMBOL, Product.SEPARATOR, children, true, 2)
 		{ }
 
 		protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
@@ -153,10 +153,11 @@ namespace Open.Evaluation.Arithmetic
 							// We might have a potential divisor...
 							foreach (var factor in Prime.Factors(d, true))
 							{
+								if (factor > muValue) break;
 								if (muValue % factor != 0) continue;
-
-								muValue /= d;
-								f *= d;
+								Debug.Assert(factor != 0);
+								muValue /= factor;
+								f *= factor;
 							}
 
 							if (f != 1L)
@@ -345,16 +346,14 @@ namespace Open.Evaluation.Arithmetic
 				if (c != catalog.GetConstant((TResult)(dynamic)1))
 					childList.Add(c);
 			}
-			else
+
+			switch (childList.Count)
 			{
-				switch (childList.Count)
-				{
-					case 0:
-						//Debug.Fail("Extraction failure.", "Should not have occured.");
-						throw new Exception("Extraction failure.");
-					case 1:
-						return childList.Single();
-				}
+				case 0:
+					//Debug.Fail("Extraction failure.", "Should not have occured.");
+					throw new Exception("Extraction failure.");
+				case 1:
+					return childList.Single();
 			}
 
 			return Product<TResult>.Create(catalog, childList);
