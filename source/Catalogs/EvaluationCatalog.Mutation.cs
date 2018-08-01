@@ -198,15 +198,14 @@ namespace Open.Evaluation.Catalogs
 		public static IEvaluate<double> Square(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
-			=> catalog.Catalog.ApplyClone(node, newNode =>
-			{
-				if (!(node.Value is Exponent<double>))
-					return catalog.Factory.Map(catalog.Catalog.GetExponent(node.Value, 2));
-
-				var power = newNode.Children[1];
-				newNode.Replace(power,
-					catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value)));
-				return newNode;
-			});
+			=> node.Value is Exponent<double>
+				? catalog.Catalog.ApplyClone(node, newNode =>
+				{
+					var power = newNode.Children[1];
+					newNode.Replace(power,
+						catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value)));
+				})
+				: catalog.Catalog.ApplyClone(node, newNode =>
+						catalog.Catalog.GetExponent(newNode.Value, 2));
 	}
 }
