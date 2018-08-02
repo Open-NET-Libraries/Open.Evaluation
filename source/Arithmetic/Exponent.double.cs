@@ -54,7 +54,7 @@ namespace Open.Evaluation.Arithmetic
 				? ('^' + p)
 				: ConvertToSuperScript(pspan);
 
-			if (ps == "¹") ps = string.Empty;
+			//if (ps == "¹") ps = string.Empty; // Don't do this since it can produce a strange hash with no way to identify the funciton.
 			return m.Groups[2].Success ? $"(1/{b}{ps})" : $"({b}{ps})";
 		}
 
@@ -74,18 +74,19 @@ namespace Open.Evaluation.Arithmetic
 			if (!(pow is IConstant<double> cPow))
 				return catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
 
-			var p = Convert.ToDouble(cPow.Value);
-			if (p == 0)
-				return GetConstant(catalog, (dynamic)1);
+			var zero = catalog.GetConstant(0);
+			var one = catalog.GetConstant(1);
+			if (cPow == zero)
+				return one;
 
 			var bas = catalog.GetReduced(Base);
 
-			if (p == 1)
+			if (cPow == one)
 				return bas;
 
 			if (bas is Constant<double> cBas)
 			{
-				if (cBas.Value == 1)
+				if (cBas == one)
 					return cBas;
 
 				var newPow = Math.Pow(cBas.Value, cPow.Value);
