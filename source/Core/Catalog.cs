@@ -82,7 +82,8 @@ namespace Open.Evaluation.Core
 
 		public readonly Node<T>.Factory Factory = new Node<T>.Factory();
 
-		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
+		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions
+			= new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
 
 		public T GetReduced(T source)
 		{
@@ -92,7 +93,8 @@ namespace Open.Evaluation.Core
 				{
 					var count = 0;
 					var result = src;
-					while (result is IReducibleEvaluation<T> red && red.TryGetReduced(this, out var r) && r != result)
+					while (result is IReducibleEvaluation<T> red
+						   && red.TryGetReduced(this, out var r) && r != result)
 					{
 						result = r;
 						count++;

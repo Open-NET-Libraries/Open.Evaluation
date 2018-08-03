@@ -54,8 +54,9 @@ namespace Open.Evaluation.Arithmetic
 				? ('^' + p)
 				: ConvertToSuperScript(pspan);
 
-			//if (ps == "¹") ps = string.Empty; // Don't do this since it can produce a strange hash with no way to identify the funciton.
-			return m.Groups[2].Success ? $"(1/{b}{ps})" : $"({b}{ps})";
+			var success = m.Groups[2].Success;
+			if (success && ps == "¹") ps = string.Empty;
+			return success ? $"(1/{b}{ps})" : $"({b}{ps})";
 		}
 
 		protected override double EvaluateInternal(object context)
@@ -89,11 +90,10 @@ namespace Open.Evaluation.Arithmetic
 				if (cBas == one)
 					return cBas;
 
-				var newPow = Math.Pow(cBas.Value, cPow.Value);
+				var newExp = Math.Pow(cBas.Value, cPow.Value);
 				// ReSharper disable once CompareOfFloatsByEqualityOperator
-				if (Math.Floor(newPow) == newPow)
-					return GetConstant(catalog, newPow);
-
+				if (Math.Floor(newExp) == newExp)
+					return GetConstant(catalog, newExp);
 			}
 
 			// ReSharper disable once InvertIf

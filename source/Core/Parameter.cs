@@ -66,7 +66,12 @@ namespace Open.Evaluation.Core
 		public static Parameter<TValue> GetParameter<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog, ushort id)
 			where TValue : IComparable
-			=> Parameter<TValue>.Create(catalog, id);
+		{
+			// ReSharper disable once SuspiciousTypeConversion.Global
+			if (catalog is ICatalog<IEvaluate<double>> dCat)
+				return (dynamic)Parameter.Create(dCat, id);
 
+			return Parameter<TValue>.Create(catalog, id);
+		}
 	}
 }
