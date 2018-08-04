@@ -6,6 +6,8 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 
 namespace Open.Evaluation.Boolean
 {
@@ -24,19 +26,31 @@ namespace Open.Evaluation.Boolean
 			if (ChildrenInternal.Count == 0)
 				throw new InvalidOperationException("Cannot resolve boolean of empty set.");
 
-			foreach (var result in ChildResults(context))
-			{
-				if (!(bool)result) return false;
-			}
+			return ChildResults(context).All(result => (bool)result);
+		}
 
-			return true;
+		internal static And Create(
+			ICatalog<IEvaluate<bool>> catalog,
+			IEnumerable<IEvaluate<bool>> param)
+		{
+			Debug.Assert(catalog != null);
+			Debug.Assert(param != null);
+
+			return catalog.Register(new And(param));
 		}
 
 		public IEvaluate<bool> NewUsing(
 			ICatalog<IEvaluate<bool>> catalog,
 			IEnumerable<IEvaluate<bool>> param)
-			=> catalog.Register(new And(param));
+			=> Create(catalog, param);
 
 	}
 
+	public static class AndExtensions
+	{
+		public static IEvaluate<bool> And(
+			this ICatalog<IEvaluate<bool>> catalog,
+			IEnumerable<IEvaluate<bool>> children)
+			=> Boolean.And.Create(catalog, children);
+	}
 }

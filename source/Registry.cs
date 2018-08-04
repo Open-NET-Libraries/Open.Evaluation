@@ -41,9 +41,9 @@ namespace Open.Evaluation
 				Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
 				switch (op)
 				{
-					case Sum.SYMBOL:
+					case ADD:
 						return catalog.SumOf(children);
-					case Product.SYMBOL:
+					case MULTIPLY:
 						return catalog.ProductOf(children);
 				}
 
@@ -189,9 +189,9 @@ namespace Open.Evaluation
 			public const char CONDITIONAL = Conditional.SYMBOL;
 
 			// Fuzzy...
-			public const string AT_LEAST = AtLeast.PREFIX;
-			public const string AT_MOST = AtMost.PREFIX;
-			public const string EXACTLY = Exactly.PREFIX;
+			public const string AT_LEAST = Open.Evaluation.Boolean.Counting.AtLeast.PREFIX;
+			public const string AT_MOST = Open.Evaluation.Boolean.Counting.AtMost.PREFIX;
+			public const string EXACTLY = Open.Evaluation.Boolean.Counting.Exactly.PREFIX;
 
 			public static readonly IReadOnlyList<char> Operators
 				= (new List<char> { AND, OR });
@@ -200,10 +200,44 @@ namespace Open.Evaluation
 			public static readonly IReadOnlyList<string> Counting
 				= (new List<string> { AT_LEAST, AT_MOST, EXACTLY });
 
+			public static IEvaluate<bool> GetOperator(
+				ICatalog<IEvaluate<bool>> catalog,
+				char op,
+				IEnumerable<IEvaluate<bool>> children)
+			{
+				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+				if (children == null) throw new ArgumentNullException(nameof(children));
+				Contract.EndContractBlock();
+				Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
+				switch (op)
+				{
+					case AND:
+						return catalog.SumOf(children);
+					case OR:
+						return catalog.ProductOf(children);
+				}
+
+				throw new ArgumentException($"Invalid operator: {op}", nameof(op));
+			}
+
+
+			public static IEvaluate<bool> GetRandomOperator(
+				ICatalog<IEvaluate<bool>> catalog,
+				IEnumerable<IEvaluate<bool>> children,
+				params char[] except)
+			{
+				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+				if (children == null) throw new ArgumentNullException(nameof(children));
+				Contract.EndContractBlock();
+
+				if (except == null || except.Length == 0)
+					return GetOperator(catalog, Operators.RandomSelectOne(), children);
+
+				return Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))
+					? GetOperator(catalog, op, children)
+					: null;
+			}
+
 		}
-
-
-
-
 	}
 }

@@ -20,14 +20,27 @@ namespace Open.Evaluation.Boolean
 				  Enumerable.Repeat(contents ?? throw new ArgumentNullException(nameof(contents)), 1))
 		{ }
 
-		public IEvaluate<bool> NewUsing(
+		internal static IEvaluate<bool> Create(
 			ICatalog<IEvaluate<bool>> catalog,
 			IEvaluate<bool> param)
 			=> catalog.Register(new Not(param));
 
+		public IEvaluate<bool> NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
+			IEvaluate<bool> param)
+			=> Create(catalog, param);
+
 		protected override bool EvaluateInternal(object context)
 			=> !ChildResults(context).Cast<bool>().Single();
 
+	}
+
+	public static partial class BooleanExtensions
+	{
+		public static IEvaluate<bool> Not(
+			this ICatalog<IEvaluate<bool>> catalog,
+			IEvaluate<bool> param)
+			=> Boolean.Not.Create(catalog, param);
 	}
 
 }
