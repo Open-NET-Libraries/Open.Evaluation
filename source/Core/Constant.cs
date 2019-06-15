@@ -21,6 +21,7 @@ namespace Open.Evaluation.Core
 			Value = value;
 		}
 
+		/// <inheritdoc />
 		public TValue Value
 		{
 			get;
@@ -28,6 +29,7 @@ namespace Open.Evaluation.Core
 
 		IComparable IConstant.Value => Value;
 
+		/// <inheritdoc />
 		public static string ToStringRepresentation(TValue value)
 			=> string.Empty + value;
 
@@ -41,6 +43,7 @@ namespace Open.Evaluation.Core
 		internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
 			=> catalog.Register(ToStringRepresentation(value), k => new Constant<TValue>(value));
 
+		/// <inheritdoc />
 		public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue value)
 			=> catalog.Register(ToStringRepresentation(value), k => new Constant<TValue>(value));
 

@@ -7,6 +7,12 @@ namespace Open.Evaluation.Core
 	public interface IReproducable<in TParam, TEval> : IEvaluate
 		where TEval : IEvaluate
 	{
+		/// <summary>
+		/// Produces a new evaluation bsed upon the provided one.
+		/// </summary>
+		/// <param name="catalog">The catalog to pull from.</param>
+		/// <param name="param">The param to use.</param>
+		/// <returns>The expected new evaluation.</returns>
 		TEval NewUsing(ICatalog<TEval> catalog, TParam param);
 	}
 
