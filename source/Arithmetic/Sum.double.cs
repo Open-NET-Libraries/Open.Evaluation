@@ -29,7 +29,7 @@ namespace Open.Evaluation.Arithmetic
 			return ChildResults(context).Cast<double>().Sum();
 		}
 
-		protected override Constant<double> GetConstant(ICatalog<IEvaluate<double>> catalog, double value)
+		protected virtual Constant<double> GetConstant(ICatalog<IEvaluate<double>> catalog, double value)
 			=> Constant.Create(catalog, value);
 
 		internal new static Sum Create(
