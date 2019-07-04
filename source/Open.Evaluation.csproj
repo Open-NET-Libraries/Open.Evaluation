@@ -30,7 +30,7 @@
     <PackageReference Include="Open.Disposable.ObjectPools" Version="2.3.2" />
     <PackageReference Include="Open.Hierarchy" Version="1.6.1" />
     <PackageReference Include="Open.Numeric.Primes" Version="1.5.1" />
-    <PackageReference Include="Open.RandomizationExtensions" Version="1.1.0" />
+    <PackageReference Include="Open.RandomizationExtensions" Version="2.0.0" />
   </ItemGroup>
 
 </Project>
