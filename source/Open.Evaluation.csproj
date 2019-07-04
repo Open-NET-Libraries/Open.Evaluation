@@ -26,9 +26,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Open.Cloneable" Version="1.1.0" />
-    <PackageReference Include="Open.Disposable" Version="2.2.1" />
-    <PackageReference Include="Open.Disposable.ObjectPools" Version="2.3.2" />
-    <PackageReference Include="Open.Hierarchy" Version="1.6.1" />
+    <PackageReference Include="Open.Disposable" Version="2.3.0" />
+    <PackageReference Include="Open.Disposable.ObjectPools" Version="2.3.3" />
+    <PackageReference Include="Open.Hierarchy" Version="1.6.2" />
     <PackageReference Include="Open.Numeric.Primes" Version="1.5.2" />
     <PackageReference Include="Open.RandomizationExtensions" Version="2.0.0" />
   </ItemGroup>
