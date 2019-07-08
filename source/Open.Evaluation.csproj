@@ -27,7 +27,7 @@
     <PackageReference Include="Microsoft.CSharp" Version="4.5.0" />
     <PackageReference Include="Open.Cloneable" Version="1.1.0" />
     <PackageReference Include="Open.Hierarchy" Version="1.6.2" />
-    <PackageReference Include="Open.Numeric.Primes" Version="1.5.3" />
+    <PackageReference Include="Open.Numeric.Primes" Version="1.5.4" />
     <PackageReference Include="Open.RandomizationExtensions" Version="2.0.0" />
   </ItemGroup>
 
