@@ -12,13 +12,10 @@ namespace Open.Evaluation.Core
 	public class Catalog<T> : DisposableBase, ICatalog<T>
 		where T : class, IEvaluate
 	{
-		protected override void OnDispose(bool calledExplicitly)
+		protected override void OnDispose()
 		{
-			if (calledExplicitly)
-			{
-				Registry.Clear();
-				//Reductions.Clear();
-			}
+			Registry.Clear();
+			//Reductions.Clear();
 		}
 
 		readonly ConcurrentDictionary<string, T> Registry = new ConcurrentDictionary<string, T>();

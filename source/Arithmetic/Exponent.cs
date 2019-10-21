@@ -96,7 +96,7 @@ namespace Open.Evaluation.Arithmetic
 			where TResult : struct, IComparable
 			=> Exponent<TResult>.Create(catalog, @base, power);
 
-		public static bool IsPowerOf(this Exponent<double> exponent, double power)
+		public static bool IsPowerOf(this Exponent<double> exponent, in double power)
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
 			=> exponent.Power is Constant<double> p && p.Value == power;
 

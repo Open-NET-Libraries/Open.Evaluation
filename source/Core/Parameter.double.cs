@@ -14,27 +14,19 @@ namespace Open.Evaluation.Core
 		}
 
 		internal new static Parameter Create(ICatalog<IEvaluate<double>> catalog, ushort id)
-		{
-			var i = id;
-			return catalog.Register(ToStringRepresentation(i), k => new Parameter(i));
-		}
+			=> catalog.Register(ToStringRepresentation(id), k => new Parameter(id));
 
 		public override IEvaluate<double> NewUsing(ICatalog<IEvaluate<double>> catalog, ushort id)
-		{
-			var i = id;
-			return catalog.Register(ToStringRepresentation(i), k => new Parameter(i));
-		}
+			=> catalog.Register(ToStringRepresentation(id), k => new Parameter(id));
 
 	}
 
 	public static partial class ParameterExtensions
 	{
-		public static Parameter GetParameter(
-			this ICatalog<IEvaluate<double>> catalog, ushort id)
+		public static Parameter GetParameter(this ICatalog<IEvaluate<double>> catalog, ushort id)
 			=> Parameter.Create(catalog, id);
 
-		public static Parameter GetParameter(
-			this ICatalog<IEvaluate<double>> catalog, int id)
+		public static Parameter GetParameter(this ICatalog<IEvaluate<double>> catalog, in int id)
 		{
 			if (id < 0 || id > ushort.MaxValue)
 				throw new System.ArgumentOutOfRangeException(nameof(id));

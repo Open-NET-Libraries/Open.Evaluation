@@ -2,11 +2,11 @@
 using Open.Evaluation.Boolean;
 using Open.Evaluation.Catalogs;
 using Open.Evaluation.Core;
-using Open.Numeric;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using Open.RandomizationExtensions;
 
 namespace Open.Evaluation
 {

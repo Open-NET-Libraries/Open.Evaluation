@@ -134,7 +134,7 @@ namespace Open.Evaluation.Core
 
 		}
 
-		protected virtual Constant<TResult> GetConstant(ICatalog<IEvaluate<TResult>> catalog, TResult value)
+		protected virtual Constant<TResult> GetConstant(ICatalog<IEvaluate<TResult>> catalog, in TResult value)
 			=> catalog.GetConstant(value);
 	}
 

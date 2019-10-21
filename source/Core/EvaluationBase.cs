@@ -28,6 +28,7 @@ namespace Open.Evaluation.Core
 
 		object IEvaluate.Evaluate(object context) => Evaluate(context);
 
+		/// <inheritdoc />
 		public TResult Evaluate(object context)
 		{
 			// Use existing context... // Caches results...
@@ -39,6 +40,7 @@ namespace Open.Evaluation.Core
 				return Evaluate(newPc);
 		}
 
+		/// <inheritdoc />
 		public virtual string ToString(object context) => ToStringInternal(Evaluate(context));
 
 	}

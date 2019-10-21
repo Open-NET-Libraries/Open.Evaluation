@@ -55,7 +55,8 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		// ReSharper disable once StaticMemberInGenericType
-		static readonly Regex HasNegativeMultiple = new Regex(@"^\(-(\d+)(\s*[\*\/]\s*)(.+)\)$|^-(\d+)$", RegexOptions.Compiled);
+		static readonly Regex HasNegativeMultiple
+			= new Regex(@"^\(-(\d+)(\s*[\*\/]\s*)(.+)\)$|^-(\d+)$", RegexOptions.Compiled);
 
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
@@ -266,9 +267,7 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<TResult>> catalog,
 			params IEvaluate<TResult>[] children)
 			where TResult : struct, IComparable
-		{
-			return SumOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
-		}
+			=> SumOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
 	}
 
 }

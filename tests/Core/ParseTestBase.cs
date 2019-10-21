@@ -6,7 +6,6 @@ using System.Linq;
 
 namespace Open.Evaluation.Tests
 {
-
 	public abstract class ParseTestBase
 	{
 		protected readonly double[] PV = { 2, 3, 4, 5 };
@@ -60,7 +59,6 @@ namespace Open.Evaluation.Tests
 					+ ".Evaluate() reduced failed.\nDetails: "
 					+ Evaluation.ToString(PV));
 			}
-
 		}
 
 
@@ -89,7 +87,6 @@ namespace Open.Evaluation.Tests
 				Evaluation.ToStringRepresentation(),
 				GetType() + ".ToStringRepresentation() failed.");
 
-
 			if (Reduction != Representation)
 			{
 				Assert.AreEqual(
@@ -97,7 +94,6 @@ namespace Open.Evaluation.Tests
 					EvaluationReduced.ToStringRepresentation(),
 					GetType() + ".ToStringRepresentation() reduced failed.");
 			}
-
 		}
 
 	}
