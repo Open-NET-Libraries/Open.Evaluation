@@ -8,6 +8,7 @@ using Open.Numeric.Primes;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
@@ -20,21 +21,37 @@ namespace Open.Evaluation.Arithmetic
 		IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
 		where TResult : struct, IComparable
 	{
-		protected Sum(IEnumerable<IEvaluate<TResult>> children = null)
+		protected Sum(IEnumerable<IEvaluate<TResult>> children)
 			: base(Sum.SYMBOL, Sum.SEPARATOR, children, true)
 		{ }
 
-		static (bool found, IConstant<TResult> value) IsProductWithSingleConstant(IEvaluate<TResult> a)
+		static bool IsProductWithSingleConstant(
+			IEvaluate<TResult> a,
+			[NotNullWhen(true)] out IConstant<TResult> value)
 		{
-			if (!(a is Product<TResult> aP)) return (false, null);
-			var constants = aP.Children.OfType<IConstant<TResult>>().ToArray();
-			return constants.Length == 1 ? (true, constants[0]) : (false, null);
+			if (a is Product<TResult> aP)
+			{
+				int count = 0;
+				IConstant<TResult>? v = default;
+				foreach (var c in aP.Children.OfType<IConstant<TResult>>())
+				{
+					v = c;
+					if (++count != 1) break;
+				}
+				if (count == 1)
+				{
+					value = v!;
+					return true;
+				}
+			}
+			value = default!;
+			return false;
 		}
 
-		protected override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
+		public override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
 		{
-			var (aFound, aConstant) = IsProductWithSingleConstant(a);
-			var (bFound, bConstant) = IsProductWithSingleConstant(b);
+			var aFound = IsProductWithSingleConstant(a, out var aConstant);
+			var bFound = IsProductWithSingleConstant(b, out var bConstant);
 			if (aFound && bFound)
 			{
 				var result = base.Compare(aConstant, bConstant);
@@ -88,10 +105,10 @@ namespace Open.Evaluation.Arithmetic
 			var zero = GetConstant(catalog, (TResult)(dynamic)0);
 
 			// Phase 1: Flatten sums of sums.
-			var children = catalog.Flatten<Sum<TResult>>(ChildrenInternal.Select(a =>
+			var children = catalog.Flatten<Sum<TResult>>(Children.Select(a =>
 			{
 				// Check for products that can be flattened as well.
-				if (!(a is Product<TResult> aP) || aP.Children.Count != 2) return a;
+				if (!(a is Product<TResult> aP) || aP.Children.Length != 2) return a;
 
 				var aS = aP.Children.OfType<Sum<TResult>>().ToArray();
 				if (aS.Length != 1) return a;
@@ -144,8 +161,9 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
-			Debug.Assert(catalog != null);
-			Debug.Assert(param != null);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (param is null) throw new ArgumentNullException(nameof(param));
+			Contract.EndContractBlock();
 
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
@@ -158,16 +176,19 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
-			Debug.Assert(param != null);
+			if (param is null) throw new ArgumentNullException(nameof(param));
 			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
 			return p.Length == 1 ? p[0] : Create(catalog, p);
 		}
 
 		public bool TryExtractGreatestFactor(
 			ICatalog<IEvaluate<TResult>> catalog,
-			out IEvaluate<TResult> sum,
-			out IConstant<TResult> greatestFactor)
+			[NotNull] out IEvaluate<TResult> sum,
+			[NotNull] out IConstant<TResult> greatestFactor)
 		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			Contract.EndContractBlock();
+
 			var one = GetConstant(catalog, (TResult)(dynamic)1);
 			greatestFactor = one;
 			sum = this;
@@ -233,8 +254,8 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (children == null) throw new ArgumentNullException(nameof(children));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (children is null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
 			var childList = children.ToList();
@@ -242,8 +263,10 @@ namespace Open.Evaluation.Arithmetic
 			{
 				case 0:
 					return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
+
 				case 1:
 					return childList.Single();
+
 				default:
 					var constants = childList.ExtractType<IConstant<TResult>>();
 

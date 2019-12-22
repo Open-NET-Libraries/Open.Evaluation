@@ -6,7 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Open.Evaluation.Boolean
@@ -17,13 +17,13 @@ namespace Open.Evaluation.Boolean
 		public const char SYMBOL = '&';
 		public const string SEPARATOR = " & ";
 
-		public And(IEnumerable<IEvaluate<bool>> children = null)
+		public And(IEnumerable<IEvaluate<bool>> children)
 			: base(SYMBOL, SEPARATOR, children, true)
 		{ }
 
 		protected override bool EvaluateInternal(object context)
 		{
-			if (ChildrenInternal.Count == 0)
+			if (Children.Length == 0)
 				throw new InvalidOperationException("Cannot resolve boolean of empty set.");
 
 			return ChildResults(context).All(result => (bool)result);
@@ -33,8 +33,9 @@ namespace Open.Evaluation.Boolean
 			ICatalog<IEvaluate<bool>> catalog,
 			IEnumerable<IEvaluate<bool>> param)
 		{
-			Debug.Assert(catalog != null);
-			Debug.Assert(param != null);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (param is null) throw new ArgumentNullException(nameof(param));
+			Contract.EndContractBlock();
 
 			return catalog.Register(new And(param));
 		}

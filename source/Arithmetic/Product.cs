@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -32,7 +33,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override TResult EvaluateInternal(object context)
 		{
-			if (ChildrenInternal.Count == 0)
+			if (Children.Length == 0)
 				throw new InvalidOperationException("Cannot resolve product of empty set.");
 
 			return ChildResults(context)
@@ -48,7 +49,7 @@ namespace Open.Evaluation.Arithmetic
 
 			// Phase 1: Flatten products of products.
 			var children = catalog
-				.Flatten<Product<TResult>>(ChildrenInternal)
+				.Flatten<Product<TResult>>(Children)
 				.Where(c => c != one)
 				.ToList(); // ** chidren's reduction is done here.
 
@@ -69,10 +70,10 @@ namespace Open.Evaluation.Arithmetic
 			switch (children.Count)
 			{
 				case 0:
-					if (ChildrenInternal.Count == 0)
+					if (Children.Length == 0)
 						throw new InvalidOperationException("Cannot reduce product of empty set.");
-
 					return one;
+
 				case 1:
 					return children[0];
 			}
@@ -92,24 +93,24 @@ namespace Open.Evaluation.Arithmetic
 			// Phase 5: Convert to exponents.
 			var exponents = children.Select(c =>
 				c is Exponent<TResult> e
-				? (cat.GetReduced(e.Base), e.Power)
+				? (Base: cat.GetReduced(e.Base), e.Power)
 				: (c, one)).ToArray();
 
-			if (exponents.Any(c => c.Item1 == zero))
+			if (exponents.Any(c => c.Base == zero))
 				return zero;
 
 			children = exponents
 				.Where(e => e.Power != zero)
-				.GroupBy(e => e.Item1.ToStringRepresentation())
+				.GroupBy(e => e.Base.ToStringRepresentation())
 				.Select(g =>
 				{
-					var @base = g.First().Item1;
-					var sumPower = cat.SumOf(g.Select(t => t.Power));
+					var @base = g.First().Base;
+					var sumPower = cat.SumOf(g.Select(t => t.Power)!);
 					var power = cat.GetReduced(sumPower);
 					if (power == zero) return one;
 					return power == one
-						? @base
-						: GetExponent(catalog, @base, power);
+						? (IEvaluate<TResult>)@base
+						: (IEvaluate<TResult>)GetExponent(catalog, @base, power);
 
 				}).ToList();
 
@@ -209,13 +210,13 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> power)
 			=> Exponent<TResult>.Create(catalog, @base, power);
 
-		public IEvaluate<TResult> ExtractMultiple(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
+		public IEvaluate<TResult> ExtractMultiple(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
 		{
 			multiple = null;
 
-			if (!ChildrenInternal.OfType<IConstant<TResult>>().Any()) return this;
+			if (!Children.OfType<IConstant<TResult>>().Any()) return this;
 
-			var children = ChildrenInternal.ToList(); // Make a copy to be worked on...
+			var children = Children.ToList(); // Make a copy to be worked on...
 			var constants = children.ExtractType<IConstant<TResult>>();
 			if (constants.Count == 0) return this;
 
@@ -223,7 +224,7 @@ namespace Open.Evaluation.Arithmetic
 			return NewUsing(catalog, children);
 		}
 
-		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult> multiple)
+		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
 		{
 			multiple = null;
 			var reduced = catalog.GetReduced(this);
@@ -232,17 +233,28 @@ namespace Open.Evaluation.Arithmetic
 				: reduced;
 		}
 
-		static (bool found, IConstant<TResult> value) IsExponentWithConstantPower(IEvaluate<TResult> a)
-			=> (a is Exponent<TResult> aP && aP.Power is IConstant<TResult> c) ? (true, c) : (false, null);
+		static bool IsExponentWithConstantPower(
+			IEvaluate<TResult> a,
+			[NotNullWhen(true)] out IConstant<TResult> value)
+		{
+			if (a is Exponent<TResult> aP && aP.Power is IConstant<TResult> c)
+			{
+				value = c;
+				return true;
+			}
 
-		protected override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
+			value = default!;
+			return false;
+		}
+
+		public override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
 		{
 			// Constants always get priority in products and are moved to the front.  They should collapse in reduction to a 'multiple'.
 			if (a is IConstant<TResult> || b is IConstant<TResult>)
 				return base.Compare(a, b);
 
-			var (aFound, aConstant) = IsExponentWithConstantPower(a);
-			var (bFound, bConstant) = IsExponentWithConstantPower(b);
+			var aFound = IsExponentWithConstantPower(a, out var aConstant);
+			var bFound = IsExponentWithConstantPower(b, out var bConstant);
 			if (aFound && bFound)
 			{
 				var result = base.Compare(aConstant, bConstant);
@@ -273,8 +285,10 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
-			Debug.Assert(catalog != null);
-			Debug.Assert(param != null);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (param is null) throw new ArgumentNullException(nameof(param));
+			Contract.EndContractBlock();
+
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
 				return (dynamic)Product.Create(dCat, p);
@@ -286,7 +300,9 @@ namespace Open.Evaluation.Arithmetic
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
-			Debug.Assert(catalog != null);
+			if (param is null) throw new ArgumentNullException(nameof(param));
+			Contract.EndContractBlock();
+
 			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
 			return p.Length == 1 ? p[0] : Create(catalog, p);
 		}
@@ -294,7 +310,7 @@ namespace Open.Evaluation.Arithmetic
 
 	public static partial class ProductExtensions
 	{
-		public static IEnumerable<(string Hash, IConstant<TResult> Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
+		public static IEnumerable<(string Hash, IConstant<TResult>? Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
 			where TResult : struct, IComparable
@@ -302,7 +318,7 @@ namespace Open.Evaluation.Arithmetic
 			return source.Select(c =>
 			{
 				if (!(c is Product<TResult> p))
-					return (c.ToStringRepresentation(), null, c);
+					return (c.ToStringRepresentation(), default(IConstant<TResult>?), c);
 
 				var reduced = reduce
 					? p.ReductionWithMutlipleExtracted(catalog, out var multiple)
@@ -354,6 +370,8 @@ namespace Open.Evaluation.Arithmetic
 					throw new Exception("Extraction failure.");
 				case 1:
 					return childList.Single();
+				default:
+					break;
 			}
 
 			return Product<TResult>.Create(catalog, childList);

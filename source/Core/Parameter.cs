@@ -14,7 +14,7 @@ namespace Open.Evaluation.Core
 		: EvaluationBase<TValue>, IParameter<TValue>, IReproducable<ushort, IEvaluate<TValue>>
 		where TValue : IComparable
 	{
-		protected Parameter(ushort id, Func<object, ushort, TValue> evaluator = null)
+		protected Parameter(ushort id, Func<object, ushort, TValue>? evaluator = null)
 		{
 			_evaluator = evaluator ?? GetParamValueFrom;
 			ID = id;
@@ -23,19 +23,14 @@ namespace Open.Evaluation.Core
 		readonly Func<object, ushort, TValue> _evaluator;
 
 		static TValue GetParamValueFrom(object source, ushort id)
-		{
-			switch (source)
+			=> source switch
 			{
-				case IReadOnlyList<TValue> list:
-					return list[id];
-				case IDictionary<ushort, TValue> d:
-					return d[id];
-				case TValue v:
-					return v;
-			}
+				IReadOnlyList<TValue> list => list[id],
+				IDictionary<ushort, TValue> d => d[id],
+				TValue v => v,
 
-			throw new ArgumentException("Unknown type.", nameof(source));
-		}
+				_ => throw new ArgumentException("Unknown type.", nameof(source)),
+			};
 
 
 		public ushort ID

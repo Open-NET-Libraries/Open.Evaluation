@@ -4,7 +4,8 @@
  */
 
 using Open.Evaluation.Core;
-using System.Diagnostics;
+using System;
+using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation.Boolean
 {
@@ -19,9 +20,9 @@ namespace Open.Evaluation.Boolean
 			IEvaluate<TResult> ifFalse)
 			: base(Conditional.SYMBOL, Conditional.SEPARATOR)
 		{
-			Condition = condition;
-			IfTrue = ifTrue;
-			IfFalse = ifFalse;
+			Condition = condition ?? throw new ArgumentNullException(nameof(condition));
+			IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue));
+			IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse));
 		}
 
 		public IEvaluate<bool> Condition { get; }
@@ -37,8 +38,8 @@ namespace Open.Evaluation.Boolean
 		public override string ToString(object context)
 			=> ToStringInternal(
 				Condition.Evaluate(context),
-				IfTrue.Evaluate(context),
-				IfFalse.Evaluate(context));
+				IfTrue.Evaluate(context)!,
+				IfFalse.Evaluate(context)!);
 
 		protected override string ToStringRepresentationInternal()
 			=> ToStringInternal(
@@ -55,7 +56,8 @@ namespace Open.Evaluation.Boolean
 			ICatalog<IEvaluate<TResult>> catalog,
 			(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 		{
-			Debug.Assert(catalog != null);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			Contract.EndContractBlock();
 
 			return catalog.Register(
 				new Conditional<TResult>(

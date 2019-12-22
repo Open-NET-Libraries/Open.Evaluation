@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
 namespace Open.Evaluation.Core
@@ -16,11 +17,9 @@ namespace Open.Evaluation.Core
 	public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 	{
 		protected abstract string ToStringRepresentationInternal();
-		string _toStringRepresentation; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
+		string? _toStringRepresentation; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
 		public string ToStringRepresentation()
-		{
-			return LazyInitializer.EnsureInitialized(ref _toStringRepresentation, ToStringRepresentationInternal);
-		}
+			=> LazyInitializer.EnsureInitialized(ref _toStringRepresentation, ToStringRepresentationInternal)!;
 
 		protected abstract TResult EvaluateInternal(object context); // **
 
@@ -29,6 +28,7 @@ namespace Open.Evaluation.Core
 		object IEvaluate.Evaluate(object context) => Evaluate(context);
 
 		/// <inheritdoc />
+		[return: NotNull]
 		public TResult Evaluate(object context)
 		{
 			// Use existing context... // Caches results...
@@ -36,12 +36,13 @@ namespace Open.Evaluation.Core
 				return pc.GetOrAdd(this, k => EvaluateInternal(pc)); // **
 
 			// Create a new one for this tree...
-			using (var newPc = new ParameterContext(context))
-				return Evaluate(newPc);
+			using var newPc = new ParameterContext(context);
+			return Evaluate(newPc);
 		}
 
 		/// <inheritdoc />
-		public virtual string ToString(object context) => ToStringInternal(Evaluate(context));
+		public virtual string ToString(object context)
+			=> ToStringInternal(Evaluate(context));
 
 	}
 

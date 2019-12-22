@@ -16,7 +16,7 @@ namespace Open.Evaluation.Boolean
 		{
 			public const string PREFIX = "AtLeast";
 
-			internal AtLeast(int count, IEnumerable<IEvaluate<bool>> children = null)
+			internal AtLeast(int count, IEnumerable<IEvaluate<bool>> children)
 				: base(PREFIX, count, children)
 			{
 				if (count < 1)

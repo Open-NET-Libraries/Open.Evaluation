@@ -97,7 +97,7 @@ namespace Open.Evaluation.Core
 			{
 				result += c.Value;
 			}
-			return GetConstant<TValue>(catalog, result);
+			return GetConstant<TValue>(catalog, (TValue)result);
 		}
 
 		public static Constant<TValue> SumOfConstants<TValue>(
@@ -146,7 +146,7 @@ namespace Open.Evaluation.Core
 				if (val == zero) return GetConstant<TValue>(catalog, zero);
 				result *= val;
 			}
-			return GetConstant<TValue>(catalog, result);
+			return GetConstant(catalog, (TValue)result);
 		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(

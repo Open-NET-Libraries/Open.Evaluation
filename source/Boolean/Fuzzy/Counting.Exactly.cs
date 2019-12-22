@@ -15,7 +15,7 @@ namespace Open.Evaluation.Boolean
 		{
 			public const string PREFIX = "Exactly";
 
-			internal Exactly(int count, IEnumerable<IEvaluate<bool>> children = null)
+			internal Exactly(int count, IEnumerable<IEvaluate<bool>> children)
 				: base(PREFIX, count, children)
 			{
 			}

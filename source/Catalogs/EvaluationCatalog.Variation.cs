@@ -4,6 +4,7 @@ using Open.Hierarchy;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
@@ -15,9 +16,9 @@ namespace Open.Evaluation.Catalogs
 	public partial class EvaluationCatalog<T>
 		where T : IComparable
 	{
-		private VariationCatalog _variation;
+		private VariationCatalog? _variation;
 		public VariationCatalog Variation =>
-			LazyInitializer.EnsureInitialized(ref _variation, () => new VariationCatalog(this));
+			LazyInitializer.EnsureInitialized(ref _variation, () => new VariationCatalog(this))!;
 
 		public class VariationCatalog : SubmoduleBase<EvaluationCatalog<T>>
 		{
@@ -63,11 +64,11 @@ namespace Open.Evaluation.Catalogs
 		public static bool TryRemoveValid(
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> node,
-			out IEvaluate<double> newRoot)
+			[NotNullWhen(true)] out IEvaluate<double> newRoot)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
 			if (IsValidForRemoval(node))
 			{
 				newRoot = catalog.Catalog
@@ -75,7 +76,7 @@ namespace Open.Evaluation.Catalogs
 					.Recycle();
 				return true;
 			}
-			newRoot = default;
+			newRoot = default!;
 			return false;
 		}
 
@@ -96,8 +97,8 @@ namespace Open.Evaluation.Catalogs
 			out IEvaluate<double> newRoot)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (sourceNode == null) throw new ArgumentNullException(nameof(sourceNode));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
 
 			return TryRemoveValid(
 				catalog,
@@ -115,13 +116,13 @@ namespace Open.Evaluation.Catalogs
 			// Validate worthyness.
 			=> parent?.Children.Count == 1;
 
-		public static IEvaluate<double> PromoteChildren(
+		public static IEvaluate<double>? PromoteChildren(
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
 			Contract.EndContractBlock();
 
 			// Validate worthyness.
@@ -132,13 +133,13 @@ namespace Open.Evaluation.Catalogs
 		}
 
 		// This should handle the case of demoting a function.
-		public static IEvaluate<double> PromoteChildrenAt(
+		public static IEvaluate<double>? PromoteChildrenAt(
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> root, int descendantIndex)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (root == null) throw new ArgumentNullException(nameof(root));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
 
 			return PromoteChildren(catalog,
@@ -151,8 +152,8 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<double>> node, char fn, IEnumerable<IEvaluate<double>> parameters)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
 			Contract.EndContractBlock();
 
 			if (!Registry.Arithmetic.Functions.Contains(fn))
@@ -163,17 +164,17 @@ namespace Open.Evaluation.Catalogs
 				Registry.Arithmetic.GetFunction(c, fn, parameters.ToArray()));
 		}
 
-		public static IEvaluate<double> ApplyRandomFunction(
+		public static IEvaluate<double>? ApplyRandomFunction(
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
 			Contract.EndContractBlock();
 
 			var c = catalog.Catalog;
-			var n = Registry.Arithmetic.GetRandomFunction(c, node.Value);
+			var n = Registry.Arithmetic.GetRandomFunction(c, node.Value!);
 			return n == null ? null : c.ApplyClone(node, newNode => n);
 		}
 
@@ -182,13 +183,13 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<double>> root, int descendantIndex, char fn, IEnumerable<IEvaluate<double>> parameters)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (root == null) throw new ArgumentNullException(nameof(root));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
 
 			return ApplyFunction(catalog,
 				root.GetDescendantsOfType()
-					.ElementAt(descendantIndex).Parent, fn, parameters);
+					.ElementAt(descendantIndex).Parent!, fn, parameters);
 		}
 
 		public static IEvaluate<double> IncreaseParameterExponents(
@@ -196,8 +197,8 @@ namespace Open.Evaluation.Catalogs
 			IEvaluate<double> root)
 		{
 			Debug.Assert(catalog != null);
-			if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-			if (root == null) throw new ArgumentNullException(nameof(root));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
 
 			if (!(root is IParent))
@@ -227,7 +228,7 @@ namespace Open.Evaluation.Catalogs
 				else
 				{
 					p.Parent.Replace(p,
-						cat.Factory.Map(cat.GetExponent(p.Value, 2)));
+						cat.Factory.Map(cat.GetExponent(p.Value!, 2)));
 				}
 			}
 

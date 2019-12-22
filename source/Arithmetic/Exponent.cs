@@ -28,15 +28,9 @@ namespace Open.Evaluation.Arithmetic
 			Power = power ?? throw new ArgumentNullException(nameof(power));
 		}
 
-		public IEvaluate<TResult> Base
-		{
-			get;
-		}
+		public IEvaluate<TResult> Base { get; }
 
-		public IEvaluate<TResult> Power
-		{
-			get;
-		}
+		public IEvaluate<TResult> Power { get; }
 
 		protected static double ConvertToDouble(in dynamic value) => (double)value;
 
@@ -72,6 +66,10 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> @base,
 			IEvaluate<TResult> power)
 		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (@base is null) throw new ArgumentNullException(nameof(@base));
+			if (power is null) throw new ArgumentNullException(nameof(power));
+
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat
 				&& @base is IEvaluate<double> b

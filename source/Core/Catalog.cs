@@ -4,6 +4,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
@@ -20,11 +21,10 @@ namespace Open.Evaluation.Core
 
 		readonly ConcurrentDictionary<string, T> Registry = new ConcurrentDictionary<string, T>();
 
-		public void Register<TItem>(ref TItem item)
+		public void Register<TItem>([NotNull] ref TItem item)
 			where TItem : T
 		{
-			if (item == null) throw new ArgumentNullException(nameof(item));
-			Contract.Ensures(Contract.Result<TItem>() != null);
+			if (item is null) throw new ArgumentNullException(nameof(item));
 			Contract.EndContractBlock();
 
 			item = Register(item);
@@ -33,10 +33,11 @@ namespace Open.Evaluation.Core
 		protected virtual TItem OnBeforeRegistration<TItem>(TItem item)
 			=> item;
 
+		[return: NotNull]
 		public TItem Register<TItem>(TItem item)
 			where TItem : T
 		{
-			if (item == null) throw new ArgumentNullException(nameof(item));
+			if (item is null) throw new ArgumentNullException(nameof(item));
 			Contract.Ensures(Contract.Result<TItem>() != null);
 			Contract.EndContractBlock();
 			var result = Registry.GetOrAdd(item.ToStringRepresentation(), OnBeforeRegistration(item));
@@ -45,11 +46,12 @@ namespace Open.Evaluation.Core
 			return (TItem)result;
 		}
 
+		[return: NotNull]
 		public TItem Register<TItem>(string id, Func<string, TItem> factory)
 			where TItem : T
 		{
-			if (id == null) throw new ArgumentNullException(nameof(id));
-			if (factory == null) throw new ArgumentNullException(nameof(factory));
+			if (id is null) throw new ArgumentNullException(nameof(id));
+			if (factory is null) throw new ArgumentNullException(nameof(factory));
 			Contract.Ensures(Contract.Result<TItem>() != null);
 			Contract.EndContractBlock();
 
@@ -65,11 +67,10 @@ namespace Open.Evaluation.Core
 			});
 		}
 
-		public bool TryGetItem<TItem>(string id, out TItem item)
+		public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
 			where TItem : T
 		{
-			if (id == null) throw new ArgumentNullException(nameof(id));
-			Contract.Ensures(Contract.Result<TItem>() != null);
+			if (id is null) throw new ArgumentNullException(nameof(id));
 			Contract.EndContractBlock();
 
 			var result = Registry.TryGetValue(id, out var e);
@@ -108,7 +109,7 @@ namespace Open.Evaluation.Core
 				: src;
 		}
 
-		public bool TryGetReduced(T source, out T reduction)
+		public bool TryGetReduced(T source, [NotNullWhen(true)] out T reduction)
 		{
 			reduction = GetReduced(source);
 			return !reduction.Equals(source);
@@ -141,8 +142,8 @@ namespace Open.Evaluation.Core
 
 			protected SubmoduleBase(ICatalog<T> catalog, Node<T>.Factory factory)
 			{
-				Catalog = catalog;
-				Factory = factory;
+				Catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
+				Factory = factory ?? throw new ArgumentNullException(nameof(factory));
 			}
 		}
 
@@ -151,7 +152,7 @@ namespace Open.Evaluation.Core
 		{
 			internal new TCatalog Catalog { get; }
 
-			protected SubmoduleBase(TCatalog catalog) : base(catalog, catalog.Factory)
+			protected SubmoduleBase(TCatalog catalog) : base(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory)
 			{
 				Catalog = catalog;
 			}

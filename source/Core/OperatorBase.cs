@@ -7,6 +7,7 @@ using Open.Hierarchy;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -15,32 +16,24 @@ using System.Text;
 namespace Open.Evaluation.Core
 {
 	public abstract class OperatorBase<TChild, TResult>
-		: OperationBase<TResult>, IOperator<TChild, TResult>
+		: OperationBase<TResult>, IOperator<TChild, TResult>, IComparer<TChild>
 
 		where TChild : class, IEvaluate
 		where TResult : IComparable
 	{
-
 		protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1) : base(symbol, separator)
 		{
-			if (children == null) throw new ArgumentNullException(nameof(children));
+			if (children is null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
-			ChildrenInternal = new List<TChild>(children);
-			if (ChildrenInternal.Count < minimumChildren)
+			Children = ImmutableArray.CreateRange(reorderChildren ? children.OrderBy(c => c, this) : children);
+			if (Children.Length < minimumChildren)
 				throw new ArgumentException($"{GetType()} must be constructed with at least {minimumChildren} child(ren).");
-
-			if (reorderChildren) ChildrenInternal.Sort(Compare);
-			Children = ChildrenInternal.AsReadOnly();
 		}
 
-		protected readonly List<TChild> ChildrenInternal;
+		public ImmutableArray<TChild> Children { get; }
 
-		public IReadOnlyList<TChild> Children
-		{
-			get;
-		}
-
+		IReadOnlyList<TChild> IParent<TChild>.Children => Children;
 		IReadOnlyList<object> IParent.Children => Children;
 
 		protected override string ToStringInternal(object contents)
@@ -70,32 +63,28 @@ namespace Open.Evaluation.Core
 		}
 
 		public override string ToString(object context)
-		{
-			return ToStringInternal(Children.Select(c => c.ToString(context)));
-		}
+			=> ToStringInternal(Children.Select(c => c.ToString(context)));
 
 		protected IEnumerable<object> ChildResults(object context)
 		{
-			foreach (var child in ChildrenInternal)
+			foreach (var child in Children)
 				yield return child.Evaluate(context);
 		}
 
 		protected IEnumerable<string> ChildRepresentations()
 		{
-			foreach (var child in ChildrenInternal)
+			foreach (var child in Children)
 				yield return child.ToStringRepresentation();
 		}
 
 		protected override string ToStringRepresentationInternal()
-		{
-			return ToStringInternal(ChildRepresentations());
-		}
+			=> ToStringInternal(ChildRepresentations());
 
 		protected virtual int ConstantPriority => +1;
 
 		// Need a standardized way to order so that comparisons are easier.
 		// ReSharper disable once VirtualMemberNeverOverridden.Global
-		protected virtual int Compare(TChild a, TChild b)
+		public virtual int Compare(TChild a, TChild b)
 		{
 			switch (a)
 			{

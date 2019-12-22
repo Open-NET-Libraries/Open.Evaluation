@@ -2,11 +2,11 @@
 using Open.Evaluation.Boolean;
 using Open.Evaluation.Catalogs;
 using Open.Evaluation.Core;
+using Open.RandomizationExtensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using Open.RandomizationExtensions;
 
 namespace Open.Evaluation
 {
@@ -35,34 +35,32 @@ namespace Open.Evaluation
 				char op,
 				IEnumerable<IEvaluate<double>> children)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-				if (children == null) throw new ArgumentNullException(nameof(children));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 				Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
-				switch (op)
+				return op switch
 				{
-					case ADD:
-						return catalog.SumOf(children);
-					case MULTIPLY:
-						return catalog.ProductOf(children);
-				}
+					ADD => catalog.SumOf(children),
+					MULTIPLY => catalog.ProductOf(children),
 
-				throw new ArgumentException($"Invalid operator: {op}", nameof(op));
+					_ => throw new ArgumentException($"Invalid operator: {op}", nameof(op)),
+				};
 			}
 
 			public static IEvaluate<double> GetOperator(
 				EvaluationCatalogSubmodule catalog,
 				char op,
 				IEnumerable<IEvaluate<double>> children)
-				=> GetOperator(catalog?.Catalog, op, children);
+				=> GetOperator(catalog.Catalog, op, children);
 
-			public static IEvaluate<double> GetRandomOperator(
+			public static IEvaluate<double>? GetRandomOperator(
 				ICatalog<IEvaluate<double>> catalog,
 				IEnumerable<IEvaluate<double>> children,
 				params char[] except)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-				if (children == null) throw new ArgumentNullException(nameof(children));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 
 				if (except == null || except.Length == 0)
@@ -73,27 +71,27 @@ namespace Open.Evaluation
 					: null;
 			}
 
-			public static IEvaluate<double> GetRandomOperator(
+			public static IEvaluate<double>? GetRandomOperator(
 				EvaluationCatalogSubmodule catalog,
 				IEnumerable<IEvaluate<double>> children,
 				params char[] except)
-				=> GetRandomOperator(catalog?.Catalog, children, except);
+				=> GetRandomOperator(catalog.Catalog, children, except);
 
 			public static IEvaluate<double> GetFunction(
 				ICatalog<IEvaluate<double>> catalog,
 				char op,
-				in ReadOnlySpan<IEvaluate<double>> children)
+				IList<IEvaluate<double>> children)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 				Contract.EndContractBlock();
 
-				if (children.Length == 1)
+				if (children.Count == 1)
 					return GetFunction(catalog, op, children[0]);
 
 				switch (op)
 				{
 					case Exponent.SYMBOL:
-						if (children.Length != 2) throw new ArgumentException("Must have 2 child params for an exponent.");
+						if (children.Count != 2) throw new ArgumentException("Must have 2 child params for an exponent.");
 						return catalog.GetExponent(children[0], children[1]);
 				}
 
@@ -105,37 +103,32 @@ namespace Open.Evaluation
 				char op,
 				IEvaluate<double> child)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-				if (child == null) throw new ArgumentNullException(nameof(child));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (child is null) throw new ArgumentNullException(nameof(child));
 				Contract.EndContractBlock();
 
-				switch (op)
+				return op switch
 				{
-					case SQUARE:
-						return catalog.GetExponent(child, 2);
-					case INVERT:
-						return catalog.GetExponent(child, -1);
-					case SQUARE_ROOT:
-						return catalog.GetExponent(child, 0.5);
-					case Exponent.SYMBOL:
-						throw new ArgumentException("Must have 2 child params for an exponent.");
-					default:
-						throw new ArgumentException("Invalid function.", nameof(op));
-				}
+					SQUARE => catalog.GetExponent(child, 2),
+					INVERT => catalog.GetExponent(child, -1),
+					SQUARE_ROOT => catalog.GetExponent(child, 0.5),
+					Exponent.SYMBOL => throw new ArgumentException("Must have 2 child params for an exponent."),
+					_ => throw new ArgumentException("Invalid function.", nameof(op)),
+				};
 			}
 
 			public static IEvaluate<double> GetFunction(
 				EvaluationCatalogSubmodule catalog,
 				char op,
-				in ReadOnlySpan<IEvaluate<double>> children)
-				=> GetFunction(catalog?.Catalog, op, children);
+				IList<IEvaluate<double>> children)
+				=> GetFunction(catalog.Catalog, op, children);
 
-			public static IEvaluate<double> GetRandomFunction(
+			public static IEvaluate<double>? GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
-				in ReadOnlySpan<IEvaluate<double>> children,
+				IList<IEvaluate<double>> children,
 				params char[] except)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 				Contract.EndContractBlock();
 
 				if (except == null || except.Length == 0)
@@ -146,19 +139,19 @@ namespace Open.Evaluation
 					: null;
 			}
 
-			public static IEvaluate<double> GetRandomFunction(
+			public static IEvaluate<double>? GetRandomFunction(
 				EvaluationCatalogSubmodule catalog,
-				in ReadOnlySpan<IEvaluate<double>> children,
+				IList<IEvaluate<double>> children,
 				params char[] except)
-				=> GetRandomFunction(catalog?.Catalog, children, except);
+				=> GetRandomFunction(catalog.Catalog, children, except);
 
 			public static IEvaluate<double> GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
 				IEvaluate<double> child,
 				params char[] except)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-				if (child == null) throw new ArgumentNullException(nameof(child));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (child is null) throw new ArgumentNullException(nameof(child));
 				Contract.EndContractBlock();
 
 				char op;
@@ -175,7 +168,7 @@ namespace Open.Evaluation
 				EvaluationCatalogSubmodule catalog,
 				IEvaluate<double> child,
 				params char[] except)
-				=> GetRandomFunction(catalog?.Catalog, child, except);
+				=> GetRandomFunction(catalog.Catalog, child, except);
 		}
 
 		public static class Boolean
@@ -189,9 +182,9 @@ namespace Open.Evaluation
 			public const char CONDITIONAL = Conditional.SYMBOL;
 
 			// Fuzzy...
-			public const string AT_LEAST = Open.Evaluation.Boolean.Counting.AtLeast.PREFIX;
-			public const string AT_MOST = Open.Evaluation.Boolean.Counting.AtMost.PREFIX;
-			public const string EXACTLY = Open.Evaluation.Boolean.Counting.Exactly.PREFIX;
+			public const string AT_LEAST = Evaluation.Boolean.Counting.AtLeast.PREFIX;
+			public const string AT_MOST = Evaluation.Boolean.Counting.AtMost.PREFIX;
+			public const string EXACTLY = Evaluation.Boolean.Counting.Exactly.PREFIX;
 
 			public static readonly IReadOnlyList<char> Operators
 				= (new List<char> { AND, OR });
@@ -205,29 +198,27 @@ namespace Open.Evaluation
 				char op,
 				IEnumerable<IEvaluate<bool>> children)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-				if (children == null) throw new ArgumentNullException(nameof(children));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 				Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
-				switch (op)
+				return op switch
 				{
-					case AND:
-						return catalog.SumOf(children);
-					case OR:
-						return catalog.ProductOf(children);
-				}
+					AND => catalog.SumOf(children),
+					OR => catalog.ProductOf(children),
 
-				throw new ArgumentException($"Invalid operator: {op}", nameof(op));
+					_ => throw new ArgumentException($"Invalid operator: {op}", nameof(op)),
+				};
 			}
 
 
-			public static IEvaluate<bool> GetRandomOperator(
+			public static IEvaluate<bool>? GetRandomOperator(
 				ICatalog<IEvaluate<bool>> catalog,
 				IEnumerable<IEvaluate<bool>> children,
 				params char[] except)
 			{
-				if (catalog == null) throw new ArgumentNullException(nameof(catalog));
-				if (children == null) throw new ArgumentNullException(nameof(children));
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 
 				if (except == null || except.Length == 0)

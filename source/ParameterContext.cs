@@ -1,6 +1,7 @@
 ﻿using Open.Evaluation.Core;
 using System;
 using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation
 {
@@ -14,15 +15,14 @@ namespace Open.Evaluation
 			Context = context;
 		}
 
+		[return: NotNull]
 		public TResult GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, TResult> factory)
-		{
-			return base.GetOrAdd(key, k => new Lazy<object>(() => factory(k))).Value is TResult r ? r
+			=> base.GetOrAdd(key, k => new Lazy<object>(() => factory(k)!)).Value is TResult r ? r
 				: throw new InvalidCastException("Result doesn't match factory return type.");
-		}
 
 		public void Dispose()
 		{
-			Context = null;
+			Context = null!;
 			Clear();
 		}
 	}

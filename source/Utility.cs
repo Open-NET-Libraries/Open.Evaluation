@@ -10,7 +10,7 @@ namespace Open.Evaluation
 	{
 		public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, in T next)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source is null) throw new ArgumentNullException(nameof(source));
 
 			return source
 				.Concat(Enumerable.Repeat(next, 1));
@@ -18,66 +18,60 @@ namespace Open.Evaluation
 
 		public static IEnumerable<T> SkipAt<T>(this IEnumerable<T> source, int index)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source is null) throw new ArgumentNullException(nameof(source));
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 			Contract.EndContractBlock();
 
-			using (var e = source.GetEnumerator())
+			using var e = source.GetEnumerator();
+			var count = 0;
+			while (e.MoveNext())
 			{
-				var count = 0;
-				while (e.MoveNext())
-				{
-					if (count != index)
-						yield return e.Current;
+				if (count != index)
+					yield return e.Current;
 
-					count++;
-				}
+				count++;
 			}
 		}
 
 		public static IEnumerable<T> ReplaceAt<T>(this IEnumerable<T> source, int index, T replacement)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source is null) throw new ArgumentNullException(nameof(source));
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 			Contract.EndContractBlock();
 
-			using (var e = source.GetEnumerator())
+			using var e = source.GetEnumerator();
+			var count = 0;
+			while (e.MoveNext())
 			{
-				var count = 0;
-				while (e.MoveNext())
-				{
-					if (count == index)
-						yield return replacement;
-					else
-						yield return e.Current;
+				if (count == index)
+					yield return replacement;
+				else
+					yield return e.Current;
 
-					count++;
-				}
+				count++;
 			}
 		}
 
 		public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int index, IEnumerable<T> injection)
 		{
-			if (source == null) throw new ArgumentNullException(nameof(source));
+			if (source is null) throw new ArgumentNullException(nameof(source));
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 			Contract.EndContractBlock();
 
-			using (var e = source.GetEnumerator())
+			using var e = source.GetEnumerator();
+			var count = 0;
+			while (e.MoveNext())
 			{
-				var count = 0;
-				while (e.MoveNext())
+				if (count == index)
 				{
-					if (count == index)
-					{
-						// ReSharper disable once PossibleMultipleEnumeration
-						foreach (var i in injection)
-							yield return i;
-					}
-
-					yield return e.Current;
-
-					count++;
+					// ReSharper disable once PossibleMultipleEnumeration
+					foreach (var i in injection)
+						yield return i;
 				}
+
+				yield return e.Current;
+
+				count++;
 			}
 		}
 
@@ -85,18 +79,16 @@ namespace Open.Evaluation
 		{
 			if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 
-			using (var e = source.GetEnumerator())
+			using var e = source.GetEnumerator();
+			var count = 0;
+			while (e.MoveNext())
 			{
-				var count = 0;
-				while (e.MoveNext())
-				{
-					if (count == index)
-						yield return injection;
+				if (count == index)
+					yield return injection;
 
-					yield return e.Current;
+				yield return e.Current;
 
-					count++;
-				}
+				count++;
 			}
 		}
 

@@ -38,7 +38,7 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> target,
 			bool operateDirectly = false)
 		{
-			if (target == null) throw new ArgumentNullException(nameof(target));
+			if (target is null) throw new ArgumentNullException(nameof(target));
 			Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() != null);
 			Contract.EndContractBlock();
 
@@ -102,8 +102,8 @@ namespace Open.Evaluation.Catalogs
 
 			target.Clear();
 
-			var old = target.Value;
-			var registered = Register(target.Value);
+			var old = target.Value!;
+			var registered = Register(old); // Will throw if old is null.
 			if (old != registered)
 				target.Value = registered;
 
@@ -145,12 +145,17 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<T>> sourceNode,
 			Func<Node<IEvaluate<T>>, IEvaluate<T>> clonedNodeHandler)
 		{
+			if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+			if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
+			Contract.EndContractBlock();
+
 			var node = sourceNode.CloneTree(); // * new 1
 			var root = node.Root;
 			var parent = node.Parent;
 			try
 			{
 				var replacement = clonedNodeHandler(node);
+				if (replacement == null) throw new NullReferenceException("clonedNodeHandler returned null.");
 				if (parent == null) return replacement;
 
 				var rn = Factory.Map(replacement);
@@ -190,6 +195,7 @@ namespace Open.Evaluation.Catalogs
 			try
 			{
 				var replacement = clonedNodeHandler(node); // * new 2
+				if (replacement == null) throw new NullReferenceException("clonedNodeHandler returned null.");
 				try
 				{
 					if (parent == null)
@@ -225,9 +231,12 @@ namespace Open.Evaluation.Catalogs
 		public Node<IEvaluate<T>> RemoveNode(
 			Node<IEvaluate<T>> node)
 		{
-			if (node?.Parent == null) return null;
+			if (node is null) throw new ArgumentNullException(nameof(node));
+			var parent = node.Parent ?? throw new ArgumentException("node cannot be removed without a parent.", nameof(node));
+			Contract.EndContractBlock();
+
 			var root = node.Root;
-			node.Parent.Remove(node);
+			parent.Remove(node);
 			return FixHierarchy(root, true);
 		}
 
@@ -252,13 +261,11 @@ namespace Open.Evaluation.Catalogs
 		/// <param name="sourceNode">The node to attempt adding a constant to.</param>
 		/// <param name="value">The constant value to add.</param>
 		/// <returns>A new node within a new tree containing the updated evaluation.</returns>
-		public IEvaluate<T> AddConstant(Node<IEvaluate<T>> sourceNode, T value)
+		public IEvaluate<T>? TryAddConstant(Node<IEvaluate<T>> sourceNode, T value)
 			=> sourceNode.Value is IParent<IEvaluate<T>>
 				? ApplyClone(
 					sourceNode,
 					newNode => newNode.Add(Factory.Map(this.GetConstant(value))))
 				: null;
-
-
 	}
 }

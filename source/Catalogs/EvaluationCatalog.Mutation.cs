@@ -17,10 +17,9 @@ namespace Open.Evaluation.Catalogs
 	public partial class EvaluationCatalog<T>
 		where T : IComparable
 	{
-		private MutationCatalog _mutation;
-
+		private MutationCatalog? _mutation;
 		public MutationCatalog Mutation =>
-			LazyInitializer.EnsureInitialized(ref _mutation, () => new MutationCatalog(this));
+			LazyInitializer.EnsureInitialized(ref _mutation, () => new MutationCatalog(this))!;
 
 		public class MutationCatalog : SubmoduleBase<EvaluationCatalog<T>>
 		{
@@ -34,12 +33,12 @@ namespace Open.Evaluation.Catalogs
 	[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 	public static partial class EvaluationCatalogExtensions
 	{
-
 		public static IEvaluate<double> MutateSign(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node, byte options = 3)
 		{
-			if (node == null) throw new ArgumentNullException(nameof(node));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
 			if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
 			Contract.EndContractBlock();
 
@@ -98,17 +97,18 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
+			if (node?.Value is null)
+				throw new ArgumentException("No node value.", nameof(node));
 			if (!(node.Value is IParameter p))
 				throw new ArgumentException("Does not contain a Parameter.", nameof(node));
 
 			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
-
 				var rv = node.Root.Value;
 				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(
 					p == rv
 						? p.ID
-						: (((IParent)rv).GetDescendants().OfType<IParameter>().Distinct().Count())
+						: (((IParent)rv!).GetDescendants().OfType<IParameter>().Distinct().Count())
 							+ (p.ID == 0 ? 1 : RandomUtilities.Random.Next(2)) /* Increase the possibility of parameter ID decrease vs increase */,
 					p.ID);
 
@@ -116,7 +116,7 @@ namespace Open.Evaluation.Catalogs
 			});
 		}
 
-		public static IEvaluate<double> ChangeOperation(
+		public static IEvaluate<double>? ChangeOperation(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
@@ -145,28 +145,23 @@ namespace Open.Evaluation.Catalogs
 
 			var c = catalog.Catalog;
 			return c.ApplyClone(node, _ => isFn
-				? Registry.Arithmetic.GetRandomFunction(c, o.Children.ToArray(), symbol)
-				: Registry.Arithmetic.GetRandomOperator(c, o.Children, symbol));
+				? Registry.Arithmetic.GetRandomFunction(c, o.Children.ToArray(), symbol)!
+				: Registry.Arithmetic.GetRandomOperator(c, o.Children, symbol)!);
 		}
 
-		public static IEvaluate<double> AddParameter(
+		public static IEvaluate<double>? AddParameter(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
-		{
-			switch (node.Value)
+			=> node.Value switch
 			{
-				case Exponent<double> _:
-					return null;
-				case IParent p:
-					return catalog.Catalog.ApplyClone(node, newNode =>
-						newNode.AddValue(catalog.Catalog.GetParameter(
-							RandomUtilities.Random.Next(
-								p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1))));
+				Exponent<double> _ => null,
+				IParent p => catalog.Catalog.ApplyClone(node, newNode =>
+						  newNode.AddValue(catalog.Catalog.GetParameter(
+							  RandomUtilities.Random.Next(
+								  p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1)))),
 
-				default:
-					throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node));
-			}
-		}
+				_ => throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node)),
+			};
 
 		public static IEvaluate<double> BranchOperation(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
@@ -179,19 +174,19 @@ namespace Open.Evaluation.Catalogs
 				var parameter = catalog.Catalog.GetParameter(RandomUtilities.Random.Next(inputParamCount));
 				IEvaluate<double>[] children;
 
-				var nv = newNode.Value;
+				var nv = newNode.Value ?? throw new NullReferenceException("newNode.Value is null.");
 				if (newNode.Value is IFunction || RandomUtilities.Random.Next(4) == 0)
 				{
 					children = RandomUtilities.Random.Next(2) == 1
-						? new[] { parameter, nv }
-						: new[] { nv, parameter };
+						? new IEvaluate<double>[] { parameter, nv }
+						: new IEvaluate<double>[] { nv, parameter };
 				}
 				else
 				{
 					children = new[] { parameter, nv };
 				}
 
-				return Registry.Arithmetic.GetRandomOperator(catalog, children);
+				return Registry.Arithmetic.GetRandomOperator(catalog, children)!; // Will throw in ApplyClone if null.
 			});
 		}
 
@@ -203,9 +198,9 @@ namespace Open.Evaluation.Catalogs
 				{
 					var power = newNode.Children[1];
 					newNode.Replace(power,
-						catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value)));
+						catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value ?? throw new NullReferenceException("power.Value is null."))));
 				})
 				: catalog.Catalog.ApplyClone(node, newNode =>
-						catalog.Catalog.GetExponent(newNode.Value, 2));
+						catalog.Catalog.GetExponent(newNode.Value ?? throw new NullReferenceException("newNode.Value is null."), 2));
 	}
 }

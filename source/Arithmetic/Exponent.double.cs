@@ -5,6 +5,7 @@
 
 using Open.Evaluation.Core;
 using System;
+using System.Buffers;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -19,17 +20,19 @@ namespace Open.Evaluation.Arithmetic
 
 		public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
-		public static string ConvertToSuperScript(ReadOnlySpan<char> number)
+		public static string ConvertToSuperScript(string number)
 		{
 			var len = number.Length;
-			var r = new char[len];
+			var r = ArrayPool<char>.Shared.Rent(len);
 			for (var i = 0; i < len; i++)
 			{
 				var n = char.GetNumericValue(number[i]);
 				r[i] = SuperScriptDigits[(int)n];
 			}
 
-			return new string(r);
+			var result = new string(r, 0, len);
+			ArrayPool<char>.Shared.Return(r);
+			return result;
 		}
 
 		static readonly Regex SquareRootPattern = new Regex(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -38,7 +41,7 @@ namespace Open.Evaluation.Arithmetic
 		protected override string ToStringInternal(object contents)
 		{
 			var value = base.ToStringInternal(contents);
-
+			Debug.Assert(value != null);
 			var m = SquareRootPattern.Match(value);
 			if (m.Success)
 				return '√' + m.Groups[1].Value;
@@ -49,10 +52,9 @@ namespace Open.Evaluation.Arithmetic
 			var b = m.Groups[1].Value;
 			Debug.Assert(!string.IsNullOrWhiteSpace(b));
 			var p = m.Groups[3].Value;
-			var pspan = p.AsSpan();
-			var ps = pspan.IndexOf('.') != -1
+			var ps = p.IndexOf('.') != -1
 				? ('^' + p)
-				: ConvertToSuperScript(pspan);
+				: ConvertToSuperScript(p);
 
 			var success = m.Groups[2].Success;
 			if (success && ps == "¹") ps = string.Empty;
@@ -105,7 +107,7 @@ namespace Open.Evaluation.Arithmetic
 
 			while (bas is Product<double> pProd)
 			{
-				if (pProd.Children.Count == 1)
+				if (pProd.Children.Length == 1)
 				{
 					bas = pProd.Children[0];
 				}

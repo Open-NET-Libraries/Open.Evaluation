@@ -3,6 +3,7 @@ using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Open.Evaluation.Catalogs
@@ -21,11 +22,12 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double> catalog,
 			Node<IEvaluate<double>> sourceNode, double multiple)
 		{
-			if (sourceNode == null)
-				throw new ArgumentNullException(nameof(sourceNode));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+			Contract.EndContractBlock();
 
 			if (multiple == 1) // No change...
-				return sourceNode.Root.Value;
+				return sourceNode.Root.Value ?? throw new NullReferenceException("newNode.Value");
 
 			if (multiple == 0 || double.IsNaN(multiple)) // Neutralized.
 			{
@@ -39,14 +41,14 @@ namespace Open.Evaluation.Catalogs
 					? catalog.ApplyClone(sourceNode, newNode =>
 					{
 						var n = newNode.Children.First(s => s.Value is IConstant<double>);
-						var c = (IConstant<double>)n.Value;
+						var c = (IConstant<double>)(n.Value ?? throw new NullReferenceException("n.Value"));
 						n.Value = catalog.ProductOfConstants(multiple, c);
 					})
-					: catalog.AddConstant(sourceNode, multiple);
+					: catalog.TryAddConstant(sourceNode, multiple)!;
 			}
 
 			return catalog.ApplyClone(sourceNode,
-				newNode => catalog.ProductOf(multiple, newNode.Value));
+				newNode => catalog.ProductOf(multiple, newNode.Value ?? throw new NullReferenceException("newNode.Value")));
 		}
 
 		public static IEvaluate<double> MultiplyNodeDescendant(
@@ -58,7 +60,7 @@ namespace Open.Evaluation.Catalogs
 			where TParent : IParent<IEvaluate<double>>
 			=> catalog.ProductOfConstants(n.Children.OfType<IConstant<double>>());
 
-		public static Constant<double> GetMultiple(this EvaluationCatalog<double> catalog, IEvaluate<double> node)
+		public static Constant<double> GetMultiple(this EvaluationCatalog<double> catalog, IEvaluate<double>? node)
 			=> node is IParent<IEvaluate<double>> n ? catalog.GetMultiple(n) : catalog.GetConstant(1);
 
 		/// <summary>
@@ -72,11 +74,12 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double> catalog,
 			Node<IEvaluate<double>> sourceNode, double delta)
 		{
-			if (sourceNode == null)
-				throw new ArgumentNullException(nameof(sourceNode));
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+			Contract.EndContractBlock();
 
 			if (delta == 0) // No change... 
-				return sourceNode.Root.Value;
+				return sourceNode.Root.Value ?? throw new NullReferenceException("sourceNode.Root.Value is null");
 
 			if (!(sourceNode.Value is Product<double> p))
 				return MultiplyNode(catalog, sourceNode, delta + 1);

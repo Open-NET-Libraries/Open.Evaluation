@@ -6,7 +6,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Open.Evaluation.Arithmetic
@@ -33,17 +33,16 @@ namespace Open.Evaluation.Arithmetic
 		internal new static Product Create(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
-		{
-			Debug.Assert(catalog != null);
-			Debug.Assert(param != null);
-			return catalog.Register(new Product(param));
-		}
+			=> catalog.Register(new Product(param));
 
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
 		{
-			Debug.Assert(param != null);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (param is null) throw new ArgumentNullException(nameof(param));
+			Contract.EndContractBlock();
+
 			var p = param as IEvaluate<double>[] ?? param.ToArray();
 			return p.Length == 1 ? p[0] : Create(catalog, p);
 		}
@@ -57,6 +56,9 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> children)
 		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			Contract.EndContractBlock();
+
 			var childList = children.ToList();
 			if (childList.Count == 0)
 				throw new InvalidOperationException("Cannot produce a product of an empty set.");
@@ -83,6 +85,8 @@ namespace Open.Evaluation.Arithmetic
 					throw new Exception("Extraction failure.");
 				case 1:
 					return childList[0];
+				default:
+					break;
 			}
 
 			return Product.Create(catalog, childList);

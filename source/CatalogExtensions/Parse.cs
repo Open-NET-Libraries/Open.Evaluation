@@ -62,7 +62,7 @@ namespace Open.Evaluation
 			});
 		}
 
-		public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
+		public static IEvaluate<double>? Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
 		{
 			var original = evaluation;
 			if (string.IsNullOrWhiteSpace(evaluation))
