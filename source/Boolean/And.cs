@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Open.Evaluation.Boolean
 {
-	public class And : OperatorBase<IEvaluate<bool>, bool>,
+	public class And : OperatorBase<bool>,
 		IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 	{
 		public const char SYMBOL = '&';

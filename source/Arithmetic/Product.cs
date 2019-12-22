@@ -17,7 +17,7 @@ using System.Text.RegularExpressions;
 namespace Open.Evaluation.Arithmetic
 {
 	public class Product<TResult> :
-		OperatorBase<IEvaluate<TResult>, TResult>,
+		OperatorBase<TResult>,
 		IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
 		where TResult : struct, IComparable
 	{

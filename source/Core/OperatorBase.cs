@@ -134,10 +134,17 @@ namespace Open.Evaluation.Core
 			char symbol,
 			string separator,
 			IEnumerable<IEvaluate<TResult>> children,
-			bool reorderChildren = false) : base(symbol, separator, children, reorderChildren)
+			bool reorderChildren = false,
+			int minimumChildren = 1)
+			: base(symbol, separator, children, reorderChildren, minimumChildren)
 		{
 		}
 
+		protected new IEnumerable<TResult> ChildResults(object context)
+		{
+			foreach (var child in Children)
+				yield return child.Evaluate(context);
+		}
 	}
 
 }

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 
 namespace Open.Evaluation.Boolean
 {
-	public abstract class CountingBase : OperatorBase<IEvaluate<bool>, bool>
+	public abstract class CountingBase : OperatorBase<bool>
 	{
 		public const char SYMBOL = ',';
 		public const string SEPARATOR = ", ";

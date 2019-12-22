@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Open.Evaluation.Boolean
 {
-	public class Or : OperatorBase<IEvaluate<bool>, bool>,
+	public class Or : OperatorBase<bool>,
 		IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 	{
 		public const char SYMBOL = '|';
