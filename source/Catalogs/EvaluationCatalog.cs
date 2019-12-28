@@ -155,7 +155,7 @@ namespace Open.Evaluation.Catalogs
 			try
 			{
 				var replacement = clonedNodeHandler(node);
-				if (replacement == null) throw new NullReferenceException("clonedNodeHandler returned null.");
+				if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
 				if (parent == null) return replacement;
 
 				var rn = Factory.Map(replacement);
@@ -195,7 +195,7 @@ namespace Open.Evaluation.Catalogs
 			try
 			{
 				var replacement = clonedNodeHandler(node); // * new 2
-				if (replacement == null) throw new NullReferenceException("clonedNodeHandler returned null.");
+				if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
 				try
 				{
 					if (parent == null)

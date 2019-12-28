@@ -22,7 +22,7 @@
     <PackageReference Include="Open.Cloneable" Version="1.1.0" />
     <PackageReference Include="Open.Hierarchy" Version="1.7.0" />
     <PackageReference Include="Open.Numeric.Primes" Version="1.5.4" />
-    <PackageReference Include="Open.RandomizationExtensions" Version="2.0.0" />
+    <PackageReference Include="Open.RandomizationExtensions" Version="2.3.1" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.0" />
   </ItemGroup>
 

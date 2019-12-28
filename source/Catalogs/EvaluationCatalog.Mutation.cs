@@ -1,13 +1,13 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
+using Open.RandomizationExtensions;
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
-using RandomUtilities = Open.RandomizationExtensions.Extensions;
 
 namespace Open.Evaluation.Catalogs
 {
@@ -53,7 +53,7 @@ namespace Open.Evaluation.Catalogs
 
 			try
 			{
-				switch (RandomUtilities.Random.Next(options))
+				switch (Randomizer.Random.Next(options))
 				{
 					case 0:
 						// Alter Sign
@@ -63,7 +63,7 @@ namespace Open.Evaluation.Catalogs
 						if (!parentIsSquareRoot()) return result;
 
 						n = catalog.Factory.Map(result);
-						if (RandomUtilities.Random.Next(2) == 0)
+						if (Randomizer.Random.Next(2) == 0)
 							goto case 1;
 
 						goto case 2;
@@ -105,11 +105,11 @@ namespace Open.Evaluation.Catalogs
 			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
 				var rv = node.Root.Value;
-				var nextParameter = RandomUtilities.NextRandomIntegerExcluding(
+				var nextParameter = Randomizer.Random.NextExcluding(
 					p == rv
 						? p.ID
 						: (((IParent)rv!).GetDescendants().OfType<IParameter>().Distinct().Count())
-							+ (p.ID == 0 ? 1 : RandomUtilities.Random.Next(2)) /* Increase the possibility of parameter ID decrease vs increase */,
+							+ (p.ID == 0 ? 1 : Randomizer.Random.Next(2)) /* Increase the possibility of parameter ID decrease vs increase */,
 					p.ID);
 
 				return catalog.Catalog.GetParameter(nextParameter);
@@ -157,7 +157,7 @@ namespace Open.Evaluation.Catalogs
 				Exponent<double> _ => null,
 				IParent p => catalog.Catalog.ApplyClone(node, newNode =>
 						  newNode.AddValue(catalog.Catalog.GetParameter(
-							  RandomUtilities.Random.Next(
+							  Randomizer.Random.Next(
 								  p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1)))),
 
 				_ => throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node)),
@@ -171,13 +171,13 @@ namespace Open.Evaluation.Catalogs
 			var inputParamCount = rv is IParent p ? p.GetDescendants().OfType<IParameter>().Distinct().Count() : rv is IParameter ? 1 : 0;
 			return catalog.Catalog.ApplyClone(node, newNode =>
 			{
-				var parameter = catalog.Catalog.GetParameter(RandomUtilities.Random.Next(inputParamCount));
+				var parameter = catalog.Catalog.GetParameter(Randomizer.Random.Next(inputParamCount));
 				IEvaluate<double>[] children;
 
 				var nv = newNode.Value ?? throw new NullReferenceException("newNode.Value is null.");
-				if (newNode.Value is IFunction || RandomUtilities.Random.Next(4) == 0)
+				if (newNode.Value is IFunction || Randomizer.Random.Next(4) == 0)
 				{
-					children = RandomUtilities.Random.Next(2) == 1
+					children = Randomizer.Random.Next(2) == 1
 						? new IEvaluate<double>[] { parameter, nv }
 						: new IEvaluate<double>[] { nv, parameter };
 				}

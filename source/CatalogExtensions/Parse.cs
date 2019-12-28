@@ -62,11 +62,11 @@ namespace Open.Evaluation
 			});
 		}
 
-		public static IEvaluate<double>? Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
+		public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
 		{
-			var original = evaluation;
+			var original = evaluation ?? throw new ArgumentNullException(nameof(evaluation));
 			if (string.IsNullOrWhiteSpace(evaluation))
-				return null;
+				throw new ArgumentException("Must be more than just whitespace or empty.", nameof(evaluation));
 
 			evaluation = evaluation.Trim();
 
