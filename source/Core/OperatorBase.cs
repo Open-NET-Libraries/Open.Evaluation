@@ -41,15 +41,17 @@ namespace Open.Evaluation.Core
 			if (!(contents is IEnumerable collection))
 				return base.ToStringInternal(contents);
 
-			var result = new StringBuilder();
-			result.Append('(');
-			var index = -1;
-			foreach (var o in collection)
+			var r = StringBuilderPool.Rent(result =>
 			{
-				ToStringInternal_OnAppendNextChild(result, ++index, o);
-			}
-			result.Append(')');
-			var r = result.ToString();
+				result.Append('(');
+				var index = -1;
+				foreach (var o in collection)
+				{
+					ToStringInternal_OnAppendNextChild(result, ++index, o);
+				}
+				result.Append(')');
+			});
+
 			var isEmpty = r == "()";
 			Debug.Assert(!isEmpty, "Operator has no children.");
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse

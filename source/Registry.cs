@@ -80,7 +80,7 @@ namespace Open.Evaluation
 			public static IEvaluate<double> GetFunction(
 				ICatalog<IEvaluate<double>> catalog,
 				char op,
-				IList<IEvaluate<double>> children)
+				IReadOnlyList<IEvaluate<double>> children)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 				Contract.EndContractBlock();
@@ -120,12 +120,12 @@ namespace Open.Evaluation
 			public static IEvaluate<double> GetFunction(
 				EvaluationCatalogSubmodule catalog,
 				char op,
-				IList<IEvaluate<double>> children)
+				IReadOnlyList<IEvaluate<double>> children)
 				=> GetFunction(catalog.Catalog, op, children);
 
 			public static IEvaluate<double>? GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
-				IList<IEvaluate<double>> children,
+				IReadOnlyList<IEvaluate<double>> children,
 				params char[] except)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
@@ -141,7 +141,7 @@ namespace Open.Evaluation
 
 			public static IEvaluate<double>? GetRandomFunction(
 				EvaluationCatalogSubmodule catalog,
-				IList<IEvaluate<double>> children,
+				IReadOnlyList<IEvaluate<double>> children,
 				params char[] except)
 				=> GetRandomFunction(catalog.Catalog, children, except);
 

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
@@ -95,12 +96,24 @@ namespace Open.Evaluation
 		public static List<T> Extract<T>(this IList<T> target, in Func<T, bool> predicate)
 		{
 			var extracted = new List<T>();
-			var contents = target.ToArray();
-			foreach (var c in contents)
+			var len = target.Count;
+			var i = 0;
+
+			while (i < len)
 			{
-				if (predicate(c)) target.Remove(c);
-				extracted.Add(c);
+				var c = target[i];
+				if (predicate(c))
+				{
+					target.RemoveAt(i);
+					extracted.Add(c);
+					len--;
+				}
+				else
+				{
+					i++;
+				}
 			}
+
 			return extracted;
 		}
 
