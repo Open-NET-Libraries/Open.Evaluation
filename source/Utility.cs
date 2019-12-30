@@ -97,45 +97,44 @@ namespace Open.Evaluation
 		{
 			var extracted = new List<T>();
 			var len = target.Count;
-			var i = 0;
+			var removed = ArrayPool<int>.Shared.Rent(len);
+			var removedCount = 0;
 
-			while (i < len)
+			for (var i = 0; i < len; i++)
 			{
 				var c = target[i];
-				if (predicate(c))
-				{
-					target.RemoveAt(i);
-					extracted.Add(c);
-					len--;
-				}
-				else
-				{
-					i++;
-				}
+				if (!predicate(c)) continue;
+				extracted.Add(c);
+				removed[removedCount++] = i;
 			}
 
+			// Doing this in reverse lessens the load on removing from the list.
+			while (0 != removedCount--)
+				target.RemoveAt(removed[removedCount]);
+
+			ArrayPool<int>.Shared.Return(removed);
 			return extracted;
 		}
 
 		public static List<TExtract> ExtractType<TExtract>(this IList target)
 		{
 			var extracted = new List<TExtract>();
-			var removed = new List<int>();
 			var len = target.Count;
+			var removed = ArrayPool<int>.Shared.Rent(len);
+			var removedCount = 0;
 
 			for (var i = 0; i < len; i++)
 			{
 				if (!(target[i] is TExtract e)) continue;
 				extracted.Add(e);
-				removed.Add(i);
+				removed[removedCount++] = i;
 			}
 
-			for (var i = removed.Count - 1; i >= 0; i--)
-			{
-				target.RemoveAt(removed[i]);
-			}
+			// Doing this in reverse lessens the load on removing from the list.
+			while (0 != removedCount--)
+				target.RemoveAt(removed[removedCount]);
 
-
+			ArrayPool<int>.Shared.Return(removed);
 			return extracted;
 		}
 	}
