@@ -7,21 +7,22 @@ namespace Open.Evaluation
 	public static class ObjectPool<T>
 		where T : class, new()
 	{
-		public static readonly InterlockedArrayObjectPool<T> Instance
-			= InterlockedArrayObjectPool.Create<T>();
+		public static readonly OptimisticArrayObjectPool<T> Instance
+			= OptimisticArrayObjectPool.Create<T>();
 	}
 
 	public static class StringBuilderPool
 	{
-		public static readonly InterlockedArrayObjectPool<StringBuilder> Instance
-			= new InterlockedArrayObjectPool<StringBuilder>(
+		public static readonly ConcurrentQueueObjectPool<StringBuilder> Instance
+			= new ConcurrentQueueObjectPool<StringBuilder>(
 				() => new StringBuilder(),
 				sb =>
 				{
 					sb.Clear();
 					if (sb.Capacity > 16) sb.Capacity = 16;
 				},
-				null);
+				null,
+				1024);
 
 		public static string Rent(Action<StringBuilder> action)
 		{
