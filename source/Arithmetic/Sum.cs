@@ -224,14 +224,9 @@ namespace Open.Evaluation.Arithmetic
 			Debug.Assert(factors.All(f => f >= gcf));
 			if (gcf <= 1) return false;
 
-			bool tryGetReducedFactor(TResult value, out TResult f)
-			{
-				var r = (dynamic)value / gcf;
-				f = r;
-				return r != 1;
-			}
+			TResult gcfT = (dynamic)gcf;
 
-			greatestFactor = GetConstant(catalog, (dynamic)gcf);
+			greatestFactor = GetConstant(catalog, gcfT);
 			sum = catalog.SumOf(catalog.MultiplesExtracted(products)
 				.Select(e =>
 				{
@@ -243,6 +238,13 @@ namespace Open.Evaluation.Arithmetic
 				}));
 
 			return true;
+
+			bool tryGetReducedFactor(TResult value, out TResult f)
+			{
+				var r = (dynamic)value / gcf;
+				f = r;
+				return r != 1;
+			}
 		}
 
 	}
