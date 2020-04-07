@@ -5,6 +5,7 @@ using Open.Evaluation.Core;
 using Open.RandomizationExtensions;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
@@ -28,9 +29,9 @@ namespace Open.Evaluation
 			public const char SQUARE_ROOT = '√';
 
 			public static readonly IReadOnlyList<char> Operators
-				= new List<char> { ADD, MULTIPLY }.AsReadOnly();
+				= new char[] { ADD, MULTIPLY }.ToImmutableArray();
 			public static readonly IReadOnlyList<char> Functions
-				= new List<char> { SQUARE, INVERT, SQUARE_ROOT }.AsReadOnly();
+				= new char[] { SQUARE, INVERT, SQUARE_ROOT }.ToImmutableArray();
 
 			public static IEvaluate<double> GetOperator(
 				ICatalog<IEvaluate<double>> catalog,
@@ -199,7 +200,7 @@ namespace Open.Evaluation
 		public static class Boolean
 		{
 			// Operators...
-			public const char AND = Open.Evaluation.Boolean.And.SYMBOL;
+			public const char AND = And.SYMBOL;
 			public const char OR = Or.SYMBOL;
 
 			// Functions...
@@ -212,11 +213,11 @@ namespace Open.Evaluation
 			public const string EXACTLY = Evaluation.Boolean.Counting.Exactly.PREFIX;
 
 			public static readonly IReadOnlyList<char> Operators
-				= new char[] { AND, OR };
+				= new char[] { AND, OR }.ToImmutableArray();
 			public static readonly IReadOnlyList<char> Functions
-				= new char[] { NOT, CONDITIONAL };
+				= new char[] { NOT, CONDITIONAL }.ToImmutableArray();
 			public static readonly IReadOnlyList<string> Counting
-				= new string[] { AT_LEAST, AT_MOST, EXACTLY };
+				= new string[] { AT_LEAST, AT_MOST, EXACTLY }.ToImmutableArray();
 
 			public static IEvaluate<bool> GetOperator(
 				ICatalog<IEvaluate<bool>> catalog,
