@@ -1,5 +1,6 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Boolean;
+using Open.Evaluation.Boolean.Counting;
 using Open.Evaluation.Catalogs;
 using Open.Evaluation.Core;
 using Open.RandomizationExtensions;
@@ -208,9 +209,9 @@ namespace Open.Evaluation
 			public const char CONDITIONAL = Conditional.SYMBOL;
 
 			// Fuzzy...
-			public const string AT_LEAST = Evaluation.Boolean.Counting.AtLeast.PREFIX;
-			public const string AT_MOST = Evaluation.Boolean.Counting.AtMost.PREFIX;
-			public const string EXACTLY = Evaluation.Boolean.Counting.Exactly.PREFIX;
+			public const string AT_LEAST = AtLeast.PREFIX;
+			public const string AT_MOST = AtMost.PREFIX;
+			public const string EXACTLY = Exactly.PREFIX;
 
 			public static readonly IReadOnlyList<char> Operators
 				= new char[] { AND, OR }.ToImmutableArray();
