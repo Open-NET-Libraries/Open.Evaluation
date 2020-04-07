@@ -6,12 +6,14 @@ using Open.RandomizationExtensions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation
 {
 	using EvaluationCatalogSubmodule = EvaluationCatalog<double>.SubmoduleBase;
 
+	[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Intentional.")]
 	public static class Registry
 	{
 		public static class Arithmetic
@@ -26,9 +28,9 @@ namespace Open.Evaluation
 			public const char SQUARE_ROOT = '√';
 
 			public static readonly IReadOnlyList<char> Operators
-				= (new List<char> { ADD, MULTIPLY }).AsReadOnly();
+				= new List<char> { ADD, MULTIPLY }.AsReadOnly();
 			public static readonly IReadOnlyList<char> Functions
-				= (new List<char> { SQUARE, INVERT, SQUARE_ROOT }).AsReadOnly();
+				= new List<char> { SQUARE, INVERT, SQUARE_ROOT }.AsReadOnly();
 
 			public static IEvaluate<double> GetOperator(
 				ICatalog<IEvaluate<double>> catalog,
@@ -52,7 +54,11 @@ namespace Open.Evaluation
 				EvaluationCatalogSubmodule catalog,
 				char op,
 				IEnumerable<IEvaluate<double>> children)
-				=> GetOperator(catalog.Catalog, op, children);
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetOperator(catalog.Catalog, op, children);
+			}
 
 			public static IEvaluate<double>? GetRandomOperator(
 				ICatalog<IEvaluate<double>> catalog,
@@ -75,7 +81,11 @@ namespace Open.Evaluation
 				EvaluationCatalogSubmodule catalog,
 				IEnumerable<IEvaluate<double>> children,
 				params char[] except)
-				=> GetRandomOperator(catalog.Catalog, children, except);
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetRandomOperator(catalog.Catalog, children, except);
+			}
 
 			public static IEvaluate<double> GetFunction(
 				ICatalog<IEvaluate<double>> catalog,
@@ -83,6 +93,8 @@ namespace Open.Evaluation
 				IReadOnlyList<IEvaluate<double>> children)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (children is null) throw new ArgumentNullException(nameof(children));
+
 				Contract.EndContractBlock();
 
 				if (children.Count == 1)
@@ -121,7 +133,11 @@ namespace Open.Evaluation
 				EvaluationCatalogSubmodule catalog,
 				char op,
 				IReadOnlyList<IEvaluate<double>> children)
-				=> GetFunction(catalog.Catalog, op, children);
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetFunction(catalog.Catalog, op, children);
+			}
 
 			public static IEvaluate<double>? GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
@@ -143,7 +159,11 @@ namespace Open.Evaluation
 				EvaluationCatalogSubmodule catalog,
 				IReadOnlyList<IEvaluate<double>> children,
 				params char[] except)
-				=> GetRandomFunction(catalog.Catalog, children, except);
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetRandomFunction(catalog.Catalog, children, except);
+			}
 
 			public static IEvaluate<double> GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
@@ -168,13 +188,18 @@ namespace Open.Evaluation
 				EvaluationCatalogSubmodule catalog,
 				IEvaluate<double> child,
 				params char[] except)
-				=> GetRandomFunction(catalog.Catalog, child, except);
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetRandomFunction(catalog.Catalog, child, except);
+			}
 		}
 
+		[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Intentional.")]
 		public static class Boolean
 		{
 			// Operators...
-			public const char AND = And.SYMBOL;
+			public const char AND = Open.Evaluation.Boolean.And.SYMBOL;
 			public const char OR = Or.SYMBOL;
 
 			// Functions...
@@ -187,11 +212,11 @@ namespace Open.Evaluation
 			public const string EXACTLY = Evaluation.Boolean.Counting.Exactly.PREFIX;
 
 			public static readonly IReadOnlyList<char> Operators
-				= (new List<char> { AND, OR });
+				= new char[] { AND, OR };
 			public static readonly IReadOnlyList<char> Functions
-				= (new List<char> { NOT, CONDITIONAL });
+				= new char[] { NOT, CONDITIONAL };
 			public static readonly IReadOnlyList<string> Counting
-				= (new List<string> { AT_LEAST, AT_MOST, EXACTLY });
+				= new string[] { AT_LEAST, AT_MOST, EXACTLY };
 
 			public static IEvaluate<bool> GetOperator(
 				ICatalog<IEvaluate<bool>> catalog,

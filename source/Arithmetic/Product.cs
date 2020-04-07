@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -42,9 +43,11 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
 		protected override IEvaluate<TResult> Reduction(
 			ICatalog<IEvaluate<TResult>> catalog)
 		{
+			Debug.Assert(catalog != null);
 			var one = catalog.GetConstant((TResult)(dynamic)1);
 
 			// Phase 1: Flatten products of products.
@@ -118,7 +121,7 @@ namespace Open.Evaluation.Arithmetic
 			// ReSharper disable once InvertIf
 			if (multiple != null)
 			{
-				var multipleValue = Convert.ToDouble(multiple.Value);
+				var multipleValue = Convert.ToDouble(multiple.Value, CultureInfo.InvariantCulture);
 				// ReSharper disable once InvertIf
 				if (multipleValue != 1 && Math.Floor(multipleValue) == multipleValue)
 				{
@@ -135,7 +138,7 @@ namespace Open.Evaluation.Arithmetic
 							|| !(ex.Base is IConstant<TResult> expC))
 							continue;
 
-						var divisor = Convert.ToDouble(expC.Value);
+						var divisor = Convert.ToDouble(expC.Value, CultureInfo.InvariantCulture);
 						// ReSharper disable once CompareOfFloatsByEqualityOperator
 
 						// We won't mess with factional divisors yet.
@@ -189,8 +192,10 @@ namespace Open.Evaluation.Arithmetic
 		// ReSharper disable once StaticMemberInGenericType
 		static readonly Regex IsInverted = new Regex(@"^\(1/(.+)\)$", RegexOptions.Compiled);
 
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
+			Debug.Assert(result != null);
 			if (index != 0 && child is string c)
 			{
 				var m = IsInverted.Match(c);
@@ -206,9 +211,9 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		protected virtual Exponent<TResult> GetExponent(ICatalog<IEvaluate<TResult>> catalog,
-			IEvaluate<TResult> @base,
+			IEvaluate<TResult> baseValue,
 			IEvaluate<TResult> power)
-			=> Exponent<TResult>.Create(catalog, @base, power);
+			=> Exponent<TResult>.Create(catalog, baseValue, power);
 
 		public IEvaluate<TResult> ExtractMultiple(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
 		{
@@ -227,6 +232,7 @@ namespace Open.Evaluation.Arithmetic
 		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
 		{
 			multiple = null;
+			Debug.Assert(catalog != null);
 			var reduced = catalog.GetReduced(this);
 			return reduced is Product<TResult> product
 				? product.ExtractMultiple(catalog, out multiple)
@@ -281,7 +287,7 @@ namespace Open.Evaluation.Arithmetic
 			return base.Compare(a, b);
 		}
 
-		public static Product<TResult> Create(
+		internal static Product<TResult> Create(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{

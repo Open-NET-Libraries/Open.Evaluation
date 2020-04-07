@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 
 namespace Open.Evaluation.Core
 {
+	[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 	public class Catalog<T> : DisposableBase, ICatalog<T>
 		where T : class, IEvaluate
 	{
@@ -78,7 +79,7 @@ namespace Open.Evaluation.Core
 			return result;
 		}
 
-		public readonly Node<T>.Factory Factory = new Node<T>.Factory();
+		public Node<T>.Factory Factory { get; } = new Node<T>.Factory();
 
 		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions
 			= new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
@@ -118,6 +119,8 @@ namespace Open.Evaluation.Core
 		public IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)
 			where TFlat : IParent<T>
 		{
+			if (source is null) throw new ArgumentNullException(nameof(source));
+
 			foreach (var child in source)
 			{
 				var c = GetReduced(child);

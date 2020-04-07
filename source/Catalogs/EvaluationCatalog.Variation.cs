@@ -129,7 +129,7 @@ namespace Open.Evaluation.Catalogs
 			if (!CheckPromoteChildrenValidity(node)) return null;
 
 			return catalog.Catalog.ApplyClone(node,
-				newNode => newNode.Children.Single().Value);
+				newNode => newNode.Children.Single().Value!);
 		}
 
 		// This should handle the case of demoting a function.

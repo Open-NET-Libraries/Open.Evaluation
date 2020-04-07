@@ -7,7 +7,7 @@ namespace Open.Evaluation.Tests
 	{
 		public static void ValidateValue(this IEvaluate<double> e, double value)
 		{
-			Assert.AreEqual(value, e.Evaluate(null));
+			Assert.AreEqual(value, e.Evaluate(new object()));
 		}
 	}
 }

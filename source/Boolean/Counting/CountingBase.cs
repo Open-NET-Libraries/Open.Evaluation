@@ -7,7 +7,7 @@ using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
 
-namespace Open.Evaluation.Boolean
+namespace Open.Evaluation.Boolean.Counting
 {
 	public abstract class CountingBase : OperatorBase<bool>
 	{
@@ -23,7 +23,7 @@ namespace Open.Evaluation.Boolean
 			Count = count;
 		}
 
-		protected readonly string Prefix;
+		protected string Prefix { get; }
 
 		// ReSharper disable once MemberCanBeProtected.Global
 		public int Count

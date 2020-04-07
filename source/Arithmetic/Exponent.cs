@@ -5,6 +5,7 @@
 
 using Open.Evaluation.Core;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Arithmetic
@@ -42,10 +43,11 @@ namespace Open.Evaluation.Arithmetic
 			return (TResult)(dynamic)Math.Pow(evaluation, power);
 		}
 
-
 		[SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
+			Debug.Assert(catalog != null);
 			var pow = catalog.GetReduced(Power);
 			if (pow is Constant<TResult> cPow)
 			{
@@ -94,9 +96,13 @@ namespace Open.Evaluation.Arithmetic
 			where TResult : struct, IComparable
 			=> Exponent<TResult>.Create(catalog, @base, power);
 
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		public static bool IsPowerOf(this Exponent<double> exponent, in double power)
+		{
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			=> exponent.Power is Constant<double> p && p.Value == power;
+			Debug.Assert(exponent != null);
+			return exponent.Power is Constant<double> p && p.Value == power;
+		}
 
 		public static bool IsSquareRoot(this Exponent<double> exponent)
 			// ReSharper disable once CompareOfFloatsByEqualityOperator

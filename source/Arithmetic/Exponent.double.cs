@@ -20,8 +20,10 @@ namespace Open.Evaluation.Arithmetic
 
 		public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		public static string ConvertToSuperScript(string number)
 		{
+			Debug.Assert(number != null);
 			var len = number.Length;
 			var r = ArrayPool<char>.Shared.Rent(len);
 			for (var i = 0; i < len; i++)
@@ -52,7 +54,7 @@ namespace Open.Evaluation.Arithmetic
 			var b = m.Groups[1].Value;
 			Debug.Assert(!string.IsNullOrWhiteSpace(b));
 			var p = m.Groups[3].Value;
-			var ps = p.IndexOf('.') != -1
+			var ps = p.IndexOf('.', StringComparison.Ordinal) != -1
 				? ('^' + p)
 				: ConvertToSuperScript(p);
 

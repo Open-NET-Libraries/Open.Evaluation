@@ -1,0 +1,14 @@
+﻿[*.cs]
+
+
+# CA1707: Identifiers should not contain underscores
+dotnet_diagnostic.CA1707.severity = silent
+
+# CA1710: Identifiers should have correct suffix
+dotnet_diagnostic.CA1710.severity = silent
+
+# CA1724: The type name Arithmetic conflicts in whole or in part with the namespace name 'Open.Evaluation.Arithmetic'. Change either name to eliminate the conflict.
+dotnet_diagnostic.CA1724.severity = silent
+
+# CA1062: Validate arguments of public methods
+dotnet_diagnostic.CA1062.severity = silent

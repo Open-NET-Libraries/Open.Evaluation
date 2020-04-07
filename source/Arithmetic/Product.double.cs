@@ -35,6 +35,12 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<double>> param)
 			=> catalog.Register(new Product(param));
 
+		internal static Product<TResult> Create<TResult>(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> param)
+			where TResult : struct, IComparable
+			=> Product<TResult>.Create(catalog, param);
+
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)

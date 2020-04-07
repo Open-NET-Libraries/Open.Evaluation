@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -77,6 +78,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
+			Debug.Assert(result != null);
 			if (index != 0 && child is string c)
 			{
 				var m = HasNegativeMultiple.Match(c);
@@ -102,6 +104,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
+			Debug.Assert(catalog != null);
 			var zero = GetConstant(catalog, (TResult)(dynamic)0);
 
 			// Phase 1: Flatten sums of sums.
@@ -216,7 +219,7 @@ namespace Open.Evaluation.Arithmetic
 			var factors = new List<ulong>();
 			foreach (var v in constants)
 			{
-				var d = Math.Abs(Convert.ToDecimal(v));
+				var d = Math.Abs(Convert.ToDecimal(v, CultureInfo.InvariantCulture));
 				if (d <= decimal.One || decimal.Floor(d) != d) return false;
 				factors.Add(Convert.ToUInt64(d));
 			}

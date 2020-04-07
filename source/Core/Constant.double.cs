@@ -14,10 +14,10 @@ namespace Open.Evaluation.Core
 		{ }
 
 		internal new static Constant Create(ICatalog<IEvaluate<double>> catalog, double value)
-			=> catalog.Register(ToStringRepresentation(value), k => new Constant(value));
+			=> catalog.Register(ToStringRepresentation(in value), k => new Constant(value));
 
 		public override IEvaluate<double> NewUsing(ICatalog<IEvaluate<double>> catalog, double value)
-			=> catalog.Register(ToStringRepresentation(value), k => new Constant(value));
+			=> catalog.Register(ToStringRepresentation(in value), k => new Constant(value));
 	}
 
 	public static partial class ConstantExtensions
@@ -50,7 +50,11 @@ namespace Open.Evaluation.Core
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
 			IConstant<double> c1, params IConstant<double>[] rest)
-			=> ProductOfConstants(catalog, c1.Value, rest);
+		{
+			if (c1 is null) throw new System.ArgumentNullException(nameof(c1));
+
+			return ProductOfConstants(catalog, c1.Value, rest);
+		}
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,

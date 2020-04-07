@@ -11,41 +11,36 @@ namespace Open.Evaluation.Tests
 		[TestMethod]
 		public void Instantiation()
 		{
-			using (var catalog = new EvaluationCatalog<double>())
-			{
-				catalog.GetConstant(5).ValidateValue(5);
-			}
+			using var catalog = new EvaluationCatalog<double>();
+			catalog.GetConstant(5).ValidateValue(5);
 		}
 
 		[TestMethod]
 		public void Sum()
 		{
-			using (var catalog = new EvaluationCatalog<double>())
-			{
-				catalog
-					.SumOfConstants(5, catalog.GetConstant(4))
-					.ValidateValue(9);
+			using var catalog = new EvaluationCatalog<double>();
 
-				catalog
-					.SumOf(catalog.GetConstant(5), catalog.GetConstant(4))
-					.ValidateValue(9);
+			catalog
+				.SumOfConstants(5, catalog.GetConstant(4))
+				.ValidateValue(9);
 
-			}
+			catalog
+				.SumOf(catalog.GetConstant(5), catalog.GetConstant(4))
+				.ValidateValue(9);
 		}
 
 		[TestMethod]
 		public void Product()
 		{
-			using (var catalog = new EvaluationCatalog<double>())
-			{
-				catalog
-					.ProductOfConstants(5, catalog.GetConstant(4))
-					.ValidateValue(20);
+			using var catalog = new EvaluationCatalog<double>();
 
-				catalog
-					.ProductOf(catalog.GetConstant(5), catalog.GetConstant(4))
-					.ValidateValue(20);
-			}
+			catalog
+				.ProductOfConstants(5, catalog.GetConstant(4))
+				.ValidateValue(20);
+
+			catalog
+				.ProductOf(catalog.GetConstant(5), catalog.GetConstant(4))
+				.ValidateValue(20);
 		}
 	}
 }

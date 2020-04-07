@@ -26,6 +26,8 @@ namespace Open.Evaluation
 
 		public static string Rent(Action<StringBuilder> action)
 		{
+			if (action is null) throw new ArgumentNullException(nameof(action));
+
 			var sb = Instance.Take();
 			action(sb);
 			var result = sb.ToString();

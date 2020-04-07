@@ -38,7 +38,7 @@ namespace Open.Evaluation.Core
 			get;
 		}
 
-		public static string ToStringRepresentation(ushort id) => "{" + id + "}";
+		protected static string ToStringRepresentation(ushort id) => "{" + id + "}";
 
 		protected override string ToStringRepresentationInternal()
 			=> ToStringRepresentation(ID);

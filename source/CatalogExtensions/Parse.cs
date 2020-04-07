@@ -2,6 +2,7 @@
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -18,7 +19,7 @@ namespace Open.Evaluation
 		static Regex GetOperatorRegex(string op)
 		{
 			return new Regex(
-				string.Format(@"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
+				string.Format(CultureInfo.InvariantCulture, @"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
 				RegexOptions.IgnorePatternWhitespace);
 		}
 
@@ -89,7 +90,7 @@ namespace Open.Evaluation
 					return catalog.GetConstant(constantOnly);
 
 				var checkParamOnly = paramOnly.Match(evaluation);
-				if (checkParamOnly.Success) return catalog.GetParameter(ushort.Parse(checkParamOnly.Groups[1].Value));
+				if (checkParamOnly.Success) return catalog.GetParameter(ushort.Parse(checkParamOnly.Groups[1].Value, CultureInfo.InvariantCulture));
 
 				evaluation = products.Replace(evaluation, m =>
 				{

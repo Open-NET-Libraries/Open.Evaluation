@@ -14,6 +14,7 @@ namespace Open.Evaluation.Catalogs
 	using IFunction = IFunction<double>;
 	using IOperator = IOperator<IEvaluate<double>, double>;
 
+	[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 	public partial class EvaluationCatalog<T>
 		where T : IComparable
 	{
@@ -33,6 +34,7 @@ namespace Open.Evaluation.Catalogs
 	[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 	public static partial class EvaluationCatalogExtensions
 	{
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should never be null and if so it should throw.")]
 		public static IEvaluate<double> MutateSign(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node, byte options = 3)
@@ -97,6 +99,8 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
+			if (catalog is null)
+				throw new ArgumentNullException(nameof(catalog));
 			if (node?.Value is null)
 				throw new ArgumentException("No node value.", nameof(node));
 			if (!(node.Value is IParameter p))
@@ -120,6 +124,11 @@ namespace Open.Evaluation.Catalogs
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
+			if (catalog is null)
+				throw new ArgumentNullException(nameof(catalog));
+			if (node is null)
+				throw new ArgumentNullException(nameof(node));
+
 			if (!(node.Value is IOperator o))
 				throw new ArgumentException("Does not contain an Operation.", nameof(node));
 
@@ -152,21 +161,30 @@ namespace Open.Evaluation.Catalogs
 		public static IEvaluate<double>? AddParameter(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
-			=> node.Value switch
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
+
+			return node.Value switch
 			{
 				Exponent<double> _ => null,
-				IParent p => catalog.Catalog.ApplyClone(node, newNode =>
-						  newNode.AddValue(catalog.Catalog.GetParameter(
-							  Randomizer.Random.Next(
-								  p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1)))),
+
+				IParent p => catalog.Catalog.ApplyClone(node,
+					newNode => newNode.AddValue(catalog.Catalog.GetParameter(
+						Randomizer.Random.Next(
+							p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1)))),
 
 				_ => throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node)),
 			};
+		}
 
 		public static IEvaluate<double> BranchOperation(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
+
 			var rv = node.Root.Value;
 			var inputParamCount = rv is IParent p ? p.GetDescendants().OfType<IParameter>().Distinct().Count() : rv is IParameter ? 1 : 0;
 			return catalog.Catalog.ApplyClone(node, newNode =>
@@ -193,7 +211,11 @@ namespace Open.Evaluation.Catalogs
 		public static IEvaluate<double> Square(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
-			=> node.Value is Exponent<double>
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
+
+			return node.Value is Exponent<double>
 				? catalog.Catalog.ApplyClone(node, newNode =>
 				{
 					var power = newNode.Children[1];
@@ -202,5 +224,6 @@ namespace Open.Evaluation.Catalogs
 				})
 				: catalog.Catalog.ApplyClone(node, newNode =>
 						catalog.Catalog.GetExponent(newNode.Value ?? throw new NullReferenceException("newNode.Value is null."), 2));
+		}
 	}
 }

@@ -6,11 +6,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Open.Evaluation.Core
 {
 	[DebuggerDisplay("Value = {Value}")]
+	[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
+	[SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Expected values are constants.")]
 	public class Constant<TValue>
 		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
 		where TValue : IComparable
@@ -29,8 +32,7 @@ namespace Open.Evaluation.Core
 
 		IComparable IConstant.Value => Value;
 
-		/// <inheritdoc />
-		public static string ToStringRepresentation(in TValue value)
+		protected static string ToStringRepresentation(in TValue value)
 			=> string.Empty + value;
 
 		protected override string ToStringRepresentationInternal()
@@ -41,11 +43,11 @@ namespace Open.Evaluation.Core
 		protected override string ToStringInternal(object context) => ToStringRepresentation();
 
 		internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
-			=> catalog.Register(ToStringRepresentation(value), k => new Constant<TValue>(value));
+			=> catalog.Register(ToStringRepresentation(in value), k => new Constant<TValue>(value));
 
 		/// <inheritdoc />
 		public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue value)
-			=> catalog.Register(ToStringRepresentation(value), k => new Constant<TValue>(value));
+			=> catalog.Register(ToStringRepresentation(in value), k => new Constant<TValue>(value));
 
 		public static implicit operator TValue(Constant<TValue> c)
 			=> c.Value;
@@ -59,11 +61,13 @@ namespace Open.Evaluation.Core
 
 	public static partial class ConstantExtensions
 	{
+		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		public static Constant<TValue> GetConstant<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
 			in TValue value)
 			where TValue : IComparable
 		{
+			Debug.Assert(catalog != null);
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat && value is double d)
 				return (dynamic)Constant.Create(dCat, d);
@@ -76,6 +80,9 @@ namespace Open.Evaluation.Core
 			in TValue c1, IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (constants is null) throw new ArgumentNullException(nameof(constants));
+
 			if (typeof(TValue) == typeof(float))
 			{
 				// ReSharper disable once PossibleMultipleEnumeration
@@ -97,7 +104,7 @@ namespace Open.Evaluation.Core
 			{
 				result += c.Value;
 			}
-			return GetConstant<TValue>(catalog, (TValue)result);
+			return GetConstant(catalog, (TValue)result);
 		}
 
 		public static Constant<TValue> SumOfConstants<TValue>(
@@ -116,13 +123,20 @@ namespace Open.Evaluation.Core
 			this ICatalog<IEvaluate<TValue>> catalog,
 			in IConstant<TValue> c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
-			=> SumOfConstants(catalog, c1.Value, rest);
+		{
+			if (c1 is null) throw new ArgumentNullException(nameof(c1));
+
+			return SumOfConstants(catalog, c1.Value, rest);
+		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
 			in TValue c1, IEnumerable<IConstant<TValue>> constants)
 			where TValue : struct, IComparable
 		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (constants is null) throw new ArgumentNullException(nameof(constants));
+
 			if (typeof(TValue) == typeof(float))
 			{
 				// ReSharper disable once PossibleMultipleEnumeration
@@ -159,7 +173,11 @@ namespace Open.Evaluation.Core
 			this ICatalog<IEvaluate<TValue>> catalog,
 			in IConstant<TValue> c1, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
-			=> ProductOfConstants(catalog, c1.Value, (IEnumerable<IConstant<TValue>>)rest);
+		{
+			if (c1 is null) throw new ArgumentNullException(nameof(c1));
+
+			return ProductOfConstants(catalog, c1.Value, (IEnumerable<IConstant<TValue>>)rest);
+		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
