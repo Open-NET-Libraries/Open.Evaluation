@@ -26,15 +26,20 @@ namespace Open.Evaluation.Arithmetic
 			Debug.Assert(number != null);
 			var len = number.Length;
 			var r = ArrayPool<char>.Shared.Rent(len);
-			for (var i = 0; i < len; i++)
+			try
 			{
-				var n = char.GetNumericValue(number[i]);
-				r[i] = SuperScriptDigits[(int)n];
-			}
+				for (var i = 0; i < len; i++)
+				{
+					var n = char.GetNumericValue(number[i]);
+					r[i] = SuperScriptDigits[(int)n];
+				}
 
-			var result = new string(r, 0, len);
-			ArrayPool<char>.Shared.Return(r);
-			return result;
+				return new string(r, 0, len);
+			}
+			finally
+			{
+				ArrayPool<char>.Shared.Return(r);
+			}
 		}
 
 		static readonly Regex SquareRootPattern = new Regex(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
@@ -54,9 +59,9 @@ namespace Open.Evaluation.Arithmetic
 			var b = m.Groups[1].Value;
 			Debug.Assert(!string.IsNullOrWhiteSpace(b));
 			var p = m.Groups[3].Value;
-			var ps = p.IndexOf('.', StringComparison.Ordinal) != -1
-				? ('^' + p)
-				: ConvertToSuperScript(p);
+			var ps = p.IndexOf('.', StringComparison.Ordinal) == -1
+				? ConvertToSuperScript(p)
+				: ('^' + p);
 
 			var success = m.Groups[2].Success;
 			if (success && ps == "¹") ps = string.Empty;
