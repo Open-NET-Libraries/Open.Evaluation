@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Arithmetic;
+﻿using Open.Disposable;
+using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
@@ -63,6 +64,13 @@ namespace Open.Evaluation
 			});
 		}
 
+		static readonly ConcurrentQueueObjectPool<Dictionary<string, IEvaluate<double>>> DictionaryPool
+			= new ConcurrentQueueObjectPool<Dictionary<string, IEvaluate<double>>>(
+				() => new Dictionary<string, IEvaluate<double>>(),
+				d => d.Clear(),
+				null,
+				1024);
+
 		public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
 		{
 			var original = evaluation ?? throw new ArgumentNullException(nameof(evaluation));
@@ -77,51 +85,53 @@ namespace Open.Evaluation
 			if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
 
 			var count = 0;
-			var registry = new Dictionary<string, IEvaluate<double>>();
-
-			string last;
-			do
+			return DictionaryPool.Rent(registry =>
 			{
-				last = evaluation;
-
-				evaluation = unnecessaryParaenthesis.Replace(evaluation, "$1");
-
-				if (double.TryParse(evaluation, out var constantOnly))
-					return catalog.GetConstant(constantOnly);
-
-				var checkParamOnly = paramOnly.Match(evaluation);
-				if (checkParamOnly.Success) return catalog.GetParameter(ushort.Parse(checkParamOnly.Groups[1].Value, CultureInfo.InvariantCulture));
-
-				evaluation = products.Replace(evaluation, m =>
+				string last;
+				do
 				{
-					var key = $"X{++count}";
-					registry.Add(key, catalog.ProductOf(SubMatches(catalog, registry, m)));
-					return '{' + key + '}';
-				});
+					last = evaluation;
 
-				evaluation = sums.Replace(evaluation, m =>
-				{
-					var key = $"X{++count}";
-					registry.Add(key, catalog.SumOf(SubMatches(catalog, registry, m)));
-					return '{' + key + '}';
-				});
+					evaluation = unnecessaryParaenthesis.Replace(evaluation, "$1");
 
-				evaluation = exponents.Replace(evaluation, m =>
-				{
-					var key = $"X{++count}";
-					var sm = SubMatches(catalog, registry, m).ToArray();
-					if (sm.Length != 2) throw new FormatException($"Exponent with {sm.Length} elements defined.");
-					registry.Add(key, catalog.GetExponent(sm.First(), sm.Last()));
-					return '{' + key + '}';
-				});
+					if (double.TryParse(evaluation, out var constantOnly))
+						return catalog.GetConstant(constantOnly);
 
-			}
-			while (last != evaluation);
+					var checkParamOnly = paramOnly.Match(evaluation);
+					if (checkParamOnly.Success) return catalog.GetParameter(ushort.Parse(checkParamOnly.Groups[1].Value, CultureInfo.InvariantCulture));
 
-			var checkRegisteredOnly = registeredOnly.Match(evaluation);
-			if (checkRegisteredOnly.Success) return registry[checkRegisteredOnly.Groups[1].Value];
+					evaluation = products.Replace(evaluation, m =>
+					{
+						var key = $"X{++count}";
+						registry.Add(key, catalog.ProductOf(SubMatches(catalog, registry, m)));
+						return '{' + key + '}';
+					});
 
-			throw new FormatException($"Could not parse sequence: {original}");
+					evaluation = sums.Replace(evaluation, m =>
+					{
+						var key = $"X{++count}";
+						registry.Add(key, catalog.SumOf(SubMatches(catalog, registry, m)));
+						return '{' + key + '}';
+					});
+
+					evaluation = exponents.Replace(evaluation, m =>
+					{
+						var key = $"X{++count}";
+						var sm = SubMatches(catalog, registry, m).ToArray();
+						if (sm.Length != 2) throw new FormatException($"Exponent with {sm.Length} elements defined.");
+						registry.Add(key, catalog.GetExponent(sm.First(), sm.Last()));
+						return '{' + key + '}';
+					});
+
+				}
+				while (last != evaluation);
+
+				var checkRegisteredOnly = registeredOnly.Match(evaluation);
+				if (checkRegisteredOnly.Success) return registry[checkRegisteredOnly.Groups[1].Value];
+
+				throw new FormatException($"Could not parse sequence: {original}");
+			});
+
 		}
 	}
 }
