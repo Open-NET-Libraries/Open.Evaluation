@@ -73,7 +73,7 @@ namespace Open.Evaluation.Catalogs
 			{
 				newRoot = catalog.Catalog
 					.RemoveNode(node.CloneTree())
-					.Recycle();
+					.Recycle()!;
 				return true;
 			}
 			newRoot = default!;
@@ -232,7 +232,7 @@ namespace Open.Evaluation.Catalogs
 				}
 			}
 
-			var pet = cat.FixHierarchy(tree).Recycle();
+			var pet = cat.FixHierarchy(tree).Recycle()!;
 			tree.Recycle();
 
 			return cat.TryGetReduced(pet, out var red) ? red : pet;

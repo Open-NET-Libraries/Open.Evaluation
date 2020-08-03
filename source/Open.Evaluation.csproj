@@ -26,10 +26,10 @@
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Open.Cloneable" Version="1.1.0" />
-    <PackageReference Include="Open.Hierarchy" Version="1.7.2" />
-    <PackageReference Include="Open.Numeric.Primes" Version="1.5.5" />
-    <PackageReference Include="Open.RandomizationExtensions" Version="2.4.2" />
+    <PackageReference Include="Open.Cloneable" Version="1.1.2" />
+    <PackageReference Include="Open.Hierarchy" Version="1.8.1" />
+    <PackageReference Include="Open.Numeric.Primes" Version="1.6.0" />
+    <PackageReference Include="Open.RandomizationExtensions" Version="2.5.0" />
     <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
   </ItemGroup>
 

@@ -125,8 +125,7 @@ namespace Open.Evaluation.Catalogs
 			try
 			{
 				clonedNodeHandler(node);
-				return FixHierarchy(root)
-					.Recycle();
+				return FixHierarchy(root).Recycle()!;
 			}
 			finally
 			{
@@ -164,8 +163,7 @@ namespace Open.Evaluation.Catalogs
 					parent.Replace(node, rn);
 					node.Recycle();
 
-					return FixHierarchy(root)
-						.Recycle();
+					return FixHierarchy(root).Recycle()!;
 				}
 				finally
 				{
@@ -199,8 +197,7 @@ namespace Open.Evaluation.Catalogs
 				try
 				{
 					if (parent == null)
-						return FixHierarchy(replacement)
-							.Recycle();
+						return FixHierarchy(replacement).Recycle()!;
 
 					// ReSharper disable once InvertIf
 					if (node != replacement)
@@ -209,8 +206,7 @@ namespace Open.Evaluation.Catalogs
 						node.Recycle();
 					}
 
-					return FixHierarchy(root)
-						.Recycle();
+					return FixHierarchy(root).Recycle()!;
 				}
 				finally
 				{
