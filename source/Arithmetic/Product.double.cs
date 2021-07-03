@@ -102,13 +102,13 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> multiple,
 			IEnumerable<IEvaluate<double>> children)
-			=> ProductOf(catalog, children.Concat(multiple));
+			=> ProductOf(catalog, children.Append(multiple));
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> multiple,
 			params IEvaluate<double>[] rest)
-			=> ProductOf(catalog, rest.Concat(multiple));
+			=> ProductOf(catalog, rest.Append(multiple));
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,

@@ -34,7 +34,6 @@ namespace Open.Evaluation.Catalogs
 	[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 	public static partial class EvaluationCatalogExtensions
 	{
-		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should never be null and if so it should throw.")]
 		public static IEvaluate<double> MutateSign(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node, byte options = 3)
@@ -103,7 +102,7 @@ namespace Open.Evaluation.Catalogs
 				throw new ArgumentNullException(nameof(catalog));
 			if (node?.Value is null)
 				throw new ArgumentException("No node value.", nameof(node));
-			if (!(node.Value is IParameter p))
+			if (node.Value is not IParameter p)
 				throw new ArgumentException("Does not contain a Parameter.", nameof(node));
 
 			return catalog.Catalog.ApplyClone(node, newNode =>
@@ -129,7 +128,7 @@ namespace Open.Evaluation.Catalogs
 			if (node is null)
 				throw new ArgumentNullException(nameof(node));
 
-			if (!(node.Value is IOperator o))
+			if (node.Value is not IOperator o)
 				throw new ArgumentException("Does not contain an Operation.", nameof(node));
 
 			var symbol = o.Symbol;

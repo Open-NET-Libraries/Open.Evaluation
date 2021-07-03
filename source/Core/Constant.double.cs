@@ -40,7 +40,7 @@ namespace Open.Evaluation.Core
 		public static Constant SumOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
 			IConstant<double> c1, params IConstant<double>[] rest)
-			=> SumOfConstants(catalog, rest.Concat(c1));
+			=> SumOfConstants(catalog, rest.Append(c1));
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,

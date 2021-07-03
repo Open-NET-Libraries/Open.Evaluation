@@ -81,7 +81,7 @@ namespace Open.Evaluation.Catalogs
 			if (delta == 0) // No change... 
 				return sourceNode.Root.Value ?? throw new NullReferenceException("sourceNode.Root.Value is null");
 
-			if (!(sourceNode.Value is Product<double> p))
+			if (sourceNode.Value is not Product<double> p)
 				return MultiplyNode(catalog, sourceNode, delta + 1);
 
 			var multiple = catalog.GetMultiple(p);

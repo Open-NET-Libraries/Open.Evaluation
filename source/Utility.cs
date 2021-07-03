@@ -3,20 +3,11 @@ using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Open.Evaluation
 {
 	internal static class Utility
 	{
-		public static IEnumerable<T> Concat<T>(this IEnumerable<T> source, in T next)
-		{
-			if (source is null) throw new ArgumentNullException(nameof(source));
-
-			return source
-				.Concat(Enumerable.Repeat(next, 1));
-		}
-
 		public static IEnumerable<T> SkipAt<T>(this IEnumerable<T> source, int index)
 		{
 			if (source is null) throw new ArgumentNullException(nameof(source));
@@ -125,7 +116,7 @@ namespace Open.Evaluation
 
 			for (var i = 0; i < len; i++)
 			{
-				if (!(target[i] is TExtract e)) continue;
+				if (target[i] is not TExtract e) continue;
 				extracted.Add(e);
 				removed[removedCount++] = i;
 			}

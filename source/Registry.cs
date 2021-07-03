@@ -8,14 +8,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation
 {
 	using EvaluationCatalogSubmodule = EvaluationCatalog<double>.SubmoduleBase;
 
-	[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "Intentional.")]
 	public static class Registry
 	{
 		public static class Arithmetic
@@ -197,7 +195,6 @@ namespace Open.Evaluation
 			}
 		}
 
-		[SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Intentional.")]
 		public static class Boolean
 		{
 			// Operators...

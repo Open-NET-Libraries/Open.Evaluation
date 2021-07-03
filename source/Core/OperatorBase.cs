@@ -38,7 +38,7 @@ namespace Open.Evaluation.Core
 
 		protected override string ToStringInternal(object contents)
 		{
-			if (!(contents is IEnumerable collection))
+			if (contents is not IEnumerable collection)
 				return base.ToStringInternal(contents);
 
 			var r = StringBuilderPool.Rent(result =>

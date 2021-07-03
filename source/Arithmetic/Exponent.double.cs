@@ -7,7 +7,6 @@ using Open.Evaluation.Core;
 using System;
 using System.Buffers;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 
@@ -20,7 +19,6 @@ namespace Open.Evaluation.Arithmetic
 
 		public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
-		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		public static string ConvertToSuperScript(string number)
 		{
 			Debug.Assert(number != null);
@@ -42,8 +40,8 @@ namespace Open.Evaluation.Arithmetic
 			}
 		}
 
-		static readonly Regex SquareRootPattern = new Regex(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-		static readonly Regex ConstantPowerPattern = new Regex(@"^\((.+)\^(-)?([0-9\.]+)\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		static readonly Regex SquareRootPattern = new(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+		static readonly Regex ConstantPowerPattern = new(@"^\((.+)\^(-)?([0-9\.]+)\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
 		protected override string ToStringInternal(object contents)
 		{
@@ -59,9 +57,9 @@ namespace Open.Evaluation.Arithmetic
 			var b = m.Groups[1].Value;
 			Debug.Assert(!string.IsNullOrWhiteSpace(b));
 			var p = m.Groups[3].Value;
-			var ps = p.IndexOf('.', StringComparison.Ordinal) == -1
-				? ConvertToSuperScript(p)
-				: ('^' + p);
+			var ps = p.Contains('.')
+				? ('^' + p)
+				: ConvertToSuperScript(p);
 
 			var success = m.Groups[2].Success;
 			if (success && ps == "¹") ps = string.Empty;
@@ -75,13 +73,10 @@ namespace Open.Evaluation.Arithmetic
 			: base(evaluation, power)
 		{ }
 
-		[SuppressMessage("ReSharper", "ConvertIfStatementToSwitchStatement")]
-		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-		[SuppressMessage("ReSharper", "InvertIf")]
 		protected override IEvaluate<double> Reduction(ICatalog<IEvaluate<double>> catalog)
 		{
 			var pow = catalog.GetReduced(Power);
-			if (!(pow is IConstant<double> cPow))
+			if (pow is not IConstant<double> cPow)
 				return catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
 
 			var zero = catalog.GetConstant(0);

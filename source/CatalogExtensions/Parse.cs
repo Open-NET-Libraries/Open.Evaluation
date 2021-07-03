@@ -11,11 +11,11 @@ namespace Open.Evaluation
 {
 	public static class CatalogExtensions
 	{
-		static readonly Regex openParen = new Regex(@"[(]");
-		static readonly Regex closeParen = new Regex(@"[)]");
-		static readonly Regex unnecessaryParaenthesis = new Regex(@"\(({\w+})\)");
-		static readonly Regex paramOnly = new Regex(@"^(?:{(\d+)})$");
-		static readonly Regex registeredOnly = new Regex(@"^(?:{(\w+)})$");
+		static readonly Regex openParen = new(@"[(]");
+		static readonly Regex closeParen = new(@"[)]");
+		static readonly Regex unnecessaryParaenthesis = new(@"\(({\w+})\)");
+		static readonly Regex paramOnly = new(@"^(?:{(\d+)})$");
+		static readonly Regex registeredOnly = new(@"^(?:{(\w+)})$");
 
 		static Regex GetOperatorRegex(string op)
 		{
@@ -65,7 +65,7 @@ namespace Open.Evaluation
 		}
 
 		static readonly ConcurrentQueueObjectPool<Dictionary<string, IEvaluate<double>>> DictionaryPool
-			= new ConcurrentQueueObjectPool<Dictionary<string, IEvaluate<double>>>(
+			= new(
 				() => new Dictionary<string, IEvaluate<double>>(),
 				d => d.Clear(),
 				null,

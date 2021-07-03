@@ -14,7 +14,7 @@ namespace Open.Evaluation
 	public static class StringBuilderPool
 	{
 		public static readonly ConcurrentQueueObjectPool<StringBuilder> Instance
-			= new ConcurrentQueueObjectPool<StringBuilder>(
+			= new(
 				() => new StringBuilder(),
 				sb =>
 				{

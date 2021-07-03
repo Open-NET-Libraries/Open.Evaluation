@@ -6,14 +6,11 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Open.Evaluation.Core
 {
 	[DebuggerDisplay("Value = {Value}")]
-	[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
-	[SuppressMessage("Usage", "CA2225:Operator overloads have named alternates", Justification = "Expected values are constants.")]
 	public class Constant<TValue>
 		: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
 		where TValue : IComparable
@@ -61,7 +58,6 @@ namespace Open.Evaluation.Core
 
 	public static partial class ConstantExtensions
 	{
-		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		public static Constant<TValue> GetConstant<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
 			in TValue value)

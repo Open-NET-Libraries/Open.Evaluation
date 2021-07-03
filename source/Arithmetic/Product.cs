@@ -42,8 +42,6 @@ namespace Open.Evaluation.Arithmetic
 				.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
 		}
 
-		[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "<Pending>")]
 		protected override IEvaluate<TResult> Reduction(
 			ICatalog<IEvaluate<TResult>> catalog)
 		{
@@ -61,7 +59,7 @@ namespace Open.Evaluation.Arithmetic
 			for (var i = 0; i < len; i++)
 			{
 				var child = children[i];
-				if (!(child is Sum<TResult> sum) ||
+				if (child is not Sum<TResult> sum ||
 					!sum.TryExtractGreatestFactor(catalog, out var newSum, out var gcf))
 					continue;
 
@@ -111,9 +109,9 @@ namespace Open.Evaluation.Arithmetic
 					var sumPower = cat.SumOf(g.Select(t => t.Power)!);
 					var power = cat.GetReduced(sumPower);
 					if (power == zero) return one;
-					return power == one
-						? (IEvaluate<TResult>)@base
-						: (IEvaluate<TResult>)GetExponent(catalog, @base, power);
+					return (IEvaluate<TResult>)(power == one
+						? @base
+						: GetExponent(catalog, @base, power));
 
 				}).ToList();
 
@@ -133,9 +131,9 @@ namespace Open.Evaluation.Arithmetic
 					for (var i = 0; i < count; i++)
 					{
 						// Let's start with simple division of constants.
-						if (!(children[i] is Exponent<TResult> ex)
+						if (children[i] is not Exponent<TResult> ex
 							|| ex.Power != oneNeg
-							|| !(ex.Base is IConstant<TResult> expC))
+							|| ex.Base is not IConstant<TResult> expC)
 							continue;
 
 						var divisor = Convert.ToDouble(expC.Value, CultureInfo.InvariantCulture);
@@ -190,9 +188,8 @@ namespace Open.Evaluation.Arithmetic
 		}
 
 		// ReSharper disable once StaticMemberInGenericType
-		static readonly Regex IsInverted = new Regex(@"^\(1/(.+)\)$", RegexOptions.Compiled);
+		static readonly Regex IsInverted = new(@"^\(1/(.+)\)$", RegexOptions.Compiled);
 
-		[SuppressMessage("Design", "CA1062:Validate arguments of public methods", Justification = "Should throw if null.")]
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
 			Debug.Assert(result != null);
@@ -323,7 +320,7 @@ namespace Open.Evaluation.Arithmetic
 		{
 			return source.Select(c =>
 			{
-				if (!(c is Product<TResult> p))
+				if (c is not Product<TResult> p)
 					return (c.ToStringRepresentation(), default(IConstant<TResult>?), c);
 
 				var reduced = reduce
@@ -388,7 +385,7 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> multiple,
 			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
-			=> ProductOf(catalog, children.Concat(multiple));
+			=> ProductOf(catalog, children.Append(multiple));
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
@@ -403,7 +400,6 @@ namespace Open.Evaluation.Arithmetic
 			where TResult : struct, IComparable
 			=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
-		[SuppressMessage("ReSharper", "RedundantCast")]
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			in TResult multiple,

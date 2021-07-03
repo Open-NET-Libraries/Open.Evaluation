@@ -74,7 +74,7 @@ namespace Open.Evaluation.Arithmetic
 
 		// ReSharper disable once StaticMemberInGenericType
 		static readonly Regex HasNegativeMultiple
-			= new Regex(@"^\(-(\d+)(\s*[\*\/]\s*)(.+)\)$|^-(\d+)$", RegexOptions.Compiled);
+			= new(@"^\(-(\d+)(\s*[\*\/]\s*)(.+)\)$|^-(\d+)$", RegexOptions.Compiled);
 
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
@@ -111,7 +111,7 @@ namespace Open.Evaluation.Arithmetic
 			var children = catalog.Flatten<Sum<TResult>>(Children.Select(a =>
 			{
 				// Check for products that can be flattened as well.
-				if (!(a is Product<TResult> aP) || aP.Children.Length != 2) return a;
+				if (a is not Product<TResult> aP || aP.Children.Length != 2) return a;
 
 				var aS = aP.Children.OfType<Sum<TResult>>().ToArray();
 				if (aS.Length != 1) return a;

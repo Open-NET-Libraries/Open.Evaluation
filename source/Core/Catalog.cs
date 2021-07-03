@@ -10,7 +10,6 @@ using System.Runtime.CompilerServices;
 
 namespace Open.Evaluation.Core
 {
-	[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 	public class Catalog<T> : DisposableBase, ICatalog<T>
 		where T : class, IEvaluate
 	{
@@ -20,7 +19,7 @@ namespace Open.Evaluation.Core
 			//Reductions.Clear();
 		}
 
-		readonly ConcurrentDictionary<string, T> Registry = new ConcurrentDictionary<string, T>();
+		readonly ConcurrentDictionary<string, T> Registry = new();
 
 		public void Register<TItem>([NotNull] ref TItem item)
 			where TItem : T
@@ -82,7 +81,7 @@ namespace Open.Evaluation.Core
 		public Node<T>.Factory Factory { get; } = new Node<T>.Factory();
 
 		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions
-			= new ConditionalWeakTable<IReducibleEvaluation<T>, T>();
+			= new();
 
 		public T GetReduced(T source)
 		{

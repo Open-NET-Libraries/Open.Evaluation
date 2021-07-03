@@ -11,7 +11,6 @@ using System.Linq;
 
 namespace Open.Evaluation.Boolean
 {
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords", Justification = "Intentional.")]
 	public class Or : OperatorBase<bool>,
 		IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 	{
