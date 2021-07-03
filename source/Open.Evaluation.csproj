@@ -17,20 +17,13 @@
     <None Include="Arithmetic\Sum.double.cs" />
   </ItemGroup>
 
-	<ItemGroup Condition="'$(Configuration)' != 'Release'">
-		<PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
-	</ItemGroup>
-
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Open.Cloneable" Version="1.1.2" />
     <PackageReference Include="Open.Hierarchy" Version="1.8.1" />
-    <PackageReference Include="Open.Numeric.Primes" Version="1.6.0" />
+    <PackageReference Include="Open.Numeric.Primes" Version="2.0.0" />
     <PackageReference Include="Open.RandomizationExtensions" Version="2.5.0" />
-    <PackageReference Include="System.Collections.Immutable" Version="1.7.1" />
+    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
   </ItemGroup>
 
 </Project>
