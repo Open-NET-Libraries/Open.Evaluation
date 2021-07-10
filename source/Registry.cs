@@ -28,9 +28,9 @@ namespace Open.Evaluation
 			public const char SQUARE_ROOT = '√';
 
 			public static readonly IReadOnlyList<char> Operators
-				= new char[] { ADD, MULTIPLY }.ToImmutableArray();
+				= ImmutableArray.Create(ADD, MULTIPLY);
 			public static readonly IReadOnlyList<char> Functions
-				= new char[] { SQUARE, INVERT, SQUARE_ROOT }.ToImmutableArray();
+				= ImmutableArray.Create(SQUARE, INVERT, SQUARE_ROOT);
 
 			public static IEvaluate<double> GetOperator(
 				ICatalog<IEvaluate<double>> catalog,
@@ -211,11 +211,11 @@ namespace Open.Evaluation
 			public const string EXACTLY = Exactly.PREFIX;
 
 			public static readonly IReadOnlyList<char> Operators
-				= new char[] { AND, OR }.ToImmutableArray();
+				= ImmutableArray.Create(AND, OR);
 			public static readonly IReadOnlyList<char> Functions
-				= new char[] { NOT, CONDITIONAL }.ToImmutableArray();
+				= ImmutableArray.Create(NOT, CONDITIONAL);
 			public static readonly IReadOnlyList<string> Counting
-				= new string[] { AT_LEAST, AT_MOST, EXACTLY }.ToImmutableArray();
+				= ImmutableArray.Create(AT_LEAST, AT_MOST, EXACTLY);
 
 			public static IEvaluate<bool> GetOperator(
 				ICatalog<IEvaluate<bool>> catalog,
