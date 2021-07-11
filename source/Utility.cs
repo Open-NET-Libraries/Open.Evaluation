@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Open.Disposable;
+using System;
 using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
@@ -86,8 +87,8 @@ namespace Open.Evaluation
 
 		public static List<T> Extract<T>(this IList<T> target, in Func<T, bool> predicate)
 		{
-			var extracted = new List<T>();
 			var len = target.Count;
+			var extracted = ListPool<T>.Shared.Take();
 			var removed = ArrayPool<int>.Shared.Rent(len);
 			var removedCount = 0;
 
@@ -109,8 +110,8 @@ namespace Open.Evaluation
 
 		public static List<TExtract> ExtractType<TExtract>(this IList target)
 		{
-			var extracted = new List<TExtract>();
 			var len = target.Count;
+			var extracted = ListPool<TExtract>.Shared.Take();
 			var removed = ArrayPool<int>.Shared.Rent(len);
 			var removedCount = 0;
 
