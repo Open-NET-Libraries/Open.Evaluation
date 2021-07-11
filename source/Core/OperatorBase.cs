@@ -26,7 +26,8 @@ namespace Open.Evaluation.Core
 			if (children is null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
-			Children = ImmutableArray.CreateRange(reorderChildren ? children.OrderBy(c => c, this) : children);
+			if (reorderChildren) children = children.OrderBy(c => c, this);
+			Children = children is ImmutableArray<TChild> c ? c : children.ToImmutableArray();
 			if (Children.Length < minimumChildren)
 				throw new ArgumentException($"{GetType()} must be constructed with at least {minimumChildren} child(ren).");
 		}
