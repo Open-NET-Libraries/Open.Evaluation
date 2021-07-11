@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
 using System;
@@ -196,41 +197,52 @@ namespace Open.Evaluation.Arithmetic
 			greatestFactor = one;
 			sum = this;
 			// Phase 5: Try and group by GCF:
-			var products = new List<Product<TResult>>();
+			using var products = ListPool<Product<TResult>>.Shared.Rent();
 			foreach (var c in Children)
 			{
 				// All of them must be products for GCF to work.
 				if (c is Product<TResult> p)
-					products.Add(p);
+					products.Item.Add(p);
 				else
 					return false;
 			}
 
 			// Try and get all the constants, and if a product does not have one, then done.
-			var constants = new List<TResult>();
-			foreach (var p in products)
+			using var constantRH = ListPool<TResult>.Shared.Rent();
+			var constants = constantRH.Item;
+			foreach (var p in products.Item)
 			{
-				var c = p.Children.OfType<IConstant<TResult>>().ToArray();
-				if (c.Length != 1) return false;
-				constants.Add(c[0].Value);
+				using var c = p.Children.OfType<IConstant<TResult>>().GetEnumerator();
+				if(c.MoveNext()) // At least 1. Ok.
+				{
+					var e = c.Current;
+					if(!c.MoveNext()) // More than 1? Abort.
+					{
+						constants.Add(e.Value);
+						continue;
+					}
+				}				
+
+				return false;
 			}
 
 			// Convert all the constants to factors, and if any are invalid for factoring, then done.
-			var factors = new List<ulong>();
+			using var factors = ListPool<ulong>.Shared.Rent();
 			foreach (var v in constants)
 			{
 				var d = Math.Abs(Convert.ToDecimal(v, CultureInfo.InvariantCulture));
 				if (d <= decimal.One || decimal.Floor(d) != d) return false;
-				factors.Add(Convert.ToUInt64(d));
+				factors.Item.Add(Convert.ToUInt64(d));
 			}
-			var gcf = Prime.GreatestFactor(factors);
-			Debug.Assert(factors.All(f => f >= gcf));
+			var gcf = Prime.GreatestFactor(factors.Item);
+			Debug.Assert(factors.Item.All(f => f >= gcf));
+			factors.Dispose();
 			if (gcf <= 1) return false;
 
 			TResult gcfT = (dynamic)gcf;
 
 			greatestFactor = GetConstant(catalog, gcfT);
-			sum = catalog.SumOf(catalog.MultiplesExtracted(products)
+			sum = catalog.SumOf(catalog.MultiplesExtracted(products.Item)
 				.Select(e =>
 				{
 					var m = e.Multiple ?? one;
@@ -281,6 +293,8 @@ namespace Open.Evaluation.Arithmetic
 					var c = constants.Count == 1
 						? constants[0]
 						: catalog.SumOfConstants(constants);
+
+					ListPool<IConstant<TResult>>.Shared.Give(constants);
 
 					if (childList.Count == 0)
 						return c;
