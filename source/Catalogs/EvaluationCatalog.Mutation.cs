@@ -207,6 +207,25 @@ namespace Open.Evaluation.Catalogs
 			});
 		}
 
+		public static IEvaluate<double> AdjustExponent(
+			this EvaluationCatalog<double>.MutationCatalog catalog,
+			Node<IEvaluate<double>> node, double value)
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (node is null) throw new ArgumentNullException(nameof(node));
+			if (value == 0) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
+
+			return node.Value is Exponent<double>
+				? catalog.Catalog.ApplyClone(node, newNode =>
+				{
+					var power = newNode.Children[1];
+					newNode.Replace(power,
+						catalog.Factory.Map(catalog.Catalog.SumOf(in value, power.Value ?? throw new NullReferenceException("power.Value is null."))));
+				})
+				: catalog.Catalog.ApplyClone(node, newNode =>
+						catalog.Catalog.GetExponent(newNode.Value ?? throw new NullReferenceException("newNode.Value is null."), 1 + value));
+		}
+
 		public static IEvaluate<double> Square(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
