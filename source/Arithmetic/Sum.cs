@@ -8,6 +8,7 @@ using Open.Evaluation.Core;
 using Open.Numeric.Primes;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
@@ -176,13 +177,19 @@ namespace Open.Evaluation.Arithmetic
 			return catalog.Register(new Sum<TResult>(param));
 		}
 
+		internal virtual IEvaluate<TResult> NewUsing(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IReadOnlyList<IEvaluate<TResult>> param)
+			=> param.Count == 1 ? param[0] : Create(catalog, param);
+
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
 		{
-			if (param is null) throw new ArgumentNullException(nameof(param));
-			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
-			return p.Length == 1 ? p[0] : Create(catalog, p);
+			if (param is IReadOnlyList<IEvaluate<TResult>> p)
+				return NewUsing(catalog, p);
+
+			return ConditionalTransform(param, p => Create(catalog, p));
 		}
 
 		public bool TryExtractGreatestFactor(
@@ -213,15 +220,15 @@ namespace Open.Evaluation.Arithmetic
 			foreach (var p in products.Item)
 			{
 				using var c = p.Children.OfType<IConstant<TResult>>().GetEnumerator();
-				if(c.MoveNext()) // At least 1. Ok.
+				if (c.MoveNext()) // At least 1. Ok.
 				{
 					var e = c.Current;
-					if(!c.MoveNext()) // More than 1? Abort.
+					if (!c.MoveNext()) // More than 1? Abort.
 					{
 						constants.Add(e.Value);
 						continue;
 					}
-				}				
+				}
 
 				return false;
 			}
@@ -266,43 +273,78 @@ namespace Open.Evaluation.Arithmetic
 
 	public static partial class SumExtensions
 	{
+		static IEvaluate<TResult> SumOfCollection<TResult>(
+			ICatalog<IEvaluate<TResult>> catalog,
+			List<IEvaluate<TResult>> childList)
+			where TResult : struct, IComparable
+		{
+			var constants = childList.ExtractType<IConstant<TResult>>();
+
+			if (constants.Count == 0)
+				return Sum<TResult>.Create(catalog, childList);
+
+			var c = constants.Count == 1
+				? constants[0]
+				: catalog.SumOfConstants(constants);
+
+			ListPool<IConstant<TResult>>.Shared.Give(constants);
+
+			if (childList.Count == 0)
+				return c;
+
+			childList.Add(c);
+
+			return Sum<TResult>.Create(catalog, childList);
+		}
+
 		public static IEvaluate<TResult> SumOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			IEnumerable<IEvaluate<TResult>> children)
+			IReadOnlyList<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (children is null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
-			var childList = children.ToList();
-			switch (childList.Count)
+			switch (children.Count)
 			{
 				case 0:
 					return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
-
 				case 1:
-					return childList.Single();
-
+					return children[0];
 				default:
-					var constants = childList.ExtractType<IConstant<TResult>>();
+					{
+						using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();
+						var childList = childListRH.Item;
+						childList.AddRange(children);
+						return SumOfCollection(catalog, childList);
+					}
+			};
+		}
 
-					if (constants.Count == 0)
-						return Sum<TResult>.Create(catalog, childList);
 
-					var c = constants.Count == 1
-						? constants[0]
-						: catalog.SumOfConstants(constants);
+		public static IEvaluate<TResult> SumOf<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> children)
+			where TResult : struct, IComparable
+		{
+			if (children is IReadOnlyList<IEvaluate<TResult>> ch) return SumOf(catalog, ch);
 
-					ListPool<IConstant<TResult>>.Shared.Give(constants);
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (children is null) throw new ArgumentNullException(nameof(children));
+			Contract.EndContractBlock();
 
-					if (childList.Count == 0)
-						return c;
+			using var e = children.GetEnumerator();
+			if (!e.MoveNext()) return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
+			var v0 = e.Current;
+			if (!e.MoveNext()) return v0;
 
-					childList.Add(c);
-
-					return Sum<TResult>.Create(catalog, childList);
-			}
+			using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();
+			var childList = childListRH.Item;
+			childList.Add(v0);
+			do { childList.Add(e.Current); }
+			while (e.MoveNext());
+			return SumOfCollection(catalog, childList);
 		}
 
 		public static IEvaluate<TResult> SumOf<TResult>(

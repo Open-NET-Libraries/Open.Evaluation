@@ -154,7 +154,7 @@ namespace Open.Evaluation.Core
 			Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
 		{
 			if (param is null) throw new ArgumentNullException(nameof(param));
-			var e = param.GetEnumerator();
+			using var e = param.GetEnumerator();
 			if (!e.MoveNext()) return transform(ImmutableArray<IEvaluate<TResult>>.Empty);
 			var v0 = e.Current;
 			if (!e.MoveNext()) return v0;
