@@ -348,7 +348,7 @@ namespace Open.Evaluation.Arithmetic
 			if (constants.Count > 0)
 			{
 				var c = constants.Count == 1
-					? constants.Single()
+					? constants[0]
 					: catalog.ProductOfConstants(constants);
 				if (childList.Count == 0)
 					return c;
@@ -372,7 +372,7 @@ namespace Open.Evaluation.Arithmetic
 					//Debug.Fail("Extraction failure.", "Should not have occured.");
 					throw new Exception("Extraction failure.");
 				case 1:
-					return childList.Single();
+					return childList[0];
 				default:
 					break;
 			}
