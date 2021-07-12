@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/electricessence/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
@@ -51,40 +52,78 @@ namespace Open.Evaluation.Arithmetic
 
 	public static partial class SumExtensions
 	{
+
+		static IEvaluate<double> SumOfCollection<TResult>(
+			ICatalog<IEvaluate<double>> catalog,
+			List<IEvaluate<double>> childList)
+			where TResult : struct, IComparable
+		{
+			var constants = childList.ExtractType<IConstant<double>>();
+
+			if (constants.Count == 0)
+				return Sum.Create(catalog, childList);
+
+			var c = constants.Count == 1
+				? constants[0]
+				: catalog.SumOfConstants(constants);
+
+			ListPool<IConstant<double>>.Shared.Give(constants);
+
+			if (childList.Count == 0)
+				return c;
+
+			childList.Add(c);
+
+			return Sum.Create(catalog, childList);
+		}
+
 		public static IEvaluate<double> SumOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			IEnumerable<IEvaluate<double>> children)
+			IReadOnlyList<IEvaluate<double>> children)
 		{
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (children is null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
-			var childList = children.ToList();
-			switch (childList.Count)
+			switch (children.Count)
 			{
 				case 0:
 					return catalog.GetConstant(0);
 
 				case 1:
-					return childList.Single();
+					return children[0];
 
 				default:
-					var constants = childList.ExtractType<IConstant<double>>();
-
-					if (constants.Count == 0)
-						return Sum.Create(catalog, childList);
-
-					var c = constants.Count == 1
-						? constants[0]
-						: catalog.SumOfConstants(constants);
-
-					if (childList.Count == 0)
-						return c;
-
-					childList.Add(c);
-
-					return Sum.Create(catalog, childList);
+					{
+						using var childListRH = ListPool<IEvaluate<double>>.Shared.Rent();
+						var childList = childListRH.Item;
+						childList.AddRange(children);
+						return SumOfCollection(catalog, childList);
+					}
 			}
+		}
+
+		public static IEvaluate<double> SumOf(
+			this ICatalog<IEvaluate<double>> catalog,
+			IEnumerable<IEvaluate<double>> children)
+		{
+			if (children is IReadOnlyList<IEvaluate<double>> ch) return SumOf(catalog, ch);
+
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (children is null) throw new ArgumentNullException(nameof(children));
+			Contract.EndContractBlock();
+
+			using var e = children.GetEnumerator();
+			if (!e.MoveNext()) return ConstantExtensions.GetConstant<double>(catalog, (dynamic)0);
+			var v0 = e.Current;
+			if (!e.MoveNext()) return v0;
+
+			using var childListRH = ListPool<IEvaluate<double>>.Shared.Rent();
+			var childList = childListRH.Item;
+			childList.Add(v0);
+			do { childList.Add(e.Current); }
+			while (e.MoveNext());
+			return SumOfCollection(catalog, childList);
 		}
 
 		public static IEvaluate<double> SumOf(
