@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
@@ -35,11 +36,11 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<double>> param)
 			=> catalog.Register(new Product(param));
 
-		internal static Product<TResult> Create<TResult>(
-			ICatalog<IEvaluate<TResult>> catalog,
-			IEnumerable<IEvaluate<TResult>> param)
-			where TResult : struct, IComparable
-			=> Product<TResult>.Create(catalog, param);
+		//internal static Product<TResult> Create<TResult>(
+		//	ICatalog<IEvaluate<TResult>> catalog,
+		//	IEnumerable<IEvaluate<TResult>> param)
+		//	where TResult : struct, IComparable
+		//	=> Product<TResult>.Create(catalog, param);
 
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
@@ -63,13 +64,16 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<double>> children)
 		{
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			Contract.EndContractBlock();
-
-			var childList = children.ToList();
-			if (childList.Count == 0)
+			if (children is IReadOnlyCollection<IEvaluate<double>> ch && ch.Count == 0)
 				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 
+			using var childListRH = ListPool<IEvaluate<double>>.Shared.Rent();
+			var childList = childListRH.Item;
+			childList.AddRange(children);
+			if (childList.Count == 0)
+				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 			var constants = childList.ExtractType<IConstant<double>>();
+
 			if (constants.Count > 0)
 			{
 				var c = constants.Count == 1

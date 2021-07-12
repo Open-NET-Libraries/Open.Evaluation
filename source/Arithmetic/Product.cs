@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
 using System;
@@ -301,14 +302,20 @@ namespace Open.Evaluation.Arithmetic
 
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
-			IEnumerable<IEvaluate<TResult>> param)
+			IReadOnlyList<IEvaluate<TResult>> param)
 		{
 			if (param is null) throw new ArgumentNullException(nameof(param));
 			Contract.EndContractBlock();
 
-			var p = param as IEvaluate<TResult>[] ?? param.ToArray();
-			return p.Length == 1 ? p[0] : Create(catalog, p);
+			return param.Count == 1 ? param[0] : Create(catalog, param);
 		}
+
+		public virtual IEvaluate<TResult> NewUsing(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> param)
+			=> param is IReadOnlyList<IEvaluate<TResult>> p
+			? NewUsing(catalog, p)
+			: ConditionalTransform(param, p => Create(catalog, p));
 	}
 
 	public static partial class ProductExtensions
@@ -317,8 +324,7 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
 			where TResult : struct, IComparable
-		{
-			return source.Select(c =>
+			=> source.Select(c =>
 			{
 				if (c is not Product<TResult> p)
 					return (c.ToStringRepresentation(), default(IConstant<TResult>?), c);
@@ -333,18 +339,23 @@ namespace Open.Evaluation.Arithmetic
 					reduced
 				);
 			});
-		}
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> children)
 			where TResult : struct, IComparable
 		{
-			var childList = children.ToList();
-			if (childList.Count == 0)
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count==0)
 				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 
+			using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();
+			var childList = childListRH.Item;
+			childList.AddRange(children);
+			if (childList.Count == 0)
+				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 			var constants = childList.ExtractType<IConstant<TResult>>();
+
 			if (constants.Count > 0)
 			{
 				var c = constants.Count == 1

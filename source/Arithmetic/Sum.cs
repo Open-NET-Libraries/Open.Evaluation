@@ -184,12 +184,9 @@ namespace Open.Evaluation.Arithmetic
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-		{
-			if (param is IReadOnlyList<IEvaluate<TResult>> p)
-				return NewUsing(catalog, p);
-
-			return ConditionalTransform(param, p => Create(catalog, p));
-		}
+			=> param is IReadOnlyList<IEvaluate<TResult>> p 
+			? NewUsing(catalog, p)
+			: ConditionalTransform(param, p => Create(catalog, p));
 
 		public bool TryExtractGreatestFactor(
 			ICatalog<IEvaluate<TResult>> catalog,

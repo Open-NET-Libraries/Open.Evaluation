@@ -64,13 +64,6 @@ namespace Open.Evaluation
 			});
 		}
 
-		static readonly ConcurrentQueueObjectPool<Dictionary<string, IEvaluate<double>>> DictionaryPool
-			= new(
-				() => new Dictionary<string, IEvaluate<double>>(),
-				d => d.Clear(),
-				null,
-				1024);
-
 		public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
 		{
 			var original = evaluation ?? throw new ArgumentNullException(nameof(evaluation));
@@ -85,7 +78,7 @@ namespace Open.Evaluation
 			if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
 
 			var count = 0;
-			return DictionaryPool.Rent(registry =>
+			return DictionaryPool<string, IEvaluate<double>>.Shared.Rent(registry =>
 			{
 				string last;
 				do
