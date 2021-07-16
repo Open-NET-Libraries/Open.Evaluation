@@ -153,7 +153,7 @@ namespace Open.Evaluation.Core
 			foreach (var c in constants)
 			{
 				var val = c.Value;
-				if (val == zero) return GetConstant<TValue>(catalog, zero);
+				if (val == zero) return GetConstant(catalog, (TValue)zero);
 				result *= val;
 			}
 			return GetConstant(catalog, (TValue)result);
