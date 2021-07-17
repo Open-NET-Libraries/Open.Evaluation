@@ -346,7 +346,7 @@ namespace Open.Evaluation.Arithmetic
 			where TResult : struct, IComparable
 		{
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count==0)
+			if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count == 0)
 				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 
 			using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();

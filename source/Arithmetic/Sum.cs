@@ -184,7 +184,7 @@ namespace Open.Evaluation.Arithmetic
 		public virtual IEvaluate<TResult> NewUsing(
 			ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> param)
-			=> param is IReadOnlyList<IEvaluate<TResult>> p 
+			=> param is IReadOnlyList<IEvaluate<TResult>> p
 			? NewUsing(catalog, p)
 			: ConditionalTransform(param, p => Create(catalog, p));
 
@@ -333,7 +333,7 @@ namespace Open.Evaluation.Arithmetic
 			Contract.EndContractBlock();
 
 			using var e = children.GetEnumerator();
-			if (!e.MoveNext()) return ConstantExtensions.GetConstant<TResult>(catalog, (dynamic)0);
+			if (!e.MoveNext()) return ConstantExtensions.GetConstant(catalog, (TResult)(dynamic)0);
 			var v0 = e.Current;
 			if (!e.MoveNext()) return v0;
 
