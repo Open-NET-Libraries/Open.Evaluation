@@ -69,5 +69,14 @@ namespace Open.Evaluation.Tests
 			protected override double Expected => 2 * Math.Sqrt(PV[0] + PV[1]);
 		}
 
+		[TestClass]
+		public class ExponentOfConstants : ParseTestBase
+		{
+			const string FORMAT = "((({0})^3)^2)";
+			public ExponentOfConstants() : base(FORMAT, "(({0}³)²)", "({0}⁶)") { }
+
+			protected override double Expected => Math.Pow(PV[0], 6);
+		}
+
 	}
 }
