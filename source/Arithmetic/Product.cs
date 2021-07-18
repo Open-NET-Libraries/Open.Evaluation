@@ -398,6 +398,20 @@ namespace Open.Evaluation.Arithmetic
 			where TResult : struct, IComparable
 			=> ProductOf(catalog, children.Append(multiple));
 
+		public static IEvaluate<TResult> ProductOfSum<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IEvaluate<TResult> multiple,
+			Sum<TResult> sum)
+			where TResult : struct, IComparable
+			=> catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
+
+		public static IEvaluate<TResult> ProductOfSums<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			Sum<TResult> a,
+			Sum<TResult> b)
+			where TResult : struct, IComparable
+			=> catalog.GetReduced(catalog.SumOf(a.Children.Select(c => ProductOfSum(catalog, c, b))));
+
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			params IEvaluate<TResult>[] children)
@@ -416,7 +430,7 @@ namespace Open.Evaluation.Arithmetic
 			in TResult multiple,
 			params IEvaluate<TResult>[] rest)
 			where TResult : struct, IComparable
-			=> ProductOf(catalog, (IEvaluate<TResult>)catalog.GetConstant(multiple), (IEnumerable<IEvaluate<TResult>>)rest);
+			=> ProductOf(catalog, catalog.GetConstant(multiple), (IEnumerable<IEvaluate<TResult>>)rest);
 
 	}
 }

@@ -1,4 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Open.Evaluation.Arithmetic;
+using Open.Evaluation.Catalogs;
 using System;
 
 namespace Open.Evaluation.Tests
@@ -68,6 +70,24 @@ namespace Open.Evaluation.Tests
 			protected override double Expected => 0;
 		}
 
+		[TestClass]
+		public class ProductOfSums
+		{
+			[TestMethod]
+			public void Product()
+			{
+				using var catalog = new EvaluationCatalog<double>();
+
+				var a = (Sum<double>)catalog.Parse("({0} + {1})");
+				var b = (Sum<double>)catalog.Parse("({2} + {3})");
+
+				var p = catalog.ProductOfSums(a, b);
+				var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
+				var s = p.ToStringRepresentation();
+				Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
+				Assert.AreEqual(21, v);
+			}
+		}
 	}
 
 }

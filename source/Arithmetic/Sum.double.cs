@@ -37,6 +37,12 @@ namespace Open.Evaluation.Arithmetic
 			IEnumerable<IEvaluate<double>> param)
 			=> catalog.Register(new Sum(param));
 
+		internal static Sum<TResult> Create<TResult>(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> param)
+			where TResult : struct, IComparable
+			=> Sum<TResult>.Create(catalog, param);
+
 		public override IEvaluate<double> NewUsing(
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> param)
