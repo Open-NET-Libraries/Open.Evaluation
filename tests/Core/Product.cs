@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Catalogs;
+using Open.Evaluation.Core;
 using System;
 
 namespace Open.Evaluation.Tests
@@ -81,11 +82,16 @@ namespace Open.Evaluation.Tests
 				var a = (Sum<double>)catalog.Parse("({0} + {1})");
 				var b = (Sum<double>)catalog.Parse("({2} + {3})");
 
-				var p = catalog.ProductOfSums(a, b);
-				var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
-				var s = p.ToStringRepresentation();
-				Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
-				Assert.AreEqual(21, v);
+				Validate(catalog.ProductOfSums(a, b));
+				Validate(catalog.ProductOfSums(new Sum<double>[] { a, b }));
+
+				static void Validate(IEvaluate<double> p)
+				{
+					var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
+					var s = p.ToStringRepresentation();
+					Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
+					Assert.AreEqual(21, v);
+				}
 			}
 		}
 	}

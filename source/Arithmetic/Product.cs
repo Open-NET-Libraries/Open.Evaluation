@@ -403,7 +403,9 @@ namespace Open.Evaluation.Arithmetic
 			IEvaluate<TResult> multiple,
 			Sum<TResult> sum)
 			where TResult : struct, IComparable
-			=> catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
+			=> multiple is Sum<TResult> m
+			? ProductOfSums(catalog, m, sum)
+			: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
 
 		public static IEvaluate<TResult> ProductOfSums<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
@@ -411,6 +413,19 @@ namespace Open.Evaluation.Arithmetic
 			Sum<TResult> b)
 			where TResult : struct, IComparable
 			=> catalog.GetReduced(catalog.SumOf(a.Children.Select(c => ProductOfSum(catalog, c, b))));
+
+		public static IEvaluate<TResult> ProductOfSums<TResult>(
+			this ICatalog<IEvaluate<TResult>> catalog,
+			IReadOnlyCollection<Sum<TResult>> sums)
+			where TResult : struct, IComparable
+		{
+			if(sums.Count==0) return catalog.GetConstant((TResult)(dynamic)1);
+			using var e = sums.GetEnumerator();
+			if (!e.MoveNext()) throw new Exception("Collection empty with count>0.");
+			IEvaluate<TResult> p = e.Current;
+			while (e.MoveNext()) p = ProductOfSum(catalog, p, e.Current);
+			return catalog.GetReduced(p);
+		}
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,

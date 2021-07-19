@@ -80,8 +80,7 @@ namespace Open.Evaluation.Core
 
 		public Node<T>.Factory Factory { get; } = new Node<T>.Factory();
 
-		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions
-			= new();
+		readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new();
 
 		public T GetReduced(T source)
 		{
