@@ -150,6 +150,7 @@ namespace Open.Evaluation.Arithmetic
 			return catalog.SumOf(
 				withMultiples
 					.GroupBy(g => g.Hash)
+					.OrderBy(g => g.Key) // Ensure consistency.
 					.Select(g => (
 						multiple: catalog.SumOfConstants(g.Select(t => t.Multiple ?? one)),
 						first: g.First().Entry
