@@ -75,7 +75,7 @@ namespace Open.Evaluation.Tests
 		public class ProductOfSums
 		{
 			[TestMethod]
-			public void Product()
+			public void TwoSumTest()
 			{
 				using var catalog = new EvaluationCatalog<double>();
 
@@ -85,13 +85,37 @@ namespace Open.Evaluation.Tests
 				Validate(catalog.ProductOfSums(a, b));
 				Validate(catalog.ProductOfSums(new Sum<double>[] { a, b }));
 
-				static void Validate(IEvaluate<double> p)
 				{
-					var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
-					var s = p.ToStringRepresentation();
-					Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
-					Assert.AreEqual(21, v);
+					var sample = catalog.Parse("(({0} + {1}) * ({2} + {3}))");
+					var reduced = catalog.Variation.FlattenProductofSums(sample);
+					Validate(reduced);
 				}
+
+				{
+					var sample = catalog.Parse("(({0} + {1}) * ({2} + (({0} + {1}) * ({2} + {3}))))");
+					var p = new double[] { 1, 2, 3, 4 };
+					var v = sample.Evaluate(p);
+					var reduced = catalog.Variation.FlattenProductofSums(sample);
+					var s = reduced.ToStringRepresentation();
+					Assert.AreEqual("((({0}²) * {2}) + (({0}²) * {3}) + (({1}²) * {2}) + (({1}²) * {3}) + (2 * {0} * {1} * {2}) + (2 * {0} * {1} * {3}) + ({0} * {2}) + ({1} * {2}))", s);
+					Assert.AreEqual(v, reduced.Evaluate(p));
+				}
+
+			}
+
+			[TestMethod]
+			public void VariationTest()
+			{
+
+
+			}
+
+			static void Validate(IEvaluate<double> p)
+			{
+				var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
+				var s = p.ToStringRepresentation();
+				Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
+				Assert.AreEqual(21, v);
 			}
 		}
 	}

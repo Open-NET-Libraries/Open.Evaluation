@@ -120,7 +120,6 @@ namespace Open.Evaluation.Catalogs
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
-			Debug.Assert(catalog != null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (node is null) throw new ArgumentNullException(nameof(node));
 			Contract.EndContractBlock();
@@ -137,7 +136,6 @@ namespace Open.Evaluation.Catalogs
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> root, int descendantIndex)
 		{
-			Debug.Assert(catalog != null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
@@ -151,7 +149,6 @@ namespace Open.Evaluation.Catalogs
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> node, char fn, IEnumerable<IEvaluate<double>> parameters)
 		{
-			Debug.Assert(catalog != null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (node is null) throw new ArgumentNullException(nameof(node));
 			Contract.EndContractBlock();
@@ -168,7 +165,6 @@ namespace Open.Evaluation.Catalogs
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> node)
 		{
-			Debug.Assert(catalog != null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (node is null) throw new ArgumentNullException(nameof(node));
 			Contract.EndContractBlock();
@@ -182,7 +178,6 @@ namespace Open.Evaluation.Catalogs
 			this EvalDoubleVariationCatalog catalog,
 			Node<IEvaluate<double>> root, int descendantIndex, char fn, IEnumerable<IEvaluate<double>> parameters)
 		{
-			Debug.Assert(catalog != null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
@@ -196,7 +191,6 @@ namespace Open.Evaluation.Catalogs
 			this EvalDoubleVariationCatalog catalog,
 			IEvaluate<double> root)
 		{
-			Debug.Assert(catalog != null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
@@ -206,7 +200,10 @@ namespace Open.Evaluation.Catalogs
 
 			var cat = catalog.Catalog;
 			var tree = cat.Factory.Map(root);
-			foreach (var p in tree.GetDescendantsOfType().Where(d => d.Value is IParameter<double>).ToArray())
+			foreach (var p in tree
+				.GetDescendantsOfType()
+				.Where(d => d.Value is IParameter<double>)
+				.ToArray())
 			{
 				if (p.Parent == null)
 				{
@@ -237,5 +234,70 @@ namespace Open.Evaluation.Catalogs
 
 			return cat.TryGetReduced(pet, out var red) ? red : pet;
 		}
+
+
+		public static IEvaluate<TResult> FlattenProductofSums<TResult>(
+			this EvaluationCatalog<TResult>.VariationCatalog catalog,
+			IEvaluate<TResult> root)
+			where TResult : struct, IComparable
+		{
+			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			if (root is null) throw new ArgumentNullException(nameof(root));
+			Contract.EndContractBlock();
+
+			var cat = catalog.Catalog; 
+		
+		retry:
+			if (!(root is IParent))
+				return root;
+
+			var tree = cat.Factory.Map(root);
+			var first = tree
+				.GetNodesOfType()
+				.FirstOrDefault(d => d.Value is Product<TResult> e
+					&& e.Children.Length > 1 && e.Children.OfType<Sum<TResult>>().Any());
+
+			if (first is null)
+			{
+				tree.Recycle();
+				return root;
+			}
+
+
+			var product = (Product<TResult>)first.Value;
+			var children = product.Children;
+			var newChildren = children.ToList();
+			var sums = newChildren.ExtractType<Sum<TResult>>();
+			IEvaluate<TResult> productOfSum;
+			if (sums.Count == 1)
+			{
+				var next = newChildren[0];
+				newChildren.RemoveAt(0);
+				productOfSum = cat.ProductOfSum(next, sums[0]);
+			}
+			else
+			{
+				productOfSum = cat.ProductOfSums(sums);
+			}
+
+			var replacment = newChildren.Count==0 ? productOfSum : Product<TResult>.Create(cat, newChildren.Append(productOfSum));
+			if (root == product)
+			{
+				root = replacment;
+			}
+			else
+			{
+				if (first.Parent == null) throw new Exception("Impossbile to replace.");
+				first.Parent.Replace(first, cat.Factory.Map(replacment));
+				var pet = cat.FixHierarchy(tree).Recycle()!;
+
+				root = cat.TryGetReduced(pet, out var red) ? red : pet;
+			}
+
+			tree.Recycle();
+
+			goto retry;
+		}
+
 	}
 }
