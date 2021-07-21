@@ -1,4 +1,7 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Open.Evaluation.Arithmetic;
+using Open.Evaluation.Catalogs;
+using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Tests
 {
@@ -59,6 +62,27 @@ namespace Open.Evaluation.Tests
 					var x3 = PV[3];
 					return x1 + x2 + x3 + 3;
 				}
+			}
+		}
+
+
+		[TestClass]
+		public class SumCollapse2
+		{
+			
+			[TestMethod]
+			public void TestMultipleCombine()
+			{
+				using var catalog = new EvaluationCatalog<double>();
+				var a2 = catalog.GetExponent(catalog.GetParameter(0), 2);
+				var g1 = catalog.ProductOf(catalog.GetConstant(9), a2);
+				var b = catalog.GetParameter(1);
+				var g2 = catalog.ProductOf(-1, a2);
+				var sum = catalog.SumOf(g1, b, g2);
+				var sumString = sum.ToStringRepresentation();
+				Assert.AreEqual("((9 * ({0}²)) + {1} - (({0}²)))", sumString);
+				Assert.AreEqual("((8 * ({0}²)) + {1})", catalog.GetReduced(sum).ToStringRepresentation());
+
 			}
 		}
 	}
