@@ -23,8 +23,8 @@ namespace Open.Evaluation.Arithmetic
 		{
 			Debug.Assert(number != null);
 			var len = number.Length;
-			var r = ArrayPool<char>.Shared.Rent(len);
-			try
+
+			return ArrayPool<char>.Shared.Rent(len, r =>
 			{
 				for (var i = 0; i < len; i++)
 				{
@@ -33,11 +33,7 @@ namespace Open.Evaluation.Arithmetic
 				}
 
 				return new string(r, 0, len);
-			}
-			finally
-			{
-				ArrayPool<char>.Shared.Return(r);
-			}
+			});
 		}
 
 		static readonly Regex SquareRootPattern = new(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);

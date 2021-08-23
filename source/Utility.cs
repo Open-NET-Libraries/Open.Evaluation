@@ -9,6 +9,47 @@ namespace Open.Evaluation
 {
 	internal static class Utility
 	{
+		const int POOL_ARRAY_LEN = 128;
+		public static void Rent<T>(this ArrayPool<T> pool, int minLength, Action<T[]> action)
+		{
+			if(minLength> POOL_ARRAY_LEN)
+			{
+				var a = pool.Rent(minLength);
+				try
+				{
+					action(a);
+				}
+				finally
+				{
+					pool.Return(a);
+				}
+			}
+			else
+			{
+				action(new T[minLength]);
+			}
+		}
+
+		public static TResult Rent<T, TResult>(this ArrayPool<T> pool, int minLength, Func<T[], TResult> action)
+		{
+			if (minLength > POOL_ARRAY_LEN)
+			{
+				var a = pool.Rent(minLength);
+				try
+				{
+					return action(a);
+				}
+				finally
+				{
+					pool.Return(a);
+				}
+			}
+			else
+			{
+				return action(new T[minLength]);
+			}
+		}
+
 		public static IEnumerable<T> SkipAt<T>(this IEnumerable<T> source, int index)
 		{
 			if (source is null) throw new ArgumentNullException(nameof(source));
@@ -85,49 +126,50 @@ namespace Open.Evaluation
 			}
 		}
 
-		public static List<T> Extract<T>(this IList<T> target, in Func<T, bool> predicate)
+		public static List<T> Extract<T>(this IList<T> target, Func<T, bool> predicate)
 		{
 			var len = target.Count;
-			var extracted = ListPool<T>.Shared.Take();
-			var removed = ArrayPool<int>.Shared.Rent(len);
-			var removedCount = 0;
-
-			for (var i = 0; i < len; i++)
+			return ArrayPool<int>.Shared.Rent(len, removed =>
 			{
-				var c = target[i];
-				if (!predicate(c)) continue;
-				extracted.Add(c);
-				removed[removedCount++] = i;
-			}
+				var extracted = ListPool<T>.Shared.Take();
+				var removedCount = 0;
+				for (var i = 0; i < len; i++)
+				{
+					var c = target[i];
+					if (!predicate(c)) continue;
+					extracted.Add(c);
+					removed[removedCount++] = i;
+				}
 
-			// Doing this in reverse lessens the load on removing from the list.
-			while (0 != removedCount--)
-				target.RemoveAt(removed[removedCount]);
+				// Doing this in reverse lessens the load on removing from the list.
+				while (0 != removedCount--)
+					target.RemoveAt(removed[removedCount]);
 
-			ArrayPool<int>.Shared.Return(removed);
-			return extracted;
+				return extracted;
+			});
 		}
 
 		public static List<TExtract> ExtractType<TExtract>(this IList target)
 		{
 			var len = target.Count;
-			var extracted = ListPool<TExtract>.Shared.Take();
-			var removed = ArrayPool<int>.Shared.Rent(len);
-			var removedCount = 0;
-
-			for (var i = 0; i < len; i++)
+			return ArrayPool<int>.Shared.Rent(len, removed =>
 			{
-				if (target[i] is not TExtract e) continue;
-				extracted.Add(e);
-				removed[removedCount++] = i;
-			}
+				var extracted = ListPool<TExtract>.Shared.Take();
+				var removedCount = 0;
 
-			// Doing this in reverse lessens the load on removing from the list.
-			while (0 != removedCount--)
-				target.RemoveAt(removed[removedCount]);
+				for (var i = 0; i < len; i++)
+				{
+					if (target[i] is not TExtract e) continue;
+					extracted.Add(e);
+					removed[removedCount++] = i;
+				}
 
-			ArrayPool<int>.Shared.Return(removed);
-			return extracted;
+				// Doing this in reverse lessens the load on removing from the list.
+				while (0 != removedCount--)
+					target.RemoveAt(removed[removedCount]);
+
+				return extracted;
+			});
 		}
 	}
 }
