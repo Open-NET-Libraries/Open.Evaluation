@@ -69,7 +69,7 @@ namespace Open.Evaluation.Tests
 		[TestClass]
 		public class SumCollapse2
 		{
-			
+
 			[TestMethod]
 			public void TestMultipleCombine()
 			{

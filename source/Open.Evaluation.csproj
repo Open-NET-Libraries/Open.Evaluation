@@ -1,31 +1,31 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFrameworks>netstandard2.1</TargetFrameworks>
-    <LangVersion>latest</LangVersion>
+	<PropertyGroup>
+		<TargetFrameworks>netstandard2.1</TargetFrameworks>
+		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-  </PropertyGroup>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <None Remove=".git" />
-    <None Remove=".gitignore" />
-    <None Remove="LICENSE.txt" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Remove=".git" />
+		<None Remove=".gitignore" />
+		<None Remove="LICENSE.txt" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <None Include="Arithmetic\Product.double.cs" />
-    <None Include="Arithmetic\Sum.double.cs" />
-  </ItemGroup>
+	<ItemGroup>
+		<None Include="Arithmetic\Product.double.cs" />
+		<None Include="Arithmetic\Sum.double.cs" />
+	</ItemGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-    <PackageReference Include="Open.Cloneable" Version="1.1.2" />
-    <PackageReference Include="Open.Disposable.ObjectPools" Version="2.6.7" />
-    <PackageReference Include="Open.Hierarchy" Version="1.8.3" />
-    <PackageReference Include="Open.Numeric.Primes" Version="2.0.1" />
-    <PackageReference Include="Open.RandomizationExtensions" Version="2.5.2" />
-    <PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
-  </ItemGroup>
+		<PackageReference Include="Open.Cloneable" Version="1.1.2" />
+		<PackageReference Include="Open.Disposable.ObjectPools" Version="2.6.7" />
+		<PackageReference Include="Open.Hierarchy" Version="1.8.3" />
+		<PackageReference Include="Open.Numeric.Primes" Version="2.0.1" />
+		<PackageReference Include="Open.RandomizationExtensions" Version="2.5.2" />
+		<PackageReference Include="System.Collections.Immutable" Version="5.0.0" />
+	</ItemGroup>
 
 </Project>

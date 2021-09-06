@@ -12,7 +12,7 @@ namespace Open.Evaluation
 		const int POOL_ARRAY_LEN = 128;
 		public static void Rent<T>(this ArrayPool<T> pool, int minLength, Action<T[]> action)
 		{
-			if(minLength> POOL_ARRAY_LEN)
+			if (minLength > POOL_ARRAY_LEN)
 			{
 				var a = pool.Rent(minLength);
 				try

@@ -245,8 +245,8 @@ namespace Open.Evaluation.Catalogs
 			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
 
-			var cat = catalog.Catalog; 
-		
+			var cat = catalog.Catalog;
+
 		retry:
 			if (!(root is IParent))
 				return root;
@@ -280,7 +280,7 @@ namespace Open.Evaluation.Catalogs
 				productOfSum = cat.ProductOfSums(sums);
 			}
 
-			var replacment = newChildren.Count==0 ? productOfSum : Product<TResult>.Create(cat, newChildren.Append(productOfSum));
+			var replacment = newChildren.Count == 0 ? productOfSum : Product<TResult>.Create(cat, newChildren.Append(productOfSum));
 			if (root == product)
 			{
 				root = replacment;

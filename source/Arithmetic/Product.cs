@@ -419,7 +419,7 @@ namespace Open.Evaluation.Arithmetic
 			IReadOnlyCollection<Sum<TResult>> sums)
 			where TResult : struct, IComparable
 		{
-			if(sums.Count==0) return catalog.GetConstant((TResult)(dynamic)1);
+			if (sums.Count == 0) return catalog.GetConstant((TResult)(dynamic)1);
 			using var e = sums.GetEnumerator();
 			if (!e.MoveNext()) throw new Exception("Collection empty with count>0.");
 			IEvaluate<TResult> p = e.Current;
