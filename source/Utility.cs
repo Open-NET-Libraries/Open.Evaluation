@@ -10,6 +10,26 @@ namespace Open.Evaluation
 	internal static class Utility
 	{
 		const int POOL_ARRAY_LEN = 128;
+		public static void Rent<T, TParam>(this ArrayPool<T> pool, int minLength, TParam param, Action<TParam, T[]> action)
+		{
+			if (minLength > POOL_ARRAY_LEN)
+			{
+				var a = pool.Rent(minLength);
+				try
+				{
+					action(param, a);
+				}
+				finally
+				{
+					pool.Return(a);
+				}
+			}
+			else
+			{
+				action(param, new T[minLength]);
+			}
+		}
+
 		public static void Rent<T>(this ArrayPool<T> pool, int minLength, Action<T[]> action)
 		{
 			if (minLength > POOL_ARRAY_LEN)
@@ -27,6 +47,26 @@ namespace Open.Evaluation
 			else
 			{
 				action(new T[minLength]);
+			}
+		}
+
+		public static TResult Rent<T, TParam, TResult>(this ArrayPool<T> pool, int minLength, TParam param, Func<TParam, T[], TResult> action)
+		{
+			if (minLength > POOL_ARRAY_LEN)
+			{
+				var a = pool.Rent(minLength);
+				try
+				{
+					return action(param, a);
+				}
+				finally
+				{
+					pool.Return(a);
+				}
+			}
+			else
+			{
+				return action(param, new T[minLength]);
 			}
 		}
 
@@ -127,12 +167,12 @@ namespace Open.Evaluation
 		}
 
 		public static List<T> Extract<T>(this IList<T> target, Func<T, bool> predicate)
-		{
-			var len = target.Count;
-			return ArrayPool<int>.Shared.Rent(len, removed =>
+			=> ArrayPool<int>.Shared.Rent(target.Count, (target, predicate), (param, removed) =>
 			{
+				var (target, predicate) = param;
 				var extracted = ListPool<T>.Shared.Take();
 				var removedCount = 0;
+				var len = target.Count;
 				for (var i = 0; i < len; i++)
 				{
 					var c = target[i];
@@ -143,20 +183,18 @@ namespace Open.Evaluation
 
 				// Doing this in reverse lessens the load on removing from the list.
 				while (0 != removedCount--)
-					target.RemoveAt(removed[removedCount]);
+				target.RemoveAt(removed[removedCount]);
 
 				return extracted;
 			});
-		}
 
 		public static List<TExtract> ExtractType<TExtract>(this IList target)
-		{
-			var len = target.Count;
-			return ArrayPool<int>.Shared.Rent(len, removed =>
+			=> ArrayPool<int>.Shared.Rent(target.Count, target, (target, removed) =>
 			{
 				var extracted = ListPool<TExtract>.Shared.Take();
 				var removedCount = 0;
 
+				var len = target.Count;
 				for (var i = 0; i < len; i++)
 				{
 					if (target[i] is not TExtract e) continue;
@@ -170,6 +208,5 @@ namespace Open.Evaluation
 
 				return extracted;
 			});
-		}
 	}
 }

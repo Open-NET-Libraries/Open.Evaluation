@@ -27,9 +27,9 @@ namespace Open.Evaluation
 			public const char INVERT = '/';
 			public const char SQUARE_ROOT = '√';
 
-			public static readonly IReadOnlyList<char> Operators
+			public static readonly ImmutableArray<char> Operators
 				= ImmutableArray.Create(ADD, MULTIPLY);
-			public static readonly IReadOnlyList<char> Functions
+			public static readonly ImmutableArray<char> Functions
 				= ImmutableArray.Create(SQUARE, INVERT, SQUARE_ROOT);
 
 			public static IEvaluate<double> GetOperator(
@@ -210,11 +210,11 @@ namespace Open.Evaluation
 			public const string AT_MOST = AtMost.PREFIX;
 			public const string EXACTLY = Exactly.PREFIX;
 
-			public static readonly IReadOnlyList<char> Operators
+			public static readonly ImmutableArray<char> Operators
 				= ImmutableArray.Create(AND, OR);
-			public static readonly IReadOnlyList<char> Functions
+			public static readonly ImmutableArray<char> Functions
 				= ImmutableArray.Create(NOT, CONDITIONAL);
-			public static readonly IReadOnlyList<string> Counting
+			public static readonly ImmutableArray<string> Counting
 				= ImmutableArray.Create(AT_LEAST, AT_MOST, EXACTLY);
 
 			public static IEvaluate<bool> GetOperator(
@@ -234,7 +234,6 @@ namespace Open.Evaluation
 					_ => throw new ArgumentException($"Invalid operator: {op}", nameof(op)),
 				};
 			}
-
 
 			public static IEvaluate<bool>? GetRandomOperator(
 				ICatalog<IEvaluate<bool>> catalog,

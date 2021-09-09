@@ -27,8 +27,12 @@ namespace Open.Evaluation
 		static readonly Regex products = GetOperatorRegex(@"\*");
 		static readonly Regex sums = GetOperatorRegex(@"\+");
 		static readonly Regex exponents = GetOperatorRegex(@"\^");
+		static readonly char[] plusMinus = new[] { '+', '-' };
 
-		static IEnumerable<IEvaluate<double>> SubMatches(Catalog<IEvaluate<double>> catalog, Dictionary<string, IEvaluate<double>> registry, Match m)
+		static IEnumerable<IEvaluate<double>> SubMatches(
+			Catalog<IEvaluate<double>> catalog,
+			Dictionary<string, IEvaluate<double>> registry,
+			Match m)
 		{
 			return m.Groups.
 				Cast<Group>()
@@ -39,15 +43,15 @@ namespace Open.Evaluation
 			{
 				if (double.TryParse(v, out var constant)) return catalog.GetConstant(constant);
 
-				v = v.Trim();
-				var negative = v.Length != 0 && v[0] == '-';
-				v = v.Trim('+', '-');
+				var span = v.AsSpan().Trim();
+				var negative = !span.IsEmpty && span[0] == '-';
+				span = span.Trim(plusMinus);
 
-				var len = v.Length;
-				if (len == 0 || v[0] != '{' || v[len - 1] != '}')
-					throw new InvalidOperationException($"Unrecognized evaluation sequence: {v}");
+				var len = span.Length;
+				if (len == 0 || span[0] != '{' || span[len - 1] != '}')
+					throw new InvalidOperationException($"Unrecognized evaluation sequence: {span.ToString()}");
 
-				v = v.TrimStart('{').TrimEnd('}');
+				v = span.TrimStart('{').TrimEnd('}').ToString();
 
 				if (negative)
 				{
@@ -77,9 +81,9 @@ namespace Open.Evaluation
 			if (oParenCount > cParenCount) throw new FormatException("Missing close parenthesis.");
 			if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
 
-			var count = 0;
 			return DictionaryPool<string, IEvaluate<double>>.Shared.Rent(registry =>
 			{
+				var count = 0;
 				string last;
 				do
 				{

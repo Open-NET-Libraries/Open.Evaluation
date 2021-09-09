@@ -22,10 +22,9 @@ namespace Open.Evaluation.Arithmetic
 		public static string ConvertToSuperScript(string number)
 		{
 			Debug.Assert(number != null);
-			var len = number.Length;
-
-			return ArrayPool<char>.Shared.Rent(len, r =>
+			return ArrayPool<char>.Shared.Rent(number.Length, number, (number, r) =>
 			{
+				var len = number.Length;
 				for (var i = 0; i < len; i++)
 				{
 					var n = char.GetNumericValue(number[i]);
