@@ -136,7 +136,7 @@ namespace Open.Evaluation.Catalogs
 			if (isFn)
 			{
 				// Functions with no other options?
-				if (Registry.Arithmetic.Functions.Count < 2)
+				if (Registry.Arithmetic.Functions.Length < 2)
 				{
 					if (node.Count < 2)
 						return null;
@@ -147,7 +147,7 @@ namespace Open.Evaluation.Catalogs
 			if (!isFn)
 			{
 				// Never will happen, but logic states that this is needed.
-				if (Registry.Arithmetic.Operators.Count < 2)
+				if (Registry.Arithmetic.Operators.Length < 2)
 					return null;
 			}
 

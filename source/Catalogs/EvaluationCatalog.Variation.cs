@@ -50,7 +50,7 @@ namespace Open.Evaluation.Catalogs
 
 			// Search for potential futility...
 			// Basically, if there is no dynamic nodes left after reduction then it's not worth removing.
-			return !parent.Any(g => g != gene && !(g.Value is IConstant))
+			return !parent.Any(g => g != gene && g.Value is not IConstant)
 				   && parent.IsValidForRemoval(true);
 		}
 
@@ -195,7 +195,7 @@ namespace Open.Evaluation.Catalogs
 			if (root is null) throw new ArgumentNullException(nameof(root));
 			Contract.EndContractBlock();
 
-			if (!(root is IParent))
+			if (root is not IParent)
 				return root;
 
 			var cat = catalog.Catalog;
@@ -248,7 +248,7 @@ namespace Open.Evaluation.Catalogs
 			var cat = catalog.Catalog;
 
 		retry:
-			if (!(root is IParent))
+			if (root is not IParent)
 				return root;
 
 			var tree = cat.Factory.Map(root);

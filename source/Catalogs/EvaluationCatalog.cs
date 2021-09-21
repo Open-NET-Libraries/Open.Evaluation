@@ -18,10 +18,10 @@ namespace Open.Evaluation.Catalogs
 
 		protected override TItem OnBeforeRegistration<TItem>(TItem item)
 		{
-			Debug.Assert(!(item is Exponent<double>) || item is Exponent);
-			Debug.Assert(!(item is Sum<double>) || item is Sum);
-			Debug.Assert(!(item is Product<double>) || item is Product);
-			Debug.Assert(!(item is Constant<double>) || item is Constant);
+			Debug.Assert(item is not Exponent<double> || item is Exponent);
+			Debug.Assert(item is not Sum<double> || item is Sum);
+			Debug.Assert(item is not Product<double> || item is Product);
+			Debug.Assert(item is not Constant<double> || item is Constant);
 
 			return item;
 		}

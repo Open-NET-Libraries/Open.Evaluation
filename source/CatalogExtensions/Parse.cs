@@ -74,8 +74,6 @@ namespace Open.Evaluation
 			if (string.IsNullOrWhiteSpace(evaluation))
 				throw new ArgumentException("Must be more than just whitespace or empty.", nameof(evaluation));
 
-			evaluation = evaluation.Trim();
-
 			var oParenCount = openParen.Matches(evaluation).Count;
 			var cParenCount = closeParen.Matches(evaluation).Count;
 			if (oParenCount > cParenCount) throw new FormatException("Missing close parenthesis.");
@@ -84,6 +82,7 @@ namespace Open.Evaluation
 			return DictionaryPool<string, IEvaluate<double>>.Shared.Rent(registry =>
 			{
 				var count = 0;
+				evaluation = evaluation.Trim();
 				string last;
 				do
 				{
