@@ -263,7 +263,6 @@ namespace Open.Evaluation.Catalogs
 				return root;
 			}
 
-
 			var product = (Product<TResult>)first.Value;
 			var children = product.Children;
 			var newChildren = children.ToList();
@@ -280,6 +279,7 @@ namespace Open.Evaluation.Catalogs
 				productOfSum = cat.ProductOfSums(sums);
 			}
 
+			var oRoot = root;
 			var replacment = newChildren.Count == 0 ? productOfSum : Product<TResult>.Create(cat, newChildren.Append(productOfSum));
 			if (root == product)
 			{
@@ -296,6 +296,7 @@ namespace Open.Evaluation.Catalogs
 
 			tree.Recycle();
 
+			if (root == oRoot) return root;
 			goto retry;
 		}
 
