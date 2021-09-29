@@ -101,7 +101,7 @@ namespace Open.Evaluation.Arithmetic
 
 				default:
 					{
-						using var childListRH = ListPool<IEvaluate<double>>.Shared.Rent();
+						using var childListRH = ListPool<IEvaluate<double>>.Rent();
 						var childList = childListRH.Item;
 						childList.AddRange(children);
 						return SumOfCollection(catalog, childList);
@@ -124,7 +124,7 @@ namespace Open.Evaluation.Arithmetic
 			var v0 = e.Current;
 			if (!e.MoveNext()) return v0;
 
-			using var childListRH = ListPool<IEvaluate<double>>.Shared.Rent();
+			using var childListRH = ListPool<IEvaluate<double>>.Rent();
 			var childList = childListRH.Item;
 			childList.Add(v0);
 			do { childList.Add(e.Current); }

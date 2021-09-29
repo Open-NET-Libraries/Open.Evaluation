@@ -45,7 +45,7 @@ namespace Open.Evaluation.Catalogs
 
 			var n = node;
 			var isRoot = n == n.Root;
-			Debug.Assert(!isRoot || n.Parent == null);
+			Debug.Assert(!isRoot || n.Parent is null);
 			// ReSharper disable once ImplicitlyCapturedClosure
 			bool parentIsSquareRoot() => !isRoot && n.Parent?.Value is Exponent<double> ex && ex.IsSquareRoot();
 

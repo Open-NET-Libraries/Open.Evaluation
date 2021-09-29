@@ -167,46 +167,48 @@ namespace Open.Evaluation
 		}
 
 		public static List<T> Extract<T>(this IList<T> target, Func<T, bool> predicate)
-			=> ArrayPool<int>.Shared.Rent(target.Count, (target, predicate), (param, removed) =>
-			{
-				var (target, predicate) = param;
-				var extracted = ListPool<T>.Shared.Take();
-				var removedCount = 0;
-				var len = target.Count;
-				for (var i = 0; i < len; i++)
-				{
-					var c = target[i];
-					if (!predicate(c)) continue;
-					extracted.Add(c);
-					removed[removedCount++] = i;
-				}
+		{
+			var extracted = ListPool<T>.Shared.Take();
+			using var lease = MemoryPool<int>.Shared.Rent(target.Count);
+			var removed = lease.Memory.Span;
+			var removedCount = 0;
+			var len = target.Count;
 
-				// Doing this in reverse lessens the load on removing from the list.
-				while (0 != removedCount--)
+			for (var i = 0; i < len; i++)
+			{
+				var c = target[i];
+				if (!predicate(c)) continue;
+				extracted.Add(c);
+				removed[removedCount++] = i;
+			}
+
+			// Doing this in reverse lessens the load on removing from the list.
+			while (0 != removedCount--)
 				target.RemoveAt(removed[removedCount]);
 
-				return extracted;
-			});
+			return extracted;
+		}
 
 		public static List<TExtract> ExtractType<TExtract>(this IList target)
-			=> ArrayPool<int>.Shared.Rent(target.Count, target, (target, removed) =>
+		{
+			var extracted = ListPool<TExtract>.Shared.Take();
+			using var lease = MemoryPool<int>.Shared.Rent(target.Count);
+			var removed = lease.Memory.Span;
+			var removedCount = 0;
+			var len = target.Count;
+
+			for (var i = 0; i < len; i++)
 			{
-				var extracted = ListPool<TExtract>.Shared.Take();
-				var removedCount = 0;
+				if (target[i] is not TExtract e) continue;
+				extracted.Add(e);
+				removed[removedCount++] = i;
+			}
 
-				var len = target.Count;
-				for (var i = 0; i < len; i++)
-				{
-					if (target[i] is not TExtract e) continue;
-					extracted.Add(e);
-					removed[removedCount++] = i;
-				}
+			// Doing this in reverse lessens the load on removing from the list.
+			while (0 != removedCount--)
+				target.RemoveAt(removed[removedCount]);
 
-				// Doing this in reverse lessens the load on removing from the list.
-				while (0 != removedCount--)
-					target.RemoveAt(removed[removedCount]);
-
-				return extracted;
-			});
+			return extracted;
+		}
 	}
 }

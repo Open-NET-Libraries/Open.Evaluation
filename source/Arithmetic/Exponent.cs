@@ -44,7 +44,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			var pow = catalog.GetReduced(Power);
 			IEvaluate<TResult> bas;
 			if (pow is Constant<TResult> cPow)
@@ -107,7 +107,7 @@ namespace Open.Evaluation.Arithmetic
 		public static bool IsPowerOf(this Exponent<double> exponent, in double power)
 		{
 			// ReSharper disable once CompareOfFloatsByEqualityOperator
-			Debug.Assert(exponent != null);
+			Debug.Assert(exponent is not null);
 			return exponent.Power is Constant<double> p && p.Value == power;
 		}
 

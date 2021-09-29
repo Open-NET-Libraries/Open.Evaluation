@@ -10,10 +10,7 @@ namespace Open.Evaluation
 	{
 		public object Context { get; private set; }
 
-		public ParameterContext(object context)
-		{
-			Context = context ?? throw new ArgumentNullException(nameof(context));
-		}
+		public ParameterContext(object context) => Context = context ?? throw new ArgumentNullException(nameof(context));
 
 		[return: NotNull]
 		public TResult GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, TResult> factory)
@@ -48,13 +45,9 @@ namespace Open.Evaluation
 
 		// This code added to correctly implement the disposable pattern.
 		[SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "<Pending>")]
-		public void Dispose()
-		{
+		public void Dispose() =>
 			// Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-			Dispose(true);
-			// TODO: uncomment the following line if the finalizer is overridden above.
-			// GC.SuppressFinalize(this);
-		}
+			Dispose(true);// TODO: uncomment the following line if the finalizer is overridden above.// GC.SuppressFinalize(this);
 		#endregion
 	}
 }

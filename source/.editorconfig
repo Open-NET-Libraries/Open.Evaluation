@@ -14,3 +14,12 @@ dotnet_diagnostic.CA1062.severity = silent
 
 # CA1303: Do not pass literals as localized parameters
 dotnet_diagnostic.CA1303.severity = silent
+
+# HAA0502: Explicit new reference type allocation
+dotnet_diagnostic.HAA0502.severity = silent
+
+# HAA0401: Possible allocation of reference type enumerator
+dotnet_diagnostic.HAA0401.severity = silent
+
+# HAA0601: Value type to reference type conversion causing boxing allocation
+dotnet_diagnostic.HAA0601.severity = silent

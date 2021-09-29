@@ -39,7 +39,7 @@ namespace Open.Evaluation.Catalogs
 			bool operateDirectly = false)
 		{
 			if (target is null) throw new ArgumentNullException(nameof(target));
-			Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() != null);
+			Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() is not null);
 			Contract.EndContractBlock();
 
 			if (!operateDirectly)
@@ -58,7 +58,7 @@ namespace Open.Evaluation.Catalogs
 					{
 						var f = FixHierarchy(n, true);
 						var v = f.Value;
-						Debug.Assert(v != null);
+						Debug.Assert(v is not null);
 						if (f != n) f.Recycle(); // Only the owner of the target node should do the recycling.
 						return Register(v);
 					}).ToArray();
@@ -155,7 +155,7 @@ namespace Open.Evaluation.Catalogs
 			{
 				var replacement = clonedNodeHandler(node);
 				if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
-				if (parent == null) return replacement;
+				if (parent is null) return replacement;
 
 				var rn = Factory.Map(replacement);
 				try
@@ -196,7 +196,7 @@ namespace Open.Evaluation.Catalogs
 				if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
 				try
 				{
-					if (parent == null)
+					if (parent is null)
 						return FixHierarchy(replacement).Recycle()!;
 
 					// ReSharper disable once InvertIf

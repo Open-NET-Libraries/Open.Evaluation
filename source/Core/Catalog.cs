@@ -13,11 +13,7 @@ namespace Open.Evaluation.Core
 	public class Catalog<T> : DisposableBase, ICatalog<T>
 		where T : class, IEvaluate
 	{
-		protected override void OnDispose()
-		{
-			Registry.Clear();
-			//Reductions.Clear();
-		}
+		protected override void OnDispose() => Registry.Clear();//Reductions.Clear();
 
 		readonly ConcurrentDictionary<string, T> Registry = new();
 
@@ -38,10 +34,10 @@ namespace Open.Evaluation.Core
 			where TItem : T
 		{
 			if (item is null) throw new ArgumentNullException(nameof(item));
-			Contract.Ensures(Contract.Result<TItem>() != null);
+			Contract.Ensures(Contract.Result<TItem>() is not null);
 			Contract.EndContractBlock();
 			var result = Registry.GetOrAdd(item.ToStringRepresentation(), OnBeforeRegistration(item));
-			Debug.Assert(result != null);
+			Debug.Assert(result is not null);
 			Debug.Assert(result is TItem);
 			return (TItem)result;
 		}
@@ -52,13 +48,13 @@ namespace Open.Evaluation.Core
 		{
 			if (id is null) throw new ArgumentNullException(nameof(id));
 			if (factory is null) throw new ArgumentNullException(nameof(factory));
-			Contract.Ensures(Contract.Result<TItem>() != null);
+			Contract.Ensures(Contract.Result<TItem>() is not null);
 			Contract.EndContractBlock();
 
 			return (TItem)Registry.GetOrAdd(id, k =>
 			{
 				var e = factory(k);
-				Debug.Assert(e != null);
+				Debug.Assert(e is not null);
 				var hash = e.ToStringRepresentation();
 				Debug.Assert(hash == k);
 				if (hash != k)
@@ -153,10 +149,7 @@ namespace Open.Evaluation.Core
 		{
 			internal new TCatalog Catalog { get; }
 
-			protected SubmoduleBase(TCatalog catalog) : base(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory)
-			{
-				Catalog = catalog;
-			}
+			protected SubmoduleBase(TCatalog catalog) : base(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory) => Catalog = catalog;
 		}
 	}
 }

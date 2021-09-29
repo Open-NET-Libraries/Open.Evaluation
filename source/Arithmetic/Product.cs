@@ -46,7 +46,7 @@ namespace Open.Evaluation.Arithmetic
 		protected override IEvaluate<TResult> Reduction(
 			ICatalog<IEvaluate<TResult>> catalog)
 		{
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			var one = catalog.GetConstant((TResult)(dynamic)1);
 
 			// Phase 1: Flatten products of products.
@@ -118,7 +118,7 @@ namespace Open.Evaluation.Arithmetic
 
 			var multiple = children.OfType<IConstant<TResult>>().FirstOrDefault();
 			// ReSharper disable once InvertIf
-			if (multiple != null)
+			if (multiple is not null)
 			{
 				var multipleValue = Convert.ToDouble(multiple.Value, CultureInfo.InvariantCulture);
 				// ReSharper disable once InvertIf
@@ -193,7 +193,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
-			Debug.Assert(result != null);
+			Debug.Assert(result is not null);
 			if (index != 0 && child is string c)
 			{
 				var m = IsInverted.Match(c);
@@ -230,7 +230,7 @@ namespace Open.Evaluation.Arithmetic
 		public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
 		{
 			multiple = null;
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			var reduced = catalog.GetReduced(this);
 			return reduced is Product<TResult> product
 				? product.ExtractMultiple(catalog, out multiple)
@@ -324,21 +324,26 @@ namespace Open.Evaluation.Arithmetic
 			this ICatalog<IEvaluate<TResult>> catalog,
 			IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
 			where TResult : struct, IComparable
-			=> source.Select(c =>
+		{
+			foreach (var c in source)
 			{
 				if (c is not Product<TResult> p)
-					return (c.ToStringRepresentation(), default(IConstant<TResult>?), c);
+				{
+					yield return (c.ToStringRepresentation(), default(IConstant<TResult>?), c);
+					continue;
+				}
 
 				var reduced = reduce
 					? p.ReductionWithMutlipleExtracted(catalog, out var multiple)
 					: p.ExtractMultiple(catalog, out multiple);
 
-				return (
+				yield return (
 					reduced.ToStringRepresentation(),
 					multiple,
 					reduced
 				);
-			});
+			}
+		}
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
@@ -349,7 +354,7 @@ namespace Open.Evaluation.Arithmetic
 			if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count == 0)
 				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 
-			using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();
+			using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
 			var childList = childListRH.Item;
 			childList.AddRange(children);
 			if (childList.Count == 0)

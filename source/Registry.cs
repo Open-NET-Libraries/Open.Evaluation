@@ -69,7 +69,7 @@ namespace Open.Evaluation
 				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 
-				if (except == null || except.Length == 0)
+				if (except is null || except.Length == 0)
 					return GetOperator(catalog, Operators.RandomSelectOne(), children);
 
 				return Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))
@@ -147,7 +147,7 @@ namespace Open.Evaluation
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 				Contract.EndContractBlock();
 
-				if (except == null || except.Length == 0)
+				if (except is null || except.Length == 0)
 					return GetFunction(catalog, Functions.RandomSelectOne(), children);
 
 				return Functions.TryRandomSelectOne(out var op, new HashSet<char>(except))
@@ -175,7 +175,7 @@ namespace Open.Evaluation
 				Contract.EndContractBlock();
 
 				char op;
-				if (except == null || except.Length == 0)
+				if (except is null || except.Length == 0)
 					op = Functions.RandomSelectOne();
 				else
 					Functions.TryRandomSelectOne(out op, new HashSet<char>(except));
@@ -244,7 +244,7 @@ namespace Open.Evaluation
 				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 
-				if (except == null || except.Length == 0)
+				if (except is null || except.Length == 0)
 					return GetOperator(catalog, Operators.RandomSelectOne(), children);
 
 				return Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))

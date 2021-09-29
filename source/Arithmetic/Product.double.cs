@@ -67,7 +67,7 @@ namespace Open.Evaluation.Arithmetic
 			if (children is IReadOnlyCollection<IEvaluate<double>> ch && ch.Count == 0)
 				throw new InvalidOperationException("Cannot produce a product of an empty set.");
 
-			using var childListRH = ListPool<IEvaluate<double>>.Shared.Rent();
+			using var childListRH = ListPool<IEvaluate<double>>.Rent();
 			var childList = childListRH.Item;
 			childList.AddRange(children);
 			if (childList.Count == 0)

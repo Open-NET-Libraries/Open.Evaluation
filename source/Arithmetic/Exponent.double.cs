@@ -21,7 +21,7 @@ namespace Open.Evaluation.Arithmetic
 
 		public static string ConvertToSuperScript(string number)
 		{
-			Debug.Assert(number != null);
+			Debug.Assert(number is not null);
 			return ArrayPool<char>.Shared.Rent(number.Length, number, (number, r) =>
 			{
 				var len = number.Length;
@@ -41,7 +41,7 @@ namespace Open.Evaluation.Arithmetic
 		protected override string ToStringInternal(object contents)
 		{
 			var value = base.ToStringInternal(contents);
-			Debug.Assert(value != null);
+			Debug.Assert(value is not null);
 			var m = SquareRootPattern.Match(value);
 			if (m.Success)
 				return '√' + m.Groups[1].Value;
@@ -118,10 +118,10 @@ namespace Open.Evaluation.Arithmetic
 			}
 
 			//cPow = pow as IConstant<double>;
-			//if (cPow != null && cPow.Value < 0 && bas is Product<double> pProd)
+			//if (cPow is not null && cPow.Value < 0 && bas is Product<double> pProd)
 			//{
 			//	var nBas = pProd.ExtractMultiple(catalog, out var multiple);
-			//	if (multiple != null && nBas != bas && multiple.Value < 0)
+			//	if (multiple is not null && nBas != bas && multiple.Value < 0)
 			//	{
 			//		multiple = catalog.ProductOfConstants(-1, multiple);
 			//		var divisor = catalog.ProductOf(multiple, nBas);

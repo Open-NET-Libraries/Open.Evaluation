@@ -43,8 +43,10 @@ namespace Open.Evaluation.Core
 			if (contents is not IEnumerable collection)
 				return base.ToStringInternal(contents);
 
-			var r = StringBuilderPool.Shared.RentToString(result =>
+			string r;
+			using (var lease = StringBuilderPool.Rent())
 			{
+				var result = lease.Item;
 				result.Append('(');
 				var index = -1;
 				foreach (var o in collection)
@@ -52,7 +54,8 @@ namespace Open.Evaluation.Core
 					ToStringInternal_OnAppendNextChild(result, ++index, o);
 				}
 				result.Append(')');
-			});
+				r = result.ToString();
+			}
 
 			var isEmpty = r == "()";
 			Debug.Assert(!isEmpty, "Operator has no children.");
@@ -62,12 +65,18 @@ namespace Open.Evaluation.Core
 
 		protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
-			if (index != 0) result.Append(SymbolString);
+			if (index is not 0) result.Append(SymbolString);
 			result.Append(child);
 		}
 
 		public override string ToString(object context)
-			=> ToStringInternal(Children.Select(c => c.ToString(context)));
+			=> ToStringInternal(ChildToString(context));
+
+		protected IEnumerable<string> ChildToString(object context)
+		{
+			foreach (var child in Children)
+				yield return child.ToString(context);
+		}
 
 		protected IEnumerable<object> ChildResults(object context)
 		{

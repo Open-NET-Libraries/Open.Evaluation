@@ -33,7 +33,7 @@ namespace Open.Evaluation.Arithmetic
 		{
 			if (a is Product<TResult> aP)
 			{
-				int count = 0;
+				var count = 0;
 				IConstant<TResult>? v = default;
 				foreach (var c in aP.Children.OfType<IConstant<TResult>>())
 				{
@@ -79,7 +79,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 		{
-			Debug.Assert(result != null);
+			Debug.Assert(result is not null);
 			if (index != 0 && child is string c)
 			{
 				var m = HasNegativeMultiple.Match(c);
@@ -105,7 +105,7 @@ namespace Open.Evaluation.Arithmetic
 
 		protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
 		{
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			var zero = GetConstant(catalog, (TResult)(dynamic)0);
 
 			// Phase 1: Flatten sums of sums.
@@ -201,7 +201,7 @@ namespace Open.Evaluation.Arithmetic
 			greatestFactor = one;
 			sum = this;
 			// Phase 5: Try and group by GCF:
-			using var products = ListPool<Product<TResult>>.Shared.Rent();
+			using var products = ListPool<Product<TResult>>.Rent();
 			foreach (var c in Children)
 			{
 				// All of them must be products for GCF to work.
@@ -212,7 +212,7 @@ namespace Open.Evaluation.Arithmetic
 			}
 
 			// Try and get all the constants, and if a product does not have one, then done.
-			using var constantRH = ListPool<TResult>.Shared.Rent();
+			using var constantRH = ListPool<TResult>.Rent();
 			var constants = constantRH.Item;
 			foreach (var p in products.Item)
 			{
@@ -231,7 +231,7 @@ namespace Open.Evaluation.Arithmetic
 			}
 
 			// Convert all the constants to factors, and if any are invalid for factoring, then done.
-			using var factors = ListPool<ulong>.Shared.Rent();
+			using var factors = ListPool<ulong>.Rent();
 			foreach (var v in constants)
 			{
 				var d = Math.Abs(Convert.ToDecimal(v, CultureInfo.InvariantCulture));
@@ -313,7 +313,7 @@ namespace Open.Evaluation.Arithmetic
 
 				default:
 					{
-						using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();
+						using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
 						var childList = childListRH.Item;
 						childList.AddRange(children);
 						return SumOfCollection(catalog, childList);
@@ -338,7 +338,7 @@ namespace Open.Evaluation.Arithmetic
 			var v0 = e.Current;
 			if (!e.MoveNext()) return v0;
 
-			using var childListRH = ListPool<IEvaluate<TResult>>.Shared.Rent();
+			using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
 			var childList = childListRH.Item;
 			childList.Add(v0);
 			do { childList.Add(e.Current); }

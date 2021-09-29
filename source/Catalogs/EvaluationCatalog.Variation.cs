@@ -39,7 +39,7 @@ namespace Open.Evaluation.Catalogs
 			if (gene == gene.Root) return ifRoot;
 			// Validate worthyness.
 			var parent = gene.Parent;
-			Debug.Assert(parent != null);
+			Debug.Assert(parent is not null);
 
 			switch (parent.Value)
 			{
@@ -66,7 +66,7 @@ namespace Open.Evaluation.Catalogs
 			Node<IEvaluate<double>> node,
 			[NotNullWhen(true)] out IEvaluate<double> newRoot)
 		{
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (node is null) throw new ArgumentNullException(nameof(node));
 			if (IsValidForRemoval(node))
@@ -96,7 +96,7 @@ namespace Open.Evaluation.Catalogs
 			int descendantIndex,
 			out IEvaluate<double> newRoot)
 		{
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
 
@@ -171,7 +171,7 @@ namespace Open.Evaluation.Catalogs
 
 			var c = catalog.Catalog;
 			var n = Registry.Arithmetic.GetRandomFunction(c, node.Value!);
-			return n == null ? null : c.ApplyClone(node, newNode => n);
+			return n is null ? null : c.ApplyClone(node, newNode => n);
 		}
 
 		public static IEvaluate<double> ApplyFunctionAt(
@@ -205,7 +205,7 @@ namespace Open.Evaluation.Catalogs
 				.Where(d => d.Value is IParameter<double>)
 				.ToArray())
 			{
-				if (p.Parent == null)
+				if (p.Parent is null)
 				{
 					Debugger.Break();
 					continue; // Should never happen.
@@ -287,7 +287,7 @@ namespace Open.Evaluation.Catalogs
 			}
 			else
 			{
-				if (first.Parent == null) throw new Exception("Impossbile to replace.");
+				if (first.Parent is null) throw new Exception("Impossbile to replace.");
 				first.Parent.Replace(first, cat.Factory.Map(replacment));
 				var pet = cat.FixHierarchy(tree).Recycle()!;
 

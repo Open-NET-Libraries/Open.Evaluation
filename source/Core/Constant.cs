@@ -16,10 +16,7 @@ namespace Open.Evaluation.Core
 		where TValue : IComparable
 	{
 
-		protected Constant(TValue value)
-		{
-			Value = value;
-		}
+		protected Constant(TValue value) => Value = value;
 
 		/// <inheritdoc />
 		public TValue Value
@@ -30,7 +27,10 @@ namespace Open.Evaluation.Core
 		IComparable IConstant.Value => Value;
 
 		protected static string ToStringRepresentation(in TValue value)
-			=> string.Empty + value;
+		{
+			Debug.Assert(value is not null);
+			return value.ToString();
+		}
 
 		protected override string ToStringRepresentationInternal()
 			=> ToStringRepresentation(Value);
@@ -63,7 +63,7 @@ namespace Open.Evaluation.Core
 			in TValue value)
 			where TValue : IComparable
 		{
-			Debug.Assert(catalog != null);
+			Debug.Assert(catalog is not null);
 			// ReSharper disable once SuspiciousTypeConversion.Global
 			if (catalog is ICatalog<IEvaluate<double>> dCat && value is double d)
 				return (dynamic)Constant.Create(dCat, d);
