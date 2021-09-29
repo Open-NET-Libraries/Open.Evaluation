@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using Open.Hierarchy;
 using System;
 using System.Collections;
@@ -42,7 +43,7 @@ namespace Open.Evaluation.Core
 			if (contents is not IEnumerable collection)
 				return base.ToStringInternal(contents);
 
-			var r = StringBuilderPool.Rent(result =>
+			var r = StringBuilderPool.Shared.RentToString(result =>
 			{
 				result.Append('(');
 				var index = -1;
