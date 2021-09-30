@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -34,13 +35,19 @@ namespace Open.Evaluation.Core
 
 		public static Constant SumOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			double c1, params IConstant<double>[] rest)
-			=> GetConstant(catalog, c1 + rest.Sum(s => s.Value));
+			double c1, in IConstant<double> c2, params IConstant<double>[] rest)
+		{
+			if (c2 is null) throw new ArgumentNullException(nameof(c2));
+			return GetConstant(catalog, c1 + c2.Value + rest.Sum(s => s.Value));
+		}
 
 		public static Constant SumOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			IConstant<double> c1, params IConstant<double>[] rest)
-			=> SumOfConstants(catalog, rest.Append(c1));
+			in IConstant<double> c1, IConstant<double> c2, params IConstant<double>[] rest)
+		{
+			if (c1 is null) throw new ArgumentNullException(nameof(c1));
+			return SumOfConstants(catalog, c1.Value, c2, rest);
+		}
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
@@ -49,9 +56,10 @@ namespace Open.Evaluation.Core
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			IConstant<double> c1, params IConstant<double>[] rest)
+			in IConstant<double> c1, in IConstant<double> c2, params IConstant<double>[] rest)
 		{
-			if (c1 is null) throw new System.ArgumentNullException(nameof(c1));
+			if (c1 is null) throw new ArgumentNullException(nameof(c1));
+			if (c2 is null) throw new ArgumentNullException(nameof(c2));
 
 			return ProductOfConstants(catalog, c1.Value, rest);
 		}
@@ -65,8 +73,8 @@ namespace Open.Evaluation.Core
 
 		public static Constant ProductOfConstants(
 			this ICatalog<IEvaluate<double>> catalog,
-			double c1, params IConstant<double>[] rest)
-			=> ProductOfConstants(catalog, c1, (IEnumerable<IConstant<double>>)rest);
+			double c1, in IConstant<double> c2, params IConstant<double>[] rest)
+			=> ProductOfConstants(catalog, c1, rest.Prepend(c2));
 
 	}
 

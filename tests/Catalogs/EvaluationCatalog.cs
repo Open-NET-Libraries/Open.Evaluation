@@ -11,16 +11,17 @@ namespace Open.Evaluation.Tests.Catalogs
 	{
 
 		[TestMethod]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "HAA0101:Array allocation for params parameter", Justification = "Reviewed.  Acceptable.")]
 		public void FixHierarchy()
 		{
 			using var catalog = new EvaluationCatalog<double>();
 			var branches = Enumerable
-.Range(0, 3)
-.Select(i => catalog.ProductOf(
-catalog.GetParameter(i),
-catalog.GetParameter(i + 1)
-))
-.ToArray();
+				.Range(0, 3)
+				.Select(i => catalog.ProductOf(
+					catalog.GetParameter(i),
+					catalog.GetParameter(i + 1)
+				))
+				.ToArray();
 
 			var group01 = catalog.SumOf(branches);
 
@@ -28,7 +29,10 @@ catalog.GetParameter(i + 1)
 
 			var group03 = catalog.ProductOf(group01, group02);
 
-			var group04 = catalog.SumOf(group03, catalog.GetParameter(0), catalog.GetConstant(5));
+			var group04 = catalog.SumOf(
+				group03,
+				catalog.GetParameter(0),
+				catalog.GetConstant(5));
 
 			var map = catalog.Factory.Map(group04);
 

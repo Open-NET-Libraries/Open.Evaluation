@@ -14,10 +14,10 @@ namespace Open.Evaluation.Core
 		}
 
 		internal new static Parameter Create(ICatalog<IEvaluate<double>> catalog, ushort id)
-			=> catalog.Register(ToStringRepresentation(id), k => new Parameter(id));
+			=> catalog.Register(ToStringRepresentation(id), id, (k,id) => new Parameter(id));
 
 		public override IEvaluate<double> NewUsing(ICatalog<IEvaluate<double>> catalog, ushort id)
-			=> catalog.Register(ToStringRepresentation(id), k => new Parameter(id));
+			=> catalog.Register(ToStringRepresentation(id), id, (k, id) => new Parameter(id));
 
 	}
 

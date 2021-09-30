@@ -177,6 +177,51 @@ namespace Open.Evaluation.Catalogs
 			}
 		}
 
+
+		/// <summary>
+		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
+		/// </summary>
+		/// <param name="sourceNode">The node to clone.</param>
+		/// <param name="clonedNodeHandler">the handler to pass the cloned node to.</param>
+		/// <returns>The resultant root evaluation corrected by .FixHierarchy()</returns>
+		public IEvaluate<T> ApplyClone<TParam>(
+			Node<IEvaluate<T>> sourceNode,
+			TParam param, // allow passthrough of data to avoid allocation.
+			Func<Node<IEvaluate<T>>, TParam, IEvaluate<T>> clonedNodeHandler)
+		{
+			if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+			if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
+			Contract.EndContractBlock();
+
+			var node = sourceNode.CloneTree(); // * new 1
+			var root = node.Root;
+			var parent = node.Parent;
+			try
+			{
+				var replacement = clonedNodeHandler(node, param);
+				if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
+				if (parent is null) return replacement;
+
+				var rn = Factory.Map(replacement);
+				try
+				{
+					parent.Replace(node, rn);
+					node.Recycle();
+
+					return FixHierarchy(root).Recycle()!;
+				}
+				finally
+				{
+
+					rn.Recycle();
+				}
+			}
+			finally
+			{
+				root.Recycle(); // * 1
+			}
+		}
+
 		/// <summary>
 		/// Provides a cloned node (as part of a cloned tree) for the handler to operate on.
 		/// </summary>

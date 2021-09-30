@@ -111,18 +111,19 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in TValue c1, params IConstant<TValue>[] rest)
+			in TValue c1, in IConstant<TValue> c2, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
-			=> SumOfConstants(catalog, c1, (IEnumerable<IConstant<TValue>>)rest);
+			=> SumOfConstants(catalog, c1, rest.Prepend(c2));
 
 		public static Constant<TValue> SumOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in IConstant<TValue> c1, params IConstant<TValue>[] rest)
+			in IConstant<TValue> c1, in IConstant<TValue> c2, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
 		{
 			if (c1 is null) throw new ArgumentNullException(nameof(c1));
+			if (c2 is null) throw new ArgumentNullException(nameof(c2));
 
-			return SumOfConstants(catalog, c1.Value, rest);
+			return SumOfConstants(catalog, c1.Value, rest.Prepend(c2));
 		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
@@ -167,19 +168,22 @@ namespace Open.Evaluation.Core
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in IConstant<TValue> c1, params IConstant<TValue>[] rest)
+			in IConstant<TValue> c1,
+			in IConstant<TValue> c2,
+			params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
 		{
 			if (c1 is null) throw new ArgumentNullException(nameof(c1));
+			if (c2 is null) throw new ArgumentNullException(nameof(c2));
 
-			return ProductOfConstants(catalog, c1.Value, (IEnumerable<IConstant<TValue>>)rest);
+			return ProductOfConstants(catalog, c1.Value, rest.Prepend(c2));
 		}
 
 		public static Constant<TValue> ProductOfConstants<TValue>(
 			this ICatalog<IEvaluate<TValue>> catalog,
-			in TValue c1, params IConstant<TValue>[] rest)
+			in TValue c1, IConstant<TValue> c2, params IConstant<TValue>[] rest)
 			where TValue : struct, IComparable
-			=> ProductOfConstants(catalog, c1, (IEnumerable<IConstant<TValue>>)rest);
+			=> ProductOfConstants(catalog, c1, rest.Prepend(c2));
 
 	}
 

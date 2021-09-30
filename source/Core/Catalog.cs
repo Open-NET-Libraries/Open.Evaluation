@@ -63,6 +63,27 @@ namespace Open.Evaluation.Core
 			});
 		}
 
+		[return: NotNull]
+		public TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
+			where TItem : T
+		{
+			if (id is null) throw new ArgumentNullException(nameof(id));
+			if (factory is null) throw new ArgumentNullException(nameof(factory));
+			Contract.Ensures(Contract.Result<TItem>() is not null);
+			Contract.EndContractBlock();
+
+			return (TItem)Registry.GetOrAdd(id, k =>
+			{
+				var e = factory(k, param);
+				Debug.Assert(e is not null);
+				var hash = e.ToStringRepresentation();
+				Debug.Assert(hash == k);
+				if (hash != k)
+					throw new Exception($"Provided ID does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}");
+				return OnBeforeRegistration(e);
+			});
+		}
+
 		public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
 			where TItem : T
 		{

@@ -434,9 +434,11 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
-			params IEvaluate<TResult>[] children)
+			IEvaluate<TResult> child1,
+			IEvaluate<TResult> child2,
+			params IEvaluate<TResult>[] moreChildren)
 			where TResult : struct, IComparable
-			=> ProductOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
+			=> ProductOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
 
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
@@ -448,9 +450,10 @@ namespace Open.Evaluation.Arithmetic
 		public static IEvaluate<TResult> ProductOf<TResult>(
 			this ICatalog<IEvaluate<TResult>> catalog,
 			in TResult multiple,
+			IEvaluate<TResult> first,
 			params IEvaluate<TResult>[] rest)
 			where TResult : struct, IComparable
-			=> ProductOf(catalog, catalog.GetConstant(multiple), (IEnumerable<IEvaluate<TResult>>)rest);
+			=> ProductOf(catalog, rest.Prepend(first).Prepend(catalog.GetConstant(multiple)));
 
 	}
 }

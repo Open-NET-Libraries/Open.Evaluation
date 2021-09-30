@@ -38,7 +38,7 @@ namespace Open.Evaluation.Core
 			get;
 		}
 
-		protected static string ToStringRepresentation(ushort id) => "{" + id + "}";
+		protected static string ToStringRepresentation(ushort id) => $"{{{id}}}";
 
 		protected override string ToStringRepresentationInternal()
 			=> ToStringRepresentation(ID);
@@ -47,13 +47,13 @@ namespace Open.Evaluation.Core
 			=> _evaluator(context is ParameterContext p ? p.Context : context, ID);
 
 		protected override string ToStringInternal(object context)
-			=> string.Empty + Evaluate(context);
+			=> Evaluate(context).ToString();
 
 		internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
-			=> catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
+			=> catalog.Register(ToStringRepresentation(id), id, (k,id) => new Parameter<TValue>(id));
 
 		public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, ushort id)
-			=> catalog.Register(ToStringRepresentation(id), k => new Parameter<TValue>(id));
+			=> catalog.Register(ToStringRepresentation(id), id, (k, id) => new Parameter<TValue>(id));
 	}
 
 	public static partial class ParameterExtensions

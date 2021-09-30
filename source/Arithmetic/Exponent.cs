@@ -21,7 +21,9 @@ namespace Open.Evaluation.Arithmetic
 				  Exponent.SYMBOL,
 				  Exponent.SEPARATOR,
 				  // Need to provide to children so a node tree can be built.
+#pragma warning disable HAA0504 // Implicit new array creation allocation
 				  new[] { @base, power }
+#pragma warning restore HAA0504 // Implicit new array creation allocation
 			)
 		{
 			Base = @base ?? throw new ArgumentNullException(nameof(@base));

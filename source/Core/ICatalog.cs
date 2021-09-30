@@ -16,6 +16,9 @@ namespace Open.Evaluation.Core
 		TItem Register<TItem>(string id, Func<string, TItem> factory)
 			where TItem : T;
 
+		TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
+			where TItem : T;
+
 		bool TryGetItem<TItem>(string id, out TItem item)
 			where TItem : T;
 

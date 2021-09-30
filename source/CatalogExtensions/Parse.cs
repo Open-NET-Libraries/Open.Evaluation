@@ -3,6 +3,7 @@ using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -17,14 +18,14 @@ namespace Open.Evaluation
 		static readonly Regex paramOnly = new(@"^(?:{(\d+)})$");
 		static readonly Regex registeredOnly = new(@"^(?:{(\w+)})$");
 
-		static Regex GetOperatorRegex(string op) => new Regex(
+		static Regex GetOperatorRegex(string op) => new(
 				string.Format(CultureInfo.InvariantCulture, @"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
 				RegexOptions.IgnorePatternWhitespace);
 
 		static readonly Regex products = GetOperatorRegex(@"\*");
 		static readonly Regex sums = GetOperatorRegex(@"\+");
 		static readonly Regex exponents = GetOperatorRegex(@"\^");
-		static readonly char[] plusMinus = new[] { '+', '-' };
+		static readonly ImmutableArray<char> plusMinus = ImmutableArray.Create('+', '-');
 
 		static IEnumerable<IEvaluate<double>> SubMatches(
 			Catalog<IEvaluate<double>> catalog,
@@ -40,7 +41,7 @@ namespace Open.Evaluation
 
 				var span = v.AsSpan().Trim();
 				var negative = !span.IsEmpty && span[0] == '-';
-				span = span.Trim(plusMinus);
+				span = span.Trim(plusMinus.AsSpan());
 
 				var len = span.Length;
 				if (len == 0 || span[0] != '{' || span[len - 1] != '}')

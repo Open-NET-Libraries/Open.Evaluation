@@ -134,14 +134,17 @@ namespace Open.Evaluation.Arithmetic
 
 		public static IEvaluate<double> SumOf(
 			this ICatalog<IEvaluate<double>> catalog,
-			params IEvaluate<double>[] children)
-			=> SumOf(catalog, (IEnumerable<IEvaluate<double>>)children);
+			IEvaluate<double> child1,
+			IEvaluate<double> child2,
+			params IEvaluate<double>[] moreChildren)
+			=> SumOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
 
 		public static IEvaluate<double> SumOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			in double multiple,
-			params IEvaluate<double>[] rest)
-			=> SumOf(catalog, catalog.GetConstant(multiple), rest);
+			IEvaluate<double> child,
+			params IEvaluate<double>[] moreChildren)
+			=> SumOf(catalog, moreChildren.Prepend(child).Prepend(catalog.GetConstant(multiple)));
 
 	}
 

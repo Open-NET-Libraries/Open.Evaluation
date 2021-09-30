@@ -71,6 +71,7 @@ namespace Open.Evaluation.Tests
 		{
 
 			[TestMethod]
+			[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "HAA0101:Array allocation for params parameter", Justification = "Reviewed.  Acceptable.")]
 			public void TestMultipleCombine()
 			{
 				using var catalog = new EvaluationCatalog<double>();

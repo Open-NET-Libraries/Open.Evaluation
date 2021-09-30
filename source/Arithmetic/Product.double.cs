@@ -111,8 +111,9 @@ namespace Open.Evaluation.Arithmetic
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			IEvaluate<double> multiple,
+			IEvaluate<double> first,
 			params IEvaluate<double>[] rest)
-			=> ProductOf(catalog, rest.Append(multiple));
+			=> ProductOf(catalog, rest.Prepend(first).Append(multiple));
 
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
@@ -123,7 +124,8 @@ namespace Open.Evaluation.Arithmetic
 		public static IEvaluate<double> ProductOf(
 			this ICatalog<IEvaluate<double>> catalog,
 			in double multiple,
+			IEvaluate<double> first,
 			params IEvaluate<double>[] rest)
-			=> ProductOf(catalog, catalog.GetConstant(multiple), rest);
+			=> ProductOf(catalog, catalog.GetConstant(multiple), rest.Prepend(first));
 	}
 }

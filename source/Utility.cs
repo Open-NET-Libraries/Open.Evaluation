@@ -7,12 +7,14 @@ using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation
 {
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "HAA0501:Explicit new array type allocation", Justification = "Required.")]
 	internal static class Utility
 	{
 		const int POOL_ARRAY_LEN = 128;
+		const int MAX_ARRAY_LEN = int.MaxValue / 2;
 		public static void Rent<T, TParam>(this ArrayPool<T> pool, int minLength, TParam param, Action<TParam, T[]> action)
 		{
-			if (minLength > POOL_ARRAY_LEN)
+			if (minLength > POOL_ARRAY_LEN & minLength < MAX_ARRAY_LEN)
 			{
 				var a = pool.Rent(minLength);
 				try
@@ -32,7 +34,7 @@ namespace Open.Evaluation
 
 		public static void Rent<T>(this ArrayPool<T> pool, int minLength, Action<T[]> action)
 		{
-			if (minLength > POOL_ARRAY_LEN)
+			if (minLength > POOL_ARRAY_LEN & minLength < MAX_ARRAY_LEN)
 			{
 				var a = pool.Rent(minLength);
 				try
@@ -52,7 +54,7 @@ namespace Open.Evaluation
 
 		public static TResult Rent<T, TParam, TResult>(this ArrayPool<T> pool, int minLength, TParam param, Func<TParam, T[], TResult> action)
 		{
-			if (minLength > POOL_ARRAY_LEN)
+			if (minLength > POOL_ARRAY_LEN & minLength < MAX_ARRAY_LEN)
 			{
 				var a = pool.Rent(minLength);
 				try
@@ -72,7 +74,7 @@ namespace Open.Evaluation
 
 		public static TResult Rent<T, TResult>(this ArrayPool<T> pool, int minLength, Func<T[], TResult> action)
 		{
-			if (minLength > POOL_ARRAY_LEN)
+			if (minLength > POOL_ARRAY_LEN & minLength < MAX_ARRAY_LEN)
 			{
 				var a = pool.Rent(minLength);
 				try

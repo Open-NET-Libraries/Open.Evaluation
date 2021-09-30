@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Arithmetic;
+﻿using Open.Disposable;
+using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Boolean;
 using Open.Evaluation.Boolean.Counting;
 using Open.Evaluation.Catalogs;
@@ -62,29 +63,52 @@ namespace Open.Evaluation
 
 			public static IEvaluate<double>? GetRandomOperator(
 				ICatalog<IEvaluate<double>> catalog,
-				IEnumerable<IEvaluate<double>> children,
-				params char[] except)
+				IEnumerable<IEvaluate<double>> children)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 				if (children is null) throw new ArgumentNullException(nameof(children));
 				Contract.EndContractBlock();
 
-				if (except is null || except.Length == 0)
-					return GetOperator(catalog, Operators.RandomSelectOne(), children);
+				return GetOperator(catalog, Operators.RandomSelectOne(), children);
+			}
 
-				return Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))
+			public static IEvaluate<double>? GetRandomOperator(
+				ICatalog<IEvaluate<double>> catalog,
+				IEnumerable<IEvaluate<double>> children,
+				char except,
+				params char[] moreExcept)
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				if (children is null) throw new ArgumentNullException(nameof(children));
+				Contract.EndContractBlock();
+
+				using var lease = HashSetPool<char>.Rent();
+				var hs = lease.Item;
+				hs.EnsureCapacity(moreExcept.Length + 1);
+				hs.Add(except);
+				return Operators.TryRandomSelectOne(out var op, hs)
 					? GetOperator(catalog, op, children)
 					: null;
 			}
 
 			public static IEvaluate<double>? GetRandomOperator(
 				EvaluationCatalogSubmodule catalog,
-				IEnumerable<IEvaluate<double>> children,
-				params char[] except)
+				IEnumerable<IEvaluate<double>> children)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 
-				return GetRandomOperator(catalog.Catalog, children, except);
+				return GetRandomOperator(catalog.Catalog, children);
+			}
+
+			public static IEvaluate<double>? GetRandomOperator(
+				EvaluationCatalogSubmodule catalog,
+				IEnumerable<IEvaluate<double>> children,
+				char except,
+				params char[] moreExcept)
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetRandomOperator(catalog.Catalog, children, except, moreExcept);
 			}
 
 			public static IEvaluate<double> GetFunction(
@@ -141,28 +165,51 @@ namespace Open.Evaluation
 
 			public static IEvaluate<double>? GetRandomFunction(
 				ICatalog<IEvaluate<double>> catalog,
-				IReadOnlyList<IEvaluate<double>> children,
-				params char[] except)
+				IReadOnlyList<IEvaluate<double>> children)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 				Contract.EndContractBlock();
 
-				if (except is null || except.Length == 0)
-					return GetFunction(catalog, Functions.RandomSelectOne(), children);
+				return GetFunction(catalog, Functions.RandomSelectOne(), children);
+			}
 
-				return Functions.TryRandomSelectOne(out var op, new HashSet<char>(except))
+			public static IEvaluate<double>? GetRandomFunction(
+				ICatalog<IEvaluate<double>> catalog,
+				IReadOnlyList<IEvaluate<double>> children,
+				char except,
+				params char[] moreExcept)
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+				Contract.EndContractBlock();
+
+				using var lease = HashSetPool<char>.Rent();
+				var hs = lease.Item;
+				hs.EnsureCapacity(moreExcept.Length+1);
+				hs.Add(except);
+				foreach (var e in moreExcept) hs.Add(e);
+				return Functions.TryRandomSelectOne(out var op, hs)
 					? GetFunction(catalog, op, children)
 					: null;
 			}
 
 			public static IEvaluate<double>? GetRandomFunction(
 				EvaluationCatalogSubmodule catalog,
-				IReadOnlyList<IEvaluate<double>> children,
-				params char[] except)
+				IReadOnlyList<IEvaluate<double>> children)
 			{
 				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 
-				return GetRandomFunction(catalog.Catalog, children, except);
+				return GetRandomFunction(catalog.Catalog, children);
+			}
+
+			public static IEvaluate<double>? GetRandomFunction(
+				EvaluationCatalogSubmodule catalog,
+				IReadOnlyList<IEvaluate<double>> children,
+				char except,
+				params char[] moreExcept)
+			{
+				if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+
+				return GetRandomFunction(catalog.Catalog, children, except, moreExcept);
 			}
 
 			public static IEvaluate<double> GetRandomFunction(

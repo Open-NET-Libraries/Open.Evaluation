@@ -177,6 +177,8 @@ namespace Open.Evaluation.Catalogs
 			};
 		}
 
+		[SuppressMessage("Performance", "HAA0504:Implicit new array creation allocation", Justification = "Necessary.")]
+		[SuppressMessage("Performance", "HAA0501:Explicit new array type allocation", Justification = "Necessary.")]
 		public static IEvaluate<double> BranchOperation(
 			this EvaluationCatalog<double>.MutationCatalog catalog,
 			Node<IEvaluate<double>> node)
@@ -184,10 +186,11 @@ namespace Open.Evaluation.Catalogs
 			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 			if (node is null) throw new ArgumentNullException(nameof(node));
 
-			var rv = node.Root.Value;
-			var inputParamCount = rv is IParent p ? p.GetDescendants().OfType<IParameter>().Distinct().Count() : rv is IParameter ? 1 : 0;
-			return catalog.Catalog.ApplyClone(node, newNode =>
+			return catalog.Catalog.ApplyClone(node, (catalog, node), (newNode, param) =>
 			{
+				var (catalog, node) = param;
+				var rv = node.Root.Value;
+				var inputParamCount = rv is IParent p ? p.GetDescendants().OfType<IParameter>().Distinct().Count() : rv is IParameter ? 1 : 0;
 				var parameter = catalog.Catalog.GetParameter(Randomizer.Random.Next(inputParamCount));
 				IEvaluate<double>[] children;
 

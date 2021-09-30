@@ -251,7 +251,7 @@ namespace Open.Evaluation.Arithmetic
 				{
 					var m = e.Multiple ?? one;
 					if (m != one && tryGetReducedFactor(m.Value, out var f))
-						return catalog.ProductOf(f, e.Entry);
+						return catalog.ProductOf(in f, e.Entry);
 
 					return e.Entry;
 				}));
