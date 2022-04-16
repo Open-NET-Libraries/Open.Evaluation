@@ -9,6 +9,7 @@ using System.Linq;
 
 namespace Open.Evaluation.Boolean;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]
 public class Not : OperatorBase<bool>,
 	IReproducable<IEvaluate<bool>, IEvaluate<bool>>
 {

@@ -24,30 +24,24 @@ public class Product<TResult> :
 	where TResult : struct, IComparable
 {
 	protected Product(IEnumerable<IEvaluate<TResult>> children)
-		: base(Product.SYMBOL, Product.SEPARATOR, children, true, 2)
-	{ }
+		: base(Product.SYMBOL, Product.SEPARATOR, children, true, 2) { }
 
 	protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
-		: this(Enumerable.Repeat(first, 1).Concat(rest))
-	{ }
+		: this(Enumerable.Repeat(first, 1).Concat(rest)) { }
 
 	protected override int ConstantPriority => -1;
 
+	[return: NotNull]
 	protected override TResult EvaluateInternal(object context)
-	{
-		if (Children.Length == 0)
-			throw new InvalidOperationException("Cannot resolve product of empty set.");
-
-		return ChildResults(context)
-			.Cast<TResult>()
+		=> Children.Length == 0	? throw new NotSupportedException("Cannot resolve product of empty set.")
+		: (TResult)ChildResults(context)
 			.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
-	}
 
 	protected override IEvaluate<TResult> Reduction(
 		ICatalog<IEvaluate<TResult>> catalog)
 	{
 		Debug.Assert(catalog is not null);
-		var one = catalog.GetConstant((TResult)(dynamic)1);
+		var one = catalog.GetConstant(Constant<TResult>.One.Value);
 
 		// Phase 1: Flatten products of products.
 		var children = catalog
@@ -75,7 +69,7 @@ public class Product<TResult> :
 		{
 			case 0:
 				if (Children.Length == 0)
-					throw new InvalidOperationException("Cannot reduce product of empty set.");
+					throw new NotSupportedException("Cannot reduce product of empty set.");
 				return one;
 
 			case 1:
@@ -84,12 +78,12 @@ public class Product<TResult> :
 
 		// Phase 4: Deal with special case constants.
 		if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-			return GetConstant(catalog, (TResult)(dynamic)float.NaN);
+			return GetConstant(catalog, Constant<TResult>.FloatNaN.Value);
 
 		if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-			return GetConstant(catalog, (TResult)(dynamic)double.NaN);
+			return GetConstant(catalog, Constant<TResult>.DoubleNaN.Value);
 
-		var zero = catalog.GetConstant((TResult)(dynamic)0); // This could be a problem in the future. What zero?  0d?  0f? :/
+		var zero = catalog.GetConstant(Constant<TResult>.Zero.Value); // This could be a problem in the future. What zero?  0d?  0f? :/
 		if (children.Any(c => c == zero))
 			return zero;
 
@@ -98,7 +92,7 @@ public class Product<TResult> :
 		var exponents = children.Select(c =>
 			c is Exponent<TResult> e
 			? (Base: cat.GetReduced(e.Base), e.Power)
-			: (c, one)).ToArray();
+			: (Base: c, Power: one)).ToArray();
 
 		if (exponents.Any(c => c.Base == zero))
 			return zero;
@@ -109,12 +103,11 @@ public class Product<TResult> :
 			.Select(g =>
 			{
 				var @base = g.First().Base;
-				var sumPower = cat.SumOf(g.Select(t => t.Power)!);
+				var sumPower = cat.SumOf(g.Select(t => t.Power));
 				var power = cat.GetReduced(sumPower);
-				if (power == zero) return one;
-				return (IEvaluate<TResult>)(power == one
-					? @base
-					: GetExponent(catalog, @base, power));
+				return power == zero ? one
+					: power == one ? @base
+					: GetExponent(catalog, @base, power);
 			}).ToList();
 
 		var multiple = children.OfType<IConstant<TResult>>().FirstOrDefault();
@@ -172,7 +165,7 @@ public class Product<TResult> :
 						{
 							children[i] = catalog.GetExponent(
 								catalog.GetConstant((TResult)(dynamic)(d / f)),
-								catalog.GetConstant((TResult)(dynamic)(-1)));
+								catalog.GetConstant(Constant<TResult>.NegativeOne.Value));
 						}
 					}
 
@@ -243,10 +236,7 @@ public class Product<TResult> :
 
 	static bool IsExponentWithConstantPower(
 		IEvaluate<TResult> a,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-#endif
-		out IConstant<TResult> value)
+		[NotNullWhen(true)] out IConstant<TResult> value)
 	{
 		if (a is Exponent<TResult> aP && aP.Power is IConstant<TResult> c)
 		{
@@ -258,14 +248,14 @@ public class Product<TResult> :
 		return false;
 	}
 
-	public override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
+	public override int Compare(IEvaluate<TResult> x, IEvaluate<TResult> y)
 	{
 		// Constants always get priority in products and are moved to the front.  They should collapse in reduction to a 'multiple'.
-		if (a is IConstant<TResult> || b is IConstant<TResult>)
-			return base.Compare(a, b);
+		if (x is IConstant<TResult> || y is IConstant<TResult>)
+			return base.Compare(x, y);
 
-		var aFound = IsExponentWithConstantPower(a, out var aConstant);
-		var bFound = IsExponentWithConstantPower(b, out var bConstant);
+		var aFound = IsExponentWithConstantPower(x, out var aConstant);
+		var bFound = IsExponentWithConstantPower(y, out var bConstant);
 		if (aFound && bFound)
 		{
 			var result = base.Compare(aConstant, bConstant);
@@ -288,7 +278,7 @@ public class Product<TResult> :
 				return +1;
 		}
 
-		return base.Compare(a, b);
+		return base.Compare(x, y);
 	}
 
 	internal static Product<TResult> Create(
@@ -300,21 +290,16 @@ public class Product<TResult> :
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global
-		if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
-			return (dynamic)Product.Create(dCat, p);
-
-		return catalog.Register(new Product<TResult>(param));
+		return catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p
+			? (Product<TResult>)(dynamic)Product.Create(dCat, p)
+			: catalog.Register(new Product<TResult>(param));
 	}
 
 	public virtual IEvaluate<TResult> NewUsing(
 		ICatalog<IEvaluate<TResult>> catalog,
 		IReadOnlyList<IEvaluate<TResult>> param)
-	{
-		if (param is null) throw new ArgumentNullException(nameof(param));
-		Contract.EndContractBlock();
-
-		return param.Count == 1 ? param[0] : Create(catalog, param);
-	}
+		=> param is null ? throw new ArgumentNullException(nameof(param))
+		: param.Count == 1 ? param[0] : Create(catalog, param);
 
 	public virtual IEvaluate<TResult> NewUsing(
 		ICatalog<IEvaluate<TResult>> catalog,
@@ -358,13 +343,13 @@ public static partial class ProductExtensions
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count == 0)
-			throw new InvalidOperationException("Cannot produce a product of an empty set.");
+			throw new NotSupportedException("Cannot produce a product of an empty set.");
 
 		using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
 		var childList = childListRH.Item;
 		childList.AddRange(children);
 		if (childList.Count == 0)
-			throw new InvalidOperationException("Cannot produce a product of an empty set.");
+			throw new NotSupportedException("Cannot produce a product of an empty set.");
 		var constants = childList.ExtractType<IConstant<TResult>>();
 
 		if (constants.Count > 0)
@@ -391,15 +376,13 @@ public static partial class ProductExtensions
 		switch (childList.Count)
 		{
 			case 0:
-				//Debug.Fail("Extraction failure.", "Should not have occured.");
-				throw new Exception("Extraction failure.");
+				Debug.Fail("Extraction failure.", "Should not have occured.");
+				throw new InvalidOperationException("Extraction failure.");
 			case 1:
 				return childList[0];
 			default:
-				break;
+				return Product<TResult>.Create(catalog, childList);
 		}
-
-		return Product<TResult>.Create(catalog, childList);
 	}
 
 	public static IEvaluate<TResult> ProductOf<TResult>(
@@ -432,7 +415,7 @@ public static partial class ProductExtensions
 	{
 		if (sums.Count == 0) return catalog.GetConstant((TResult)(dynamic)1);
 		using var e = sums.GetEnumerator();
-		if (!e.MoveNext()) throw new Exception("Collection empty with count>0.");
+		if (!e.MoveNext()) throw new NotSupportedException("Collection empty with count > 0.");
 		IEvaluate<TResult> p = e.Current;
 		while (e.MoveNext()) p = ProductOfSum(catalog, p, e.Current);
 		return catalog.GetReduced(p);

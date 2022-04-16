@@ -2,6 +2,7 @@
 using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System;
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -11,6 +12,8 @@ namespace Open.Evaluation.Catalogs;
 [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 public static partial class EvaluationCatalogExtensions
 {
+	const string CannotOperateNewNodeNullValue = "Cannot operate when the newNode.Value is null.";
+
 	/// <summary>
 	/// Applies a multiple to any node.
 	/// </summary>
@@ -27,7 +30,9 @@ public static partial class EvaluationCatalogExtensions
 		Contract.EndContractBlock();
 
 		if (multiple == 1) // No change...
-			return sourceNode.Root.Value ?? throw new NullReferenceException("newNode.Value");
+		{
+			return sourceNode.Root.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
+		}
 
 		if (multiple == 0 || double.IsNaN(multiple)) // Neutralized.
 		{
@@ -35,20 +40,22 @@ public static partial class EvaluationCatalogExtensions
 				catalog.GetConstant(multiple));
 		}
 
-		if (sourceNode.Value is Product<double> p)
+#pragma warning disable IDE0046 // Convert to conditional expression
+		if (sourceNode.Value is not Product<double> p)
 		{
-			return p.Children.OfType<IConstant<double>>().Any()
-				? catalog.ApplyClone(sourceNode, newNode =>
-				{
-					var n = newNode.Children.First(s => s.Value is IConstant<double>);
-					var c = (IConstant<double>)(n.Value ?? throw new NullReferenceException("n.Value"));
-					n.Value = catalog.ProductOfConstants(multiple, c);
-				})
-				: catalog.TryAddConstant(sourceNode, multiple)!;
+			return catalog.ApplyClone(sourceNode,
+				newNode => catalog.ProductOf(multiple, newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue)));
 		}
+#pragma warning restore IDE0046 // Convert to conditional expression
 
-		return catalog.ApplyClone(sourceNode,
-			newNode => catalog.ProductOf(multiple, newNode.Value ?? throw new NullReferenceException("newNode.Value")));
+		return p.Children.OfType<IConstant<double>>().Any()
+			? catalog.ApplyClone(sourceNode, newNode =>
+			{
+				var n = newNode.Children.First(s => s.Value is IConstant<double>);
+				var c = (IConstant<double>)(n.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue));
+				n.Value = catalog.ProductOfConstants(multiple, c);
+			})
+			: catalog.TryAddConstant(sourceNode, multiple)!;
 	}
 
 	public static IEvaluate<double> MultiplyNodeDescendant(
@@ -79,23 +86,24 @@ public static partial class EvaluationCatalogExtensions
 		Contract.EndContractBlock();
 
 		if (delta == 0) // No change... 
-			return sourceNode.Root.Value ?? throw new NullReferenceException("sourceNode.Root.Value is null");
+			return sourceNode.Root.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
 
 		if (sourceNode.Value is not Product<double> p)
 			return MultiplyNode(catalog, sourceNode, delta + 1);
 
 		var multiple = catalog.GetMultiple(p);
-		if (multiple.Value == 1)
-			return MultiplyNode(catalog, sourceNode, delta + 1);
-
-		return catalog.ApplyClone(sourceNode, newNode =>
+		return multiple.Value switch
 		{
-			var constantNodes = newNode.Children.Where(s => s.Value is IConstant<double>).ToArray();
-			constantNodes[0].Value = catalog.SumOfConstants(delta, multiple);
+			1 => catalog.MultiplyNode(sourceNode, delta + 1),
+			_ => catalog.ApplyClone(sourceNode, newNode =>
+			{
+				var constantNodes = newNode.Children.Where(s => s.Value is IConstant<double>).ToArray();
+				constantNodes[0].Value = catalog.SumOfConstants(delta, multiple);
 
-			for (var i = 1; i < constantNodes.Length; i++)
+				for (var i = 1; i < constantNodes.Length; i++)
 				newNode.Remove(constantNodes[i]);
-		});
+			})
+		};
 	}
 
 	public static IEvaluate<double> AdjustNodeMultipleOfDescendant(

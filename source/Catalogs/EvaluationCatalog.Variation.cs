@@ -9,10 +9,9 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 
+using EvalDoubleVariationCatalog = Open.Evaluation.Catalogs.EvaluationCatalog<double>.VariationCatalog;
+
 namespace Open.Evaluation.Catalogs;
-
-using EvalDoubleVariationCatalog = EvaluationCatalog<double>.VariationCatalog;
-
 public partial class EvaluationCatalog<T>
 	where T : IComparable
 {
@@ -61,10 +60,7 @@ public static partial class EvaluationCatalogExtensions
 	public static bool TryRemoveValid(
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> node,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-# endif
-		out IEvaluate<double> newRoot)
+		[NotNullWhen(true)] out IEvaluate<double> newRoot)
 	{
 		Debug.Assert(catalog is not null);
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
@@ -97,6 +93,7 @@ public static partial class EvaluationCatalogExtensions
 		Debug.Assert(catalog is not null);
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		Contract.EndContractBlock();
 
 		return TryRemoveValid(
 			catalog,
@@ -120,10 +117,9 @@ public static partial class EvaluationCatalogExtensions
 		Contract.EndContractBlock();
 
 		// Validate worthyness.
-		if (!CheckPromoteChildrenValidity(node)) return null;
-
-		return catalog.Catalog.ApplyClone(node,
-			newNode => newNode.Children.Single().Value!);
+		return CheckPromoteChildrenValidity(node)
+			? catalog.Catalog.ApplyClone(node, newNode => newNode.Children.Single().Value!)
+			: null;
 	}
 
 	// This should handle the case of demoting a function.
@@ -281,7 +277,7 @@ public static partial class EvaluationCatalogExtensions
 		}
 		else
 		{
-			if (first.Parent is null) throw new Exception("Impossbile to replace.");
+			if (first.Parent is null) throw new NotSupportedException("Impossible to replace when first parent is null.");
 			first.Parent.Replace(first, cat.Factory.Map(replacment));
 			var pet = cat.FixHierarchy(tree).Recycle()!;
 

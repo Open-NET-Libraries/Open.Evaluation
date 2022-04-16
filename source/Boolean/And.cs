@@ -11,6 +11,7 @@ using System.Linq;
 
 namespace Open.Evaluation.Boolean;
 
+[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]
 public class And : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
@@ -22,12 +23,9 @@ public class And : OperatorBase<bool>,
 	{ }
 
 	protected override bool EvaluateInternal(object context)
-	{
-		if (Children.Length == 0)
-			throw new InvalidOperationException("Cannot resolve boolean of empty set.");
-
-		return ChildResults(context).All(result => (bool)result);
-	}
+		=> Children.Length == 0
+			? throw new NotSupportedException("Cannot resolve boolean of empty set.")
+			: ChildResults(context).All(result => (bool)result);
 
 	internal static And Create(
 		ICatalog<IEvaluate<bool>> catalog,

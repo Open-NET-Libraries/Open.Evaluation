@@ -4,6 +4,7 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
@@ -17,16 +18,20 @@ public abstract class OperationBase<TResult>
 	}
 
 	public char Symbol { get; }
+
 	public string SymbolString { get; }
 
-	protected override string ToStringInternal(object contents)
-		=> $"{SymbolString}({contents})";
+	protected override string ToStringInternal(object context)
+		=> $"{SymbolString}({context})";
 
-	protected virtual IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
+	protected virtual IEvaluate<TResult> Reduction(
+		ICatalog<IEvaluate<TResult>> catalog)
 		=> this;
 
 	// Override this if reduction is possible.  Return null if you can't reduce.
-	public bool TryGetReduced(ICatalog<IEvaluate<TResult>> catalog, out IEvaluate<TResult> reduction)
+	public bool TryGetReduced(
+		ICatalog<IEvaluate<TResult>> catalog,
+		[NotNull] out IEvaluate<TResult> reduction)
 	{
 		reduction = Reduction(catalog);
 		return reduction != this;

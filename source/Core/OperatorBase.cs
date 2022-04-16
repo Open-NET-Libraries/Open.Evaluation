@@ -12,6 +12,7 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Open.Evaluation.Core;
@@ -38,10 +39,10 @@ public abstract class OperatorBase<TChild, TResult>
 	IReadOnlyList<TChild> IParent<TChild>.Children => Children;
 	IReadOnlyList<object> IParent.Children => Children;
 
-	protected override string ToStringInternal(object contents)
+	protected override string ToStringInternal(object context)
 	{
-		if (contents is not IEnumerable collection)
-			return base.ToStringInternal(contents);
+		if (context is not IEnumerable collection)
+			return base.ToStringInternal(context);
 
 		string r;
 		using (var lease = StringBuilderPool.Rent())
@@ -69,6 +70,7 @@ public abstract class OperatorBase<TChild, TResult>
 		result.Append(child);
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public override string ToString(object context)
 		=> ToStringInternal(ChildToString(context));
 
@@ -90,6 +92,7 @@ public abstract class OperatorBase<TChild, TResult>
 			yield return child.ToStringRepresentation();
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected override string ToStringRepresentationInternal()
 		=> ToStringInternal(ChildRepresentations());
 
@@ -97,44 +100,45 @@ public abstract class OperatorBase<TChild, TResult>
 
 	// Need a standardized way to order so that comparisons are easier.
 	// ReSharper disable once VirtualMemberNeverOverridden.Global
-	public virtual int Compare(TChild a, TChild b)
+	public virtual int Compare(TChild x, TChild y)
 	{
-		switch (a)
+		switch (x)
 		{
-			case Constant<TResult> aC when b is Constant<TResult> bC:
+			case Constant<TResult> aC when y is Constant<TResult> bC:
 				return bC.Value.CompareTo(aC.Value); // Descending...
 			case Constant<TResult> _:
 				return +1 * ConstantPriority;
 			default:
-				if (b is Constant<TResult>)
+				if (y is Constant<TResult>)
 					return -1 * ConstantPriority;
 				break;
 		}
 
-		switch (a)
+		switch (x)
 		{
-			case Parameter<TResult> aP when b is Parameter<TResult> bP:
+			case Parameter<TResult> aP when y is Parameter<TResult> bP:
 				return aP.ID.CompareTo(bP.ID);
 			case Parameter<TResult> _:
 				return +1;
 			default:
-				if (b is Parameter<TResult>)
+				if (y is Parameter<TResult>)
 					return -1;
 				break;
 		}
 
-		var aChildCount = ((a as IParent)?.GetDescendants().Count(d => d is not IConstant) ?? 0) + 1;
-		var bChildCount = ((b as IParent)?.GetDescendants().Count(d => d is not IConstant) ?? 0) + 1;
+		var aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant) ?? 0) + 1;
+		var bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant) ?? 0) + 1;
 
 		if (aChildCount > bChildCount) return -1;
 		if (aChildCount < bChildCount) return +1;
 
-		var ats = a.ToStringRepresentation();
-		var bts = b.ToStringRepresentation();
+		var ats = x.ToStringRepresentation();
+		var bts = y.ToStringRepresentation();
 
 		return string.CompareOrdinal(ats, bts);
 	}
 
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected virtual Constant<TResult> GetConstant(ICatalog<IEvaluate<TResult>> catalog, in TResult value)
 		=> catalog.GetConstant(value);
 }

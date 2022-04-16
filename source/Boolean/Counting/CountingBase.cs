@@ -31,6 +31,6 @@ public abstract class CountingBase : OperatorBase<bool>
 		get;
 	}
 
-	protected override string ToStringInternal(object contents)
-		=> $"{Prefix}({Count}, {base.ToStringInternal(contents)})";
+	protected override string ToStringInternal(object context)
+		=> $"{Prefix}({Count}, {base.ToStringInternal(context)})";
 }

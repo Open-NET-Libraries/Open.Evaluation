@@ -38,9 +38,9 @@ public sealed class Exponent : Exponent<double>
 	static readonly Regex SquareRootPattern = new(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 	static readonly Regex ConstantPowerPattern = new(@"^\((.+)\^(-)?([0-9\.]+)\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
 
-	protected override string ToStringInternal(object contents)
+	protected override string ToStringInternal(object context)
 	{
-		var value = base.ToStringInternal(contents);
+		var value = base.ToStringInternal(context);
 		Debug.Assert(value is not null);
 		var m = SquareRootPattern.Match(value);
 		if (m.Success)

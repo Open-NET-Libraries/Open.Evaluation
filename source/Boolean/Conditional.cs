@@ -5,6 +5,7 @@
 
 using Open.Evaluation.Core;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation.Boolean;
@@ -24,32 +25,40 @@ public class Conditional<TResult> : OperationBase<TResult>,
 		IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse));
 	}
 
+	[NotNull]
 	public IEvaluate<bool> Condition { get; }
 
+	[NotNull]
 	public IEvaluate<TResult> IfTrue { get; }
 
+	[NotNull]
 	public IEvaluate<TResult> IfFalse { get; }
 
+	[return: NotNull]
 	protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
 		=> $"{condition} ? {ifTrue} : {ifFalse}";
 
+	[return: NotNull]
 	public override string ToString(object context)
 		=> ToStringInternal(
 			Condition.Evaluate(context),
 			IfTrue.Evaluate(context)!,
 			IfFalse.Evaluate(context)!);
 
+	[return: NotNull]
 	protected override string ToStringRepresentationInternal()
 		=> ToStringInternal(
 			Condition.ToStringRepresentation(),
 			IfTrue.ToStringRepresentation(),
 			IfFalse.ToStringRepresentation());
 
+	[return: NotNull]
 	protected override TResult EvaluateInternal(object context)
 		=> Condition.Evaluate(context)
 			? IfTrue.Evaluate(context)
 			: IfFalse.Evaluate(context);
 
+	[return: NotNull]
 	internal static Conditional<TResult> Create(
 		ICatalog<IEvaluate<TResult>> catalog,
 		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)

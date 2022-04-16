@@ -9,10 +9,10 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Threading;
 
-namespace Open.Evaluation.Catalogs;
+using IFunction = Open.Evaluation.Core.IFunction<double>;
+using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<double>, double>;
 
-using IFunction = IFunction<double>;
-using IOperator = IOperator<IEvaluate<double>, double>;
+namespace Open.Evaluation.Catalogs;
 
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 public partial class EvaluationCatalog<T>
@@ -30,9 +30,10 @@ public partial class EvaluationCatalog<T>
 	}
 }
 
-[SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 public static partial class EvaluationCatalogExtensions
 {
+	const string CannotOperatePowerNullValue = "Cannot operate when the power.Value is null.";
+
 	public static IEvaluate<double> MutateSign(
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node, byte options = 3)
@@ -102,6 +103,7 @@ public static partial class EvaluationCatalogExtensions
 			throw new ArgumentException("No node value.", nameof(node));
 		if (node.Value is not IParameter p)
 			throw new ArgumentException("Does not contain a Parameter.", nameof(node));
+		Contract.EndContractBlock();
 
 		return catalog.Catalog.ApplyClone(node, _ =>
 		{
@@ -161,6 +163,7 @@ public static partial class EvaluationCatalogExtensions
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (node is null) throw new ArgumentNullException(nameof(node));
+		Contract.EndContractBlock();
 
 		return node.Value switch
 		{
@@ -175,14 +178,13 @@ public static partial class EvaluationCatalogExtensions
 		};
 	}
 
-	[SuppressMessage("Performance", "HAA0504:Implicit new array creation allocation", Justification = "Necessary.")]
-	[SuppressMessage("Performance", "HAA0501:Explicit new array type allocation", Justification = "Necessary.")]
 	public static IEvaluate<double> BranchOperation(
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (node is null) throw new ArgumentNullException(nameof(node));
+		Contract.EndContractBlock();
 
 		return catalog.Catalog.ApplyClone(node, (catalog, node), (newNode, param) =>
 		{
@@ -192,17 +194,13 @@ public static partial class EvaluationCatalogExtensions
 			var parameter = catalog.Catalog.GetParameter(Randomizer.Random.Next(inputParamCount));
 			IEvaluate<double>[] children;
 
-			var nv = newNode.Value ?? throw new NullReferenceException("newNode.Value is null.");
-			if (newNode.Value is IFunction || Randomizer.Random.Next(4) == 0)
-			{
-				children = Randomizer.Random.Next(2) == 1
+			var nv = newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
+			children
+				= newNode.Value is IFunction || Randomizer.Random.Next(4) == 0
+				? Randomizer.Random.Next(2) == 1
 					? new IEvaluate<double>[] { parameter, nv }
-					: new IEvaluate<double>[] { nv, parameter };
-			}
-			else
-			{
-				children = new[] { parameter, nv };
-			}
+					: new IEvaluate<double>[] { nv, parameter }
+				: (new[] { parameter, nv });
 
 			return Registry.Arithmetic.GetRandomOperator(catalog, children)!; // Will throw in ApplyClone if null.
 		});
@@ -215,16 +213,17 @@ public static partial class EvaluationCatalogExtensions
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		if (value == 0) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
+		Contract.EndContractBlock();
 
 		return node.Value is Exponent<double>
 			? catalog.Catalog.ApplyClone(node, newNode =>
 			{
 				var power = newNode.Children[1];
 				newNode.Replace(power,
-					catalog.Factory.Map(catalog.Catalog.SumOf(in value, power.Value ?? throw new NullReferenceException("power.Value is null."))));
+					catalog.Factory.Map(catalog.Catalog.SumOf(in value, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
 			})
 			: catalog.Catalog.ApplyClone(node, newNode =>
-					catalog.Catalog.GetExponent(newNode.Value ?? throw new NullReferenceException("newNode.Value is null."), 1 + value));
+					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), 1 + value));
 	}
 
 	public static IEvaluate<double> Square(
@@ -233,15 +232,16 @@ public static partial class EvaluationCatalogExtensions
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (node is null) throw new ArgumentNullException(nameof(node));
+		Contract.EndContractBlock();
 
 		return node.Value is Exponent<double>
 			? catalog.Catalog.ApplyClone(node, newNode =>
 			{
 				var power = newNode.Children[1];
 				newNode.Replace(power,
-					catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value ?? throw new NullReferenceException("power.Value is null."))));
+					catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
 			})
 			: catalog.Catalog.ApplyClone(node, newNode =>
-					catalog.Catalog.GetExponent(newNode.Value ?? throw new NullReferenceException("newNode.Value is null."), 2));
+					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), 2));
 	}
 }

@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 
@@ -20,25 +21,31 @@ public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 	public string ToStringRepresentation()
 		=> LazyInitializer.EnsureInitialized(ref _toStringRepresentation, ToStringRepresentationInternal)!;
 
+	[return: NotNull]
 	protected abstract TResult EvaluateInternal(object context); // **
 
+	[return: NotNull]
 	protected abstract string ToStringInternal(object context);
 
+	[return: NotNull]
 	object IEvaluate.Evaluate(object context) => Evaluate(context);
 
 	/// <inheritdoc />
+	[return: NotNull]
 	public TResult Evaluate(object context)
 	{
+		Debug.Assert(context is not null);
 		// Use existing context... // Caches results...
 		if (context is ParameterContext pc)
-			return pc.GetOrAdd(this, _ => EvaluateInternal(pc)); // **
+			return pc.GetOrAdd(this, _ => EvaluateInternal(pc))!; // **
 
 		// Create a new one for this tree...
-		using var newPc = new ParameterContext(context);
+		using var newPc = new ParameterContext(context!);
 		return Evaluate(newPc);
 	}
 
 	/// <inheritdoc />
+	[return: NotNull]
 	public virtual string ToString(object context)
 		=> ToStringInternal(Evaluate(context));
 }

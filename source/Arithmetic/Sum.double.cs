@@ -22,12 +22,9 @@ public class Sum : Sum<double>
 	{ }
 
 	protected override double EvaluateInternal(object context)
-	{
-		if (Children.Length == 0)
-			throw new InvalidOperationException("Cannot resolve sum of empty set.");
-
-		return ChildResults(context).Cast<double>().Sum();
-	}
+		=> Children.Length == 0
+			? throw new NotSupportedException("Cannot resolve sum of empty set.")
+			: ChildResults(context).Cast<double>().Sum();
 
 	protected virtual Constant<double> GetConstant(ICatalog<IEvaluate<double>> catalog, double value)
 		=> Constant.Create(catalog, value);

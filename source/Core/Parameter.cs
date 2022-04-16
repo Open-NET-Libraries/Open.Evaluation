@@ -51,8 +51,8 @@ public class Parameter<TValue>
 	internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
 		=> catalog.Register(ToStringRepresentation(id), id, (_,id) => new Parameter<TValue>(id));
 
-	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, ushort id)
-		=> catalog.Register(ToStringRepresentation(id), id, (_, id) => new Parameter<TValue>(id));
+	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, ushort param)
+		=> catalog.Register(ToStringRepresentation(param), param, (_, id) => new Parameter<TValue>(id));
 }
 
 public static partial class ParameterExtensions
@@ -60,11 +60,7 @@ public static partial class ParameterExtensions
 	public static Parameter<TValue> GetParameter<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog, ushort id)
 		where TValue : IComparable
-	{
-		// ReSharper disable once SuspiciousTypeConversion.Global
-		if (catalog is ICatalog<IEvaluate<double>> dCat)
-			return (dynamic)Parameter.Create(dCat, id);
-
-		return Parameter<TValue>.Create(catalog, id);
-	}
+		=> catalog is ICatalog<IEvaluate<double>> dCat
+			? (Parameter<TValue>)(dynamic)Parameter.Create(dCat, id)
+			: Parameter<TValue>.Create(catalog, id);
 }

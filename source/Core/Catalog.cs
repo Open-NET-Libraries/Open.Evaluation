@@ -17,11 +17,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 	readonly ConcurrentDictionary<string, T> Registry = new();
 
-	public void Register<TItem>(
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNull]
-#endif
-		ref TItem item)
+	public void Register<TItem>([NotNull] ref TItem item)
 		where TItem : T
 	{
 		if (item is null) throw new ArgumentNullException(nameof(item));
@@ -33,6 +29,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	protected virtual TItem OnBeforeRegistration<TItem>(TItem item)
 		=> item;
 
+	[return: NotNull]
 	public TItem Register<TItem>(TItem item)
 		where TItem : T
 	{
@@ -45,6 +42,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		return (TItem)result;
 	}
 
+	[return: NotNull]
 	public TItem Register<TItem>(string id, Func<string, TItem> factory)
 		where TItem : T
 	{
@@ -59,12 +57,12 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 			Debug.Assert(e is not null);
 			var hash = e.ToStringRepresentation();
 			Debug.Assert(hash == k);
-			if (hash != k)
-				throw new Exception($"Provided ID does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}");
-			return OnBeforeRegistration(e);
+			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
+				: (T)OnBeforeRegistration(e);
 		});
 	}
 
+	[return: NotNull]
 	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
 		where TItem : T
 	{
@@ -79,17 +77,12 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 			Debug.Assert(e is not null);
 			var hash = e.ToStringRepresentation();
 			Debug.Assert(hash == k);
-			if (hash != k)
-				throw new Exception($"Provided ID does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}");
-			return OnBeforeRegistration(e);
+			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
+				: (T)OnBeforeRegistration(e);
 		});
 	}
 
-	public bool TryGetItem<TItem>(string id,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-#endif
-		out TItem item)
+	public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
 		where TItem : T
 	{
 		if (id is null) throw new ArgumentNullException(nameof(id));
@@ -104,6 +97,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 	readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new();
 
+	[return: NotNull]
 	public T GetReduced(T source)
 	{
 		var src = Register(source);
@@ -131,11 +125,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	}
 
 	public bool TryGetReduced(
-		T source,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-#endif
-		out T reduction)
+		T source, [NotNullWhen(true)] out T reduction)
 	{
 		reduction = GetReduced(source);
 		return !reduction.Equals(source);

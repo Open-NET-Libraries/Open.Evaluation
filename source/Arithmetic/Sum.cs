@@ -29,10 +29,7 @@ public class Sum<TResult> :
 
 	static bool IsProductWithSingleConstant(
 		IEvaluate<TResult> a,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-#endif
-		out IConstant<TResult> value)
+		[NotNullWhen(true)]	out IConstant<TResult> value)
 	{
 		if (a is Product<TResult> aP)
 		{
@@ -53,10 +50,10 @@ public class Sum<TResult> :
 		return false;
 	}
 
-	public override int Compare(IEvaluate<TResult> a, IEvaluate<TResult> b)
+	public override int Compare(IEvaluate<TResult> x, IEvaluate<TResult> y)
 	{
-		var aFound = IsProductWithSingleConstant(a, out var aConstant);
-		var bFound = IsProductWithSingleConstant(b, out var bConstant);
+		var aFound = IsProductWithSingleConstant(x, out var aConstant);
+		var bFound = IsProductWithSingleConstant(y, out var bConstant);
 		if (aFound && bFound)
 		{
 			var result = base.Compare(aConstant, bConstant);
@@ -73,7 +70,7 @@ public class Sum<TResult> :
 				return -1;
 		}
 
-		return base.Compare(a, b);
+		return base.Compare(x, y);
 	}
 
 	// ReSharper disable once StaticMemberInGenericType
@@ -172,10 +169,9 @@ public class Sum<TResult> :
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global
-		if (catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p)
-			return (dynamic)Sum.Create(dCat, p);
-
-		return catalog.Register(new Sum<TResult>(param));
+		return catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p
+			? (Sum<TResult>)(dynamic)Sum.Create(dCat, p)
+			: catalog.Register(new Sum<TResult>(param));
 	}
 
 	internal virtual IEvaluate<TResult> NewUsing(
@@ -192,19 +188,13 @@ public class Sum<TResult> :
 
 	public bool TryExtractGreatestFactor(
 		ICatalog<IEvaluate<TResult>> catalog,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-#endif
-		out IEvaluate<TResult> sum,
-#if NETSTANDARD2_1_OR_GREATER
-		[NotNullWhen(true)]
-#endif
-		out IConstant<TResult> greatestFactor)
+		[NotNullWhen(true)] out IEvaluate<TResult> sum,
+		[NotNullWhen(true)]	out IConstant<TResult> greatestFactor)
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		Contract.EndContractBlock();
 
-		var one = GetConstant(catalog, (TResult)(dynamic)1);
+		var one = GetConstant(catalog, Constant<TResult>.One.Value);
 		greatestFactor = one;
 		sum = this;
 		// Phase 5: Try and group by GCF:
@@ -257,10 +247,9 @@ public class Sum<TResult> :
 			.Select(e =>
 			{
 				var m = e.Multiple ?? one;
-				if (m != one && tryGetReducedFactor(m.Value, out var f))
-					return catalog.ProductOf(in f, e.Entry);
-
-				return e.Entry;
+				return m != one && tryGetReducedFactor(m.Value, out var f)
+					? catalog.ProductOf(in f, e.Entry)
+					: e.Entry;
 			}));
 
 		return true;

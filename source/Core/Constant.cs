@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.Linq;
 
 namespace Open.Evaluation.Core;
@@ -13,7 +14,7 @@ namespace Open.Evaluation.Core;
 [DebuggerDisplay("Value = {Value}")]
 public class Constant<TValue>
 	: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
-	where TValue : IComparable
+	where TValue : notnull, IComparable
 {
 	protected Constant(TValue value) => Value = value;
 
@@ -42,8 +43,8 @@ public class Constant<TValue>
 		=> catalog.Register(ToStringRepresentation(in value), _ => new Constant<TValue>(value));
 
 	/// <inheritdoc />
-	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue value)
-		=> catalog.Register(ToStringRepresentation(in value), _ => new Constant<TValue>(value));
+	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue param)
+		=> catalog.Register(ToStringRepresentation(in param), _ => new Constant<TValue>(param));
 
 	public static implicit operator TValue(Constant<TValue> c)
 		=> c.Value;
@@ -53,6 +54,13 @@ public class Constant<TValue>
 
 	public static TValue operator +(Constant<TValue> a, Constant<TValue> b)
 		=> (dynamic)a.Value + (dynamic)b.Value;
+
+	// Avoid repeated boxing unboxing.
+	internal static readonly Lazy<TValue> Zero = new(() => (TValue)(dynamic)0);
+	internal static readonly Lazy<TValue> One = new(() => (TValue)(dynamic)1);
+	internal static readonly Lazy<TValue> NegativeOne = new(() => (TValue)(dynamic)(-1));
+	internal static readonly Lazy<TValue> FloatNaN = new(() => (TValue)(dynamic)float.NaN);
+	internal static readonly Lazy<TValue> DoubleNaN = new(() => (TValue)(dynamic)double.NaN);
 }
 
 public static partial class ConstantExtensions
@@ -64,10 +72,9 @@ public static partial class ConstantExtensions
 	{
 		Debug.Assert(catalog is not null);
 		// ReSharper disable once SuspiciousTypeConversion.Global
-		if (catalog is ICatalog<IEvaluate<double>> dCat && value is double d)
-			return (dynamic)Constant.Create(dCat, d);
-
-		return Constant<TValue>.Create(catalog, value);
+		return catalog is ICatalog<IEvaluate<double>> dCat && value is double d
+			? (Constant<TValue>)(dynamic)Constant.Create(dCat, d)
+			: Constant<TValue>.Create(catalog, value);
 	}
 
 	public static Constant<TValue> SumOfConstants<TValue>(
@@ -121,6 +128,7 @@ public static partial class ConstantExtensions
 	{
 		if (c1 is null) throw new ArgumentNullException(nameof(c1));
 		if (c2 is null) throw new ArgumentNullException(nameof(c2));
+		Contract.EndContractBlock();
 
 		return SumOfConstants(catalog, c1.Value, rest.Prepend(c2));
 	}
@@ -174,6 +182,7 @@ public static partial class ConstantExtensions
 	{
 		if (c1 is null) throw new ArgumentNullException(nameof(c1));
 		if (c2 is null) throw new ArgumentNullException(nameof(c2));
+		Contract.EndContractBlock();
 
 		return ProductOfConstants(catalog, c1.Value, rest.Prepend(c2));
 	}

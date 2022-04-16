@@ -11,10 +11,9 @@ using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 
+using EvaluationCatalogSubmodule = Open.Evaluation.Catalogs.EvaluationCatalog<double>.SubmoduleBase;
+
 namespace Open.Evaluation;
-
-using EvaluationCatalogSubmodule = EvaluationCatalog<double>.SubmoduleBase;
-
 public static class Registry
 {
 	public static class Arithmetic
@@ -55,11 +54,9 @@ public static class Registry
 			EvaluationCatalogSubmodule catalog,
 			char op,
 			IEnumerable<IEvaluate<double>> children)
-		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-
-			return GetOperator(catalog.Catalog, op, children);
-		}
+			=> catalog is null
+				? throw new ArgumentNullException(nameof(catalog))
+				: GetOperator(catalog.Catalog, op, children);
 
 		public static IEvaluate<double>? GetRandomOperator(
 			ICatalog<IEvaluate<double>> catalog,
@@ -156,11 +153,8 @@ public static class Registry
 			EvaluationCatalogSubmodule catalog,
 			char op,
 			IReadOnlyList<IEvaluate<double>> children)
-		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-
-			return GetFunction(catalog.Catalog, op, children);
-		}
+			=> catalog is null ? throw new ArgumentNullException(nameof(catalog))
+			: GetFunction(catalog.Catalog, op, children);
 
 		public static IEvaluate<double>? GetRandomFunction(
 			ICatalog<IEvaluate<double>> catalog,
@@ -196,22 +190,16 @@ public static class Registry
 		public static IEvaluate<double>? GetRandomFunction(
 			EvaluationCatalogSubmodule catalog,
 			IReadOnlyList<IEvaluate<double>> children)
-		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-
-			return GetRandomFunction(catalog.Catalog, children);
-		}
+			=> catalog is null ? throw new ArgumentNullException(nameof(catalog))
+			: GetRandomFunction(catalog.Catalog, children);
 
 		public static IEvaluate<double>? GetRandomFunction(
 			EvaluationCatalogSubmodule catalog,
 			IReadOnlyList<IEvaluate<double>> children,
 			char except,
 			params char[] moreExcept)
-		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-
-			return GetRandomFunction(catalog.Catalog, children, except, moreExcept);
-		}
+			=> catalog is null ? throw new ArgumentNullException(nameof(catalog))
+			: GetRandomFunction(catalog.Catalog, children, except, moreExcept);
 
 		public static IEvaluate<double> GetRandomFunction(
 			ICatalog<IEvaluate<double>> catalog,
@@ -235,13 +223,11 @@ public static class Registry
 			EvaluationCatalogSubmodule catalog,
 			IEvaluate<double> child,
 			params char[] except)
-		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-
-			return GetRandomFunction(catalog.Catalog, child, except);
-		}
+			=> catalog is null ? throw new ArgumentNullException(nameof(catalog))
+			: GetRandomFunction(catalog.Catalog, child, except);
 	}
 
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]
 	public static class Boolean
 	{
 		// Operators...
@@ -291,10 +277,9 @@ public static class Registry
 			if (children is null) throw new ArgumentNullException(nameof(children));
 			Contract.EndContractBlock();
 
-			if (except is null || except.Length == 0)
-				return GetOperator(catalog, Operators.RandomSelectOne(), children);
-
-			return Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))
+			return except is null || except.Length == 0
+				? GetOperator(catalog, Operators.RandomSelectOne(), children)
+				: Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))
 				? GetOperator(catalog, op, children)
 				: null;
 		}

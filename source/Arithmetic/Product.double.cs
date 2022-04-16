@@ -7,6 +7,7 @@ using Open.Disposable;
 using Open.Evaluation.Core;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Linq;
 
@@ -26,6 +27,7 @@ public class Product : Product<double>
 		: this(Enumerable.Repeat(first, 1).Concat(rest))
 	{ }
 
+	[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1725:Parameter names should match base declaration")]
 	protected override Exponent<double> GetExponent(ICatalog<IEvaluate<double>> catalog,
 		IEvaluate<double> @base,
 		IEvaluate<double> power)
@@ -63,13 +65,13 @@ public static partial class ProductExtensions
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (children is IReadOnlyCollection<IEvaluate<double>> ch && ch.Count == 0)
-			throw new InvalidOperationException("Cannot produce a product of an empty set.");
+			throw new NotSupportedException("Cannot produce a product of an empty set.");
 
 		using var childListRH = ListPool<IEvaluate<double>>.Rent();
 		var childList = childListRH.Item;
 		childList.AddRange(children);
 		if (childList.Count == 0)
-			throw new InvalidOperationException("Cannot produce a product of an empty set.");
+			throw new NotSupportedException("Cannot produce a product of an empty set.");
 		var constants = childList.ExtractType<IConstant<double>>();
 
 		if (constants.Count > 0)
@@ -89,8 +91,8 @@ public static partial class ProductExtensions
 		switch (childList.Count)
 		{
 			case 0:
-				//Debug.Fail("Extraction failure.", "Should not have occured.");
-				throw new Exception("Extraction failure.");
+				Debug.Fail("Extraction failure.", "Should not have occured.");
+				throw new InvalidOperationException("Extraction failure.");
 			case 1:
 				return childList[0];
 			default:

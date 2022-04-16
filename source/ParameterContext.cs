@@ -20,7 +20,7 @@ public class ParameterContext // Using a Lazy to differentiate between the value
 				? r : throw new InvalidCastException("Result doesn't match factory return type.");
 
 	#region IDisposable Support
-	private bool disposedValue = false; // To detect redundant calls
+	private bool disposedValue; // To detect redundant calls
 
 	protected virtual void Dispose(bool disposing)
 	{

@@ -15,6 +15,8 @@ namespace Open.Evaluation.Catalogs;
 public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	where T : IComparable
 {
+	private const string ReturnedNull = "Returned null.";
+
 	protected override TItem OnBeforeRegistration<TItem>(TItem item)
 	{
 		Debug.Assert(item is not Exponent<double> or Exponent);
@@ -88,7 +90,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 					break;
 
 				default:
-					throw new Exception("Unknown IParent / IReproducable.");
+					throw new NotSupportedException("Unknown IParent / IReproducable.");
 			}
 
 			target.Parent?.Replace(target, node);
@@ -150,7 +152,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		try
 		{
 			var replacement = clonedNodeHandler(node);
-			if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
+			if (replacement is null) throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
 			if (parent is null) return replacement;
 
 			var rn = Factory.Map(replacement);
@@ -193,7 +195,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		try
 		{
 			var replacement = clonedNodeHandler(node, param);
-			if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
+			if (replacement is null) throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
 			if (parent is null) return replacement;
 
 			var rn = Factory.Map(replacement);
@@ -231,7 +233,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		try
 		{
 			var replacement = clonedNodeHandler(node); // * new 2
-			if (replacement is null) throw new NullReferenceException("clonedNodeHandler returned null.");
+			if (replacement is null) throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
 			try
 			{
 				if (parent is null)

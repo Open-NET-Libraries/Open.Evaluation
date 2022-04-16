@@ -7,7 +7,6 @@ using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Performance", "HAA0501:Explicit new array type allocation", Justification = "Required.")]
 internal static class Utility
 {
 	const int POOL_ARRAY_LEN = 128;
@@ -102,8 +101,6 @@ internal static class Utility
 
 		static IEnumerable<T> SkipAtCore(IEnumerable<T> source, int index)
 		{
-			Contract.EndContractBlock();
-
 			using var e = source.GetEnumerator();
 			for (var count = 0; e.MoveNext(); count++)
 			{
@@ -123,15 +120,10 @@ internal static class Utility
 
 		static IEnumerable<T> ReplaceAtCore(IEnumerable<T> source, int index, T replacement)
 		{
-			Contract.EndContractBlock();
-
 			using var e = source.GetEnumerator();
 			for (var count = 0; e.MoveNext(); count++)
 			{
-				if (count == index)
-					yield return replacement;
-				else
-					yield return e.Current;
+				yield return count == index ? replacement : e.Current;
 			}
 		}
 	}
@@ -146,8 +138,6 @@ internal static class Utility
 
 		static IEnumerable<T> InsertAtCore(IEnumerable<T> source, int index, IEnumerable<T> injection)
 		{
-			Contract.EndContractBlock();
-
 			using var e = source.GetEnumerator();
 			for (var count = 0; e.MoveNext(); count++)
 			{

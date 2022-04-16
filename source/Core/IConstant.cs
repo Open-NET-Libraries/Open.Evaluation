@@ -4,16 +4,19 @@
  */
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
 public interface IConstant : IEvaluate
 {
+	[NotNull]
 	IComparable Value { get; }
 }
 
 public interface IConstant<out TResult> : IEvaluate<TResult>, IConstant
-	where TResult : IComparable
+	where TResult : notnull, IComparable
 {
+	[NotNull]
 	new TResult Value { get; }
 }

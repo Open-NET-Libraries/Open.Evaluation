@@ -45,7 +45,7 @@ public static class CatalogExtensions
 
 			var len = span.Length;
 			if (len == 0 || span[0] != '{' || span[len - 1] != '}')
-				throw new InvalidOperationException($"Unrecognized evaluation sequence: {span.ToString()}");
+				throw new FormatException($"Unrecognized evaluation sequence: {span.ToString()}");
 
 			v = span.TrimStart('{').TrimEnd('}').ToString();
 
@@ -60,7 +60,7 @@ public static class CatalogExtensions
 				if (ushort.TryParse(v, out var p)) return catalog.GetParameter(p);
 			}
 
-			throw new InvalidOperationException($"Unrecognized evaluation sequence: {v}");
+			throw new FormatException($"Unrecognized evaluation sequence: {v}");
 		});
 
 	public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
@@ -118,8 +118,8 @@ public static class CatalogExtensions
 		while (last != evaluation);
 
 		var checkRegisteredOnly = registeredOnly.Match(evaluation);
-		if (checkRegisteredOnly.Success) return registry[checkRegisteredOnly.Groups[1].Value];
-
-		throw new FormatException($"Could not parse sequence: {original}");
+		return checkRegisteredOnly.Success
+			? registry[checkRegisteredOnly.Groups[1].Value]
+			: throw new FormatException($"Could not parse sequence: {original}");
 	}
 }
