@@ -3,11 +3,10 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-namespace Open.Evaluation.Core
+namespace Open.Evaluation.Core;
+
+public interface ISymbolized
 {
-	public interface ISymbolized
-	{
-		char Symbol { get; }
-		string SymbolString { get; }
-	}
+	char Symbol { get; }
+	string SymbolString { get; }
 }

@@ -8,7 +8,6 @@ using System.Collections.Generic;
 
 namespace Open.Evaluation.Boolean.Counting
 {
-
 	public class AtMost : CountingBase,
 			IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
@@ -40,11 +39,7 @@ namespace Open.Evaluation.Boolean.Counting
 
 			return true;
 		}
-
 	}
-
-
-
 }
 
 namespace Open.Evaluation.Boolean

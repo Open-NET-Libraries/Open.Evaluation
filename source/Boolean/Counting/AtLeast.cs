@@ -42,7 +42,6 @@ namespace Open.Evaluation.Boolean.Counting
 
 			return false;
 		}
-
 	}
 }
 

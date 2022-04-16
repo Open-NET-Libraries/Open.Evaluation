@@ -6,13 +6,11 @@
 using Open.Hierarchy;
 using System;
 
-namespace Open.Evaluation.Core
-{
-	public interface IOperator<out TChild, out TResult>
-		: IFunction<TResult>, IParent<TChild>
-		where TChild : class, IEvaluate
-		where TResult : IComparable
-	{
+namespace Open.Evaluation.Core;
 
-	}
+public interface IOperator<out TChild, out TResult>
+	: IFunction<TResult>, IParent<TChild>
+	where TChild : class, IEvaluate
+	where TResult : IComparable
+{
 }

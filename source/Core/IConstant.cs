@@ -5,16 +5,15 @@
 
 using System;
 
-namespace Open.Evaluation.Core
-{
-	public interface IConstant : IEvaluate
-	{
-		IComparable Value { get; }
-	}
+namespace Open.Evaluation.Core;
 
-	public interface IConstant<out TResult> : IEvaluate<TResult>, IConstant
-		where TResult : IComparable
-	{
-		new TResult Value { get; }
-	}
+public interface IConstant : IEvaluate
+{
+	IComparable Value { get; }
+}
+
+public interface IConstant<out TResult> : IEvaluate<TResult>, IConstant
+	where TResult : IComparable
+{
+	new TResult Value { get; }
 }
