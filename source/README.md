@@ -1,5 +1,9 @@
 ﻿# Open.Evaluation
 
+Open.Evaluation is a framework for constructing and evaluating any hierarchal formula or complex structure.  Typically used for evaluating math or algorithms.
+
+For example: Given a specific mathmatical formula (or function), it is possible to not only resolve/evaluate the result given a set of parameters, it is also possible to inspect the formula's structure and see how the values are being used.
+
 ## Evaluation Classes
 
 (See Core/EvaluationBase.cs)
