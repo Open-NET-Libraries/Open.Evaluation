@@ -363,9 +363,9 @@ public static partial class ProductExtensions
 			switch (c)
 			{
 				case IConstant<float> f when float.IsNaN(f.Value):
-					return catalog.GetConstant((TResult)(dynamic)float.NaN);
+					return catalog.GetConstant(Constant<TResult>.FloatNaN.Value);
 				case IConstant<double> d when double.IsNaN(d.Value):
-					return catalog.GetConstant((TResult)(dynamic)double.NaN);
+					return catalog.GetConstant(Constant<TResult>.DoubleNaN.Value);
 			}
 
 			// No need to multiply by 1.

@@ -134,10 +134,10 @@ public class Sum<TResult> :
 		}
 
 		if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-			return GetConstant(catalog, (TResult)(dynamic)float.NaN);
+			return GetConstant(catalog, Constant<TResult>.FloatNaN.Value);
 
 		if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-			return GetConstant(catalog, (TResult)(dynamic)double.NaN);
+			return GetConstant(catalog, Constant<TResult>.DoubleNaN.Value);
 
 		var one = GetConstant(catalog, (TResult)(dynamic)1);
 
