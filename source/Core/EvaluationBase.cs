@@ -37,7 +37,7 @@ public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 		Debug.Assert(context is not null);
 		// Use existing context... // Caches results...
 		if (context is ParameterContext pc)
-			return pc.GetOrAdd(this, _ => EvaluateInternal(pc))!; // **
+			return pc.GetOrAdd(this, () => EvaluateInternal(pc))!; // **
 
 		// Create a new one for this tree...
 		using var newPc = new ParameterContext(context!);
