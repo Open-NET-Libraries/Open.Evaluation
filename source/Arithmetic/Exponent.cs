@@ -13,7 +13,7 @@ namespace Open.Evaluation.Arithmetic;
 // ReSharper disable once PossibleInfiniteInheritance
 public class Exponent<TResult> : OperatorBase<TResult>,
 	IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
-	where TResult : struct, IComparable
+	where TResult : notnull, IComparable<TResult>, IComparable
 {
 	protected Exponent(
 		IEvaluate<TResult> @base,
@@ -102,7 +102,7 @@ public static partial class ExponentExtensions
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> Exponent<TResult>.Create(catalog, @base, power);
 
 	public static bool IsPowerOf(this Exponent<double> exponent, in double power)

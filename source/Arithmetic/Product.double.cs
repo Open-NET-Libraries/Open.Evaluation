@@ -41,7 +41,7 @@ public class Product : Product<double>
 	//internal static Product<TResult> Create<TResult>(
 	//	ICatalog<IEvaluate<TResult>> catalog,
 	//	IEnumerable<IEvaluate<TResult>> param)
-	//	where TResult : struct, IComparable
+	//	where TResult : notnull, IComparable<TResult>, IComparable
 	//	=> Product<TResult>.Create(catalog, param);
 
 	public override IEvaluate<double> NewUsing(

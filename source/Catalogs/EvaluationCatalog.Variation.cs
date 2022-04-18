@@ -13,7 +13,7 @@ using EvalDoubleVariationCatalog = Open.Evaluation.Catalogs.EvaluationCatalog<do
 
 namespace Open.Evaluation.Catalogs;
 public partial class EvaluationCatalog<T>
-	where T : IComparable
+	where T : notnull, IComparable<T>, IComparable
 {
 	private VariationCatalog? _variation;
 	public VariationCatalog Variation =>
@@ -30,7 +30,7 @@ public partial class EvaluationCatalog<T>
 public static partial class EvaluationCatalogExtensions
 {
 	public static bool IsValidForRemoval<T>(this Node<IEvaluate<T>> gene, bool ifRoot = false)
-		where T : struct, IComparable
+		where T : notnull, IComparable<T>, IComparable
 	{
 		if (gene == gene.Root) return ifRoot;
 		// Validate worthyness.
@@ -229,7 +229,7 @@ public static partial class EvaluationCatalogExtensions
 	public static IEvaluate<TResult> FlattenProductofSums<TResult>(
 		this EvaluationCatalog<TResult>.VariationCatalog catalog,
 		IEvaluate<TResult> root)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (root is null) throw new ArgumentNullException(nameof(root));

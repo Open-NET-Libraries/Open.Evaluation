@@ -13,7 +13,7 @@ namespace Open.Evaluation.Catalogs;
 [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
-	where T : IComparable
+	where T : notnull, IComparable<T>, IComparable
 {
 	private const string ReturnedNull = "Returned null.";
 

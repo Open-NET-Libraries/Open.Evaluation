@@ -15,7 +15,7 @@ public interface IConstant : IEvaluate
 }
 
 public interface IConstant<out TResult> : IEvaluate<TResult>, IConstant
-	where TResult : notnull, IComparable
+	where TResult : notnull, IComparable<TResult>, IComparable
 {
 	[NotNull]
 	new TResult Value { get; }

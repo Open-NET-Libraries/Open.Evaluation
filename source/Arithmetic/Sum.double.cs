@@ -37,7 +37,7 @@ public class Sum : Sum<double>
 	internal static Sum<TResult> Create<TResult>(
 		ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> param)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> Sum<TResult>.Create(catalog, param);
 
 	public override IEvaluate<double> NewUsing(
@@ -58,7 +58,7 @@ public static partial class SumExtensions
 	static IEvaluate<double> SumOfCollection<TResult>(
 		ICatalog<IEvaluate<double>> catalog,
 		List<IEvaluate<double>> childList)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		var constants = childList.ExtractType<IConstant<double>>();
 

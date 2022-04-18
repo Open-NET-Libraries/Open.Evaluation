@@ -46,7 +46,8 @@
 		  <PrivateAssets>all</PrivateAssets>
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Open.Hierarchy" Version="1.9.0" />
+		<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />
+		<PackageReference Include="Open.Hierarchy" Version="1.9.1" />
 		<PackageReference Include="Open.Numeric.Primes" Version="2.0.2" />
 		<PackageReference Include="Open.RandomizationExtensions" Version="2.5.3" />
 	</ItemGroup>

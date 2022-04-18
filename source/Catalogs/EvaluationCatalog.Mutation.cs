@@ -16,7 +16,7 @@ namespace Open.Evaluation.Catalogs;
 
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 public partial class EvaluationCatalog<T>
-	where T : IComparable
+	where T : notnull, IComparable<T>, IComparable
 {
 	private MutationCatalog? _mutation;
 	public MutationCatalog Mutation =>

@@ -21,7 +21,7 @@ namespace Open.Evaluation.Arithmetic;
 public class Sum<TResult> :
 	OperatorBase<TResult>,
 	IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
-	where TResult : struct, IComparable
+	where TResult : notnull, IComparable<TResult>, IComparable
 {
 	protected Sum(IEnumerable<IEvaluate<TResult>> children)
 		: base(Sum.SYMBOL, Sum.SEPARATOR, children, true)
@@ -268,7 +268,7 @@ public static partial class SumExtensions
 	static IEvaluate<TResult> SumOfCollection<TResult>(
 		ICatalog<IEvaluate<TResult>> catalog,
 		List<IEvaluate<TResult>> childList)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		var constants = childList.ExtractType<IConstant<TResult>>();
 
@@ -292,7 +292,7 @@ public static partial class SumExtensions
 	public static IEvaluate<TResult> SumOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IReadOnlyList<IEvaluate<TResult>> children)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (children is null) throw new ArgumentNullException(nameof(children));
@@ -319,7 +319,7 @@ public static partial class SumExtensions
 	public static IEvaluate<TResult> SumOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		if (children is IReadOnlyList<IEvaluate<TResult>> ch) return SumOf(catalog, ch);
 
@@ -343,6 +343,6 @@ public static partial class SumExtensions
 	public static IEvaluate<TResult> SumOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		params IEvaluate<TResult>[] children)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> SumOf(catalog, (IEnumerable<IEvaluate<TResult>>)children);
 }

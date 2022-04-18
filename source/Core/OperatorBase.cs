@@ -21,7 +21,7 @@ public abstract class OperatorBase<TChild, TResult>
 	: OperationBase<TResult>, IOperator<TChild, TResult>, IComparer<TChild>
 
 	where TChild : class, IEvaluate
-	where TResult : IComparable
+	where TResult : notnull, IComparable<TResult>, IComparable
 {
 	protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1) : base(symbol, separator)
 	{
@@ -144,7 +144,7 @@ public abstract class OperatorBase<TChild, TResult>
 }
 
 public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, TResult>
-	where TResult : IComparable
+	where TResult : notnull, IComparable<TResult>, IComparable
 {
 	protected OperatorBase(
 		char symbol,

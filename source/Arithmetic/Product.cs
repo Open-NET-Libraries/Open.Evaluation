@@ -21,7 +21,7 @@ namespace Open.Evaluation.Arithmetic;
 public class Product<TResult> :
 	OperatorBase<TResult>,
 	IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
-	where TResult : struct, IComparable
+	where TResult : notnull, IComparable<TResult>, IComparable
 {
 	protected Product(IEnumerable<IEvaluate<TResult>> children)
 		: base(Product.SYMBOL, Product.SEPARATOR, children, true, 2) { }
@@ -118,7 +118,7 @@ public class Product<TResult> :
 			// ReSharper disable once InvertIf
 			if (multipleValue != 1 && Math.Floor(multipleValue) == multipleValue)
 			{
-				var oneNeg = catalog.GetConstant((TResult)(dynamic)(-1));
+				var oneNeg = catalog.GetConstant(Constant<TResult>.NegativeOne.Value);
 				var muValue = (long)multipleValue;
 				var originalMultiple = muValue;
 				var multipleIndex = children.IndexOf(multiple);
@@ -314,7 +314,7 @@ public static partial class ProductExtensions
 	public static IEnumerable<(string Hash, IConstant<TResult>? Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		foreach (var c in source)
 		{
@@ -339,7 +339,7 @@ public static partial class ProductExtensions
 	public static IEvaluate<TResult> ProductOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count == 0)
@@ -389,14 +389,14 @@ public static partial class ProductExtensions
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEvaluate<TResult> multiple,
 		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> ProductOf(catalog, children.Append(multiple));
 
 	public static IEvaluate<TResult> ProductOfSum<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEvaluate<TResult> multiple,
 		Sum<TResult> sum)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> multiple is Sum<TResult> m
 		? ProductOfSums(catalog, m, sum)
 		: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
@@ -405,13 +405,13 @@ public static partial class ProductExtensions
 		this ICatalog<IEvaluate<TResult>> catalog,
 		Sum<TResult> a,
 		Sum<TResult> b)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> catalog.GetReduced(catalog.SumOf(a.Children.Select(c => ProductOfSum(catalog, c, b))));
 
 	public static IEvaluate<TResult> ProductOfSums<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IReadOnlyCollection<Sum<TResult>> sums)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 	{
 		if (sums.Count == 0) return catalog.GetConstant((TResult)(dynamic)1);
 		using var e = sums.GetEnumerator();
@@ -426,14 +426,14 @@ public static partial class ProductExtensions
 		IEvaluate<TResult> child1,
 		IEvaluate<TResult> child2,
 		params IEvaluate<TResult>[] moreChildren)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> ProductOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
 
 	public static IEvaluate<TResult> ProductOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		in TResult multiple,
 		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
 	public static IEvaluate<TResult> ProductOf<TResult>(
@@ -441,6 +441,6 @@ public static partial class ProductExtensions
 		in TResult multiple,
 		IEvaluate<TResult> first,
 		params IEvaluate<TResult>[] rest)
-		where TResult : struct, IComparable
+		where TResult : notnull, IComparable<TResult>, IComparable
 		=> ProductOf(catalog, rest.Prepend(first).Prepend(catalog.GetConstant(multiple)));
 }

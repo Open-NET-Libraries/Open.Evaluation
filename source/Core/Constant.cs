@@ -14,7 +14,7 @@ namespace Open.Evaluation.Core;
 [DebuggerDisplay("Value = {Value}")]
 public class Constant<TValue>
 	: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
-	where TValue : notnull, IComparable
+	where TValue : notnull, IComparable<TValue>, IComparable
 {
 	protected Constant(TValue value) => Value = value;
 
@@ -61,6 +61,9 @@ public class Constant<TValue>
 	internal static readonly Lazy<TValue> NegativeOne = new(() => (TValue)(dynamic)(-1));
 	internal static readonly Lazy<TValue> FloatNaN = new(() => (TValue)(dynamic)float.NaN);
 	internal static readonly Lazy<TValue> DoubleNaN = new(() => (TValue)(dynamic)double.NaN);
+
+	internal static readonly Func<IConstant<TValue>, bool> IsFloatNaN = c => c is IConstant<float> d && float.IsNaN(d.Value);
+	internal static readonly Func<IConstant<TValue>, bool> IsDoubleNaN = c => c is IConstant<double> d && double.IsNaN(d.Value);
 }
 
 public static partial class ConstantExtensions
@@ -68,7 +71,7 @@ public static partial class ConstantExtensions
 	public static Constant<TValue> GetConstant<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue value)
-		where TValue : IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 	{
 		Debug.Assert(catalog is not null);
 		// ReSharper disable once SuspiciousTypeConversion.Global
@@ -80,7 +83,7 @@ public static partial class ConstantExtensions
 	public static Constant<TValue> SumOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue c1, IEnumerable<IConstant<TValue>> constants)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (constants is null) throw new ArgumentNullException(nameof(constants));
@@ -88,15 +91,15 @@ public static partial class ConstantExtensions
 		if (typeof(TValue) == typeof(float))
 		{
 			// ReSharper disable once PossibleMultipleEnumeration
-			if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-				return catalog.GetConstant((TValue)(dynamic)float.NaN);
+			if (float.IsNaN((float)(dynamic)c1) || constants.Any(Constant<TValue>.IsFloatNaN))
+				return catalog.GetConstant(Constant<TValue>.FloatNaN.Value);
 		}
 
 		if (typeof(TValue) == typeof(double))
 		{
 			// ReSharper disable once PossibleMultipleEnumeration
-			if (double.IsNaN((double)(dynamic)c1) || constants.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-				return catalog.GetConstant((TValue)(dynamic)double.NaN);
+			if (double.IsNaN((double)(dynamic)c1) || constants.Any(Constant<TValue>.IsDoubleNaN))
+				return catalog.GetConstant(Constant<TValue>.DoubleNaN.Value);
 		}
 
 		dynamic result = c1;
@@ -112,19 +115,19 @@ public static partial class ConstantExtensions
 	public static Constant<TValue> SumOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		IEnumerable<IConstant<TValue>> constants)
-		where TValue : struct, IComparable
-		=> SumOfConstants(catalog, (TValue)(dynamic)0, constants);
+		where TValue : notnull, IComparable<TValue>, IComparable
+		=> SumOfConstants(catalog, Constant<TValue>.Zero.Value, constants);
 
 	public static Constant<TValue> SumOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue c1, in IConstant<TValue> c2, params IConstant<TValue>[] rest)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 		=> SumOfConstants(catalog, c1, rest.Prepend(c2));
 
 	public static Constant<TValue> SumOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in IConstant<TValue> c1, in IConstant<TValue> c2, params IConstant<TValue>[] rest)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 	{
 		if (c1 is null) throw new ArgumentNullException(nameof(c1));
 		if (c2 is null) throw new ArgumentNullException(nameof(c2));
@@ -136,7 +139,7 @@ public static partial class ConstantExtensions
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue c1, IEnumerable<IConstant<TValue>> constants)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 	{
 		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
 		if (constants is null) throw new ArgumentNullException(nameof(constants));
@@ -144,15 +147,15 @@ public static partial class ConstantExtensions
 		if (typeof(TValue) == typeof(float))
 		{
 			// ReSharper disable once PossibleMultipleEnumeration
-			if (float.IsNaN((float)(dynamic)c1) || constants.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-				return catalog.GetConstant((TValue)(dynamic)float.NaN);
+			if (float.IsNaN((float)(dynamic)c1) || constants.Any(Constant<TValue>.IsFloatNaN))
+				return catalog.GetConstant(Constant<TValue>.FloatNaN.Value);
 		}
 
 		if (typeof(TValue) == typeof(double))
 		{
 			// ReSharper disable once PossibleMultipleEnumeration
-			if (double.IsNaN((double)(dynamic)c1) || constants.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-				return catalog.GetConstant((TValue)(dynamic)double.NaN);
+			if (double.IsNaN((double)(dynamic)c1) || constants.Any(Constant<TValue>.IsDoubleNaN))
+				return catalog.GetConstant(Constant<TValue>.DoubleNaN.Value);
 		}
 
 		dynamic zero = (TValue)(dynamic)0;
@@ -170,7 +173,7 @@ public static partial class ConstantExtensions
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		IEnumerable<IConstant<TValue>> constants)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 		=> ProductOfConstants(catalog, (TValue)(dynamic)1, constants);
 
 	public static Constant<TValue> ProductOfConstants<TValue>(
@@ -178,7 +181,7 @@ public static partial class ConstantExtensions
 		in IConstant<TValue> c1,
 		in IConstant<TValue> c2,
 		params IConstant<TValue>[] rest)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 	{
 		if (c1 is null) throw new ArgumentNullException(nameof(c1));
 		if (c2 is null) throw new ArgumentNullException(nameof(c2));
@@ -190,6 +193,6 @@ public static partial class ConstantExtensions
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue c1, IConstant<TValue> c2, params IConstant<TValue>[] rest)
-		where TValue : struct, IComparable
+		where TValue : notnull, IComparable<TValue>, IComparable
 		=> ProductOfConstants(catalog, c1, rest.Prepend(c2));
 }

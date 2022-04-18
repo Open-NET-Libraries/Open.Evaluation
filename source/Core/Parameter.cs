@@ -22,8 +22,8 @@ public class Parameter<TValue>
 
 	readonly Func<object, ushort, TValue> _evaluator;
 
-	static TValue GetParamValueFrom(object source, ushort id)
-		=> source switch
+	static readonly Func<object, ushort, TValue> GetParamValueFrom
+		= (object source, ushort id) => source switch
 		{
 			IReadOnlyList<TValue> list => list[id],
 			IDictionary<ushort, TValue> d => d[id],
