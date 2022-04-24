@@ -19,13 +19,13 @@ public class ParameterContext // Using a Lazy to differentiate between the value
 		=> Context is null
 			? throw new ObjectDisposedException(nameof(ParameterContext))
 			: base.GetOrAdd(key, k => new Lazy<object>(() => factory(k)!)).Value is TResult r
-			? r : throw new InvalidCastException(ParameterContext.DoesntMatch);
+			? r : throw new InvalidCastException(DoesntMatch);
 
 	public TResult GetOrAdd<TResult>(IEvaluate key, Func<TResult> factory)
 		=> Context is null
 			? throw new ObjectDisposedException(nameof(ParameterContext))
-			: base.GetOrAdd(key, _ => new Lazy<object>(factory)).Value is TResult r
-			? r : throw new InvalidCastException(ParameterContext.DoesntMatch);
+			: base.GetOrAdd(key, _ => new Lazy<object>(() => factory()!)).Value is TResult r
+			? r : throw new InvalidCastException(DoesntMatch);
 
 	#region IDisposable Support
 	private bool disposedValue; // To detect redundant calls
