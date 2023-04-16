@@ -3,38 +3,37 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Threading;
+using System.Diagnostics.Contracts;
+using Throw;
 
 namespace Open.Evaluation.Core;
 
 /*
- * The main idea here is to envorce an immutable class and it's related sub classes.  No changes allowed after construction
+ * The main idea here is to enforce an immutable class and it's related sub classes.  No changes allowed after construction
  * A clone can only be created by 'recreating' or 'reconstructing'.
  */
 
 public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	protected abstract string ToStringRepresentationInternal();
-	string? _toStringRepresentation; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
-	public string ToStringRepresentation()
-		=> LazyInitializer.EnsureInitialized(ref _toStringRepresentation, ToStringRepresentationInternal)!;
-
 	[return: NotNull]
-	protected abstract TResult EvaluateInternal(object context); // **
+	protected abstract string Describe();
 
-	[return: NotNull]
-	protected abstract string ToStringInternal(object context);
+	string? _description; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
 
-	[return: NotNull]
-	object IEvaluate.Evaluate(object context) => Evaluate(context);
+	[NotNull]
+	public string Description
+		=> LazyInitializer.EnsureInitialized(ref _description, Describe)!;
+
+	protected abstract EvaluationResult<TResult> EvaluateInternal(object context); // **
 
 	/// <inheritdoc />
-	[return: NotNull]
-	public TResult Evaluate(object context)
+	public EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] object context)
 	{
-		Debug.Assert(context is not null);
+		context.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
 		// Use existing context... // Caches results...
 		if (context is ParameterContext pc)
 			return pc.GetOrAdd(this, () => EvaluateInternal(pc))!; // **
@@ -43,9 +42,4 @@ public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 		using var newPc = new ParameterContext(context!);
 		return Evaluate(newPc);
 	}
-
-	/// <inheritdoc />
-	[return: NotNull]
-	public virtual string ToString(object context)
-		=> ToStringInternal(Evaluate(context));
 }

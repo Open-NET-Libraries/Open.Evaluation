@@ -4,22 +4,16 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]
 public class And : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
-	public const char SYMBOL = '&';
-	public const string SEPARATOR = " & ";
-
 	public And(IEnumerable<IEvaluate<bool>> children)
-		: base(SYMBOL, SEPARATOR, children, true)
+		: base(BooleanSymbols.And, children, true)
 	{ }
 
 	protected override bool EvaluateInternal(object context)
@@ -31,7 +25,7 @@ public class And : OperatorBase<bool>,
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (param is null) throw new ArgumentNullException(nameof(param));
 		Contract.EndContractBlock();
 

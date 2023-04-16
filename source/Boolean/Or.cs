@@ -4,22 +4,16 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]
 public class Or : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
-	public const char SYMBOL = '|';
-	public const string SEPARATOR = " | ";
-
 	public Or(IEnumerable<IEvaluate<bool>> children)
-		: base(SYMBOL, SEPARATOR, children, true)
+		: base(BooleanSymbols.Or, children, true)
 	{ }
 
 	protected override bool EvaluateInternal(object context)
@@ -31,7 +25,7 @@ public class Or : OperatorBase<bool>,
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (param is null) throw new ArgumentNullException(nameof(param));
 		Contract.EndContractBlock();
 

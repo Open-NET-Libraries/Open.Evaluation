@@ -4,18 +4,15 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 
 namespace Open.Evaluation.Boolean.Counting;
 
 public abstract class CountingBase : OperatorBase<bool>
 {
-	public const char SYMBOL = ',';
-	public const string SEPARATOR = ", ";
+	public static readonly Symbol SymbolInstance = new(',', ", ");
 
-	protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<bool>> children)
-		: base(SYMBOL, SEPARATOR, children, true)
+	protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<bool>> children, int minimumChildren = 0)
+		: base(SymbolInstance, children, true, minimumChildren)
 	{
 		if (count < 0)
 			throw new ArgumentOutOfRangeException(nameof(count), count, "Count must be at least 0.");

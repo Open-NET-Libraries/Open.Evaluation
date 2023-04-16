@@ -5,7 +5,8 @@
 
 namespace Open.Evaluation.Core;
 
-public interface IFunction<out TResult>
+public interface IFunction<TResult>
 	: IEvaluate<TResult>, ISymbolized
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
 }

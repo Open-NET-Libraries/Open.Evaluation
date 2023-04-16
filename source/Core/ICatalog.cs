@@ -1,6 +1,4 @@
 ﻿using Open.Hierarchy;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
@@ -23,7 +21,7 @@ public interface ICatalog<T> : IDisposable
 	TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
 		where TItem : T;
 
-	bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem? item)
+	bool TryGetItem<TItem>(string id, [MaybeNullWhen(false)] out TItem item)
 		where TItem : T;
 
 	[return: NotNull]

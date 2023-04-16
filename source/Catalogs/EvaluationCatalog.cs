@@ -1,28 +1,27 @@
-﻿using Open.Evaluation.Arithmetic;
+﻿using OneOf.Types;
+using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using Throw;
 
 namespace Open.Evaluation.Catalogs;
 
 [SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
 [SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
 public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
-	where T : notnull, IComparable<T>, IComparable
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	private const string ReturnedNull = "Returned null.";
 
 	protected override TItem OnBeforeRegistration<TItem>(TItem item)
 	{
-		Debug.Assert(item is not Exponent<double> or Exponent);
-		Debug.Assert(item is not Sum<double> or Sum);
-		Debug.Assert(item is not Product<double> or Product);
-		Debug.Assert(item is not Constant<double> or Constant);
+		Debug.Assert(item is not Exponent<double>);
+		Debug.Assert(item is not Sum<double>);
+		Debug.Assert(item is not Product<double>);
+		Debug.Assert(item is not Constant<double>);
 
 		return item;
 	}
@@ -38,7 +37,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		Node<IEvaluate<T>> target,
 		bool operateDirectly = false)
 	{
-		if (target is null) throw new ArgumentNullException(nameof(target));
+		target.ThrowIfNull();
 		Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() is not null);
 		Contract.EndContractBlock();
 
@@ -142,8 +141,8 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		Node<IEvaluate<T>> sourceNode,
 		Func<Node<IEvaluate<T>>, IEvaluate<T>> clonedNodeHandler)
 	{
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
-		if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
+		sourceNode.ThrowIfNull();
+		clonedNodeHandler.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var node = sourceNode.CloneTree(); // * new 1
@@ -151,8 +150,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		var parent = node.Parent;
 		try
 		{
-			var replacement = clonedNodeHandler(node);
-			if (replacement is null) throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
+			var replacement = clonedNodeHandler(node) ?? throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
 			if (parent is null) return replacement;
 
 			var rn = Factory.Map(replacement);
@@ -182,10 +180,10 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	/// <returns>The resultant root evaluation corrected by .FixHierarchy()</returns>
 	public IEvaluate<T> ApplyClone<TParam>(
 		Node<IEvaluate<T>> sourceNode,
-		TParam param, // allow passthrough of data to avoid allocation.
+		TParam param, // allow pass-through of data to avoid allocation.
 		Func<Node<IEvaluate<T>>, TParam, IEvaluate<T>> clonedNodeHandler)
 	{
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		sourceNode.ThrowIfNull();
 		if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
 		Contract.EndContractBlock();
 
@@ -194,8 +192,9 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		var parent = node.Parent;
 		try
 		{
-			var replacement = clonedNodeHandler(node, param);
-			if (replacement is null) throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
+			var replacement = clonedNodeHandler(node, param)
+				?? throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
+
 			if (parent is null) return replacement;
 
 			var rn = Factory.Map(replacement);
@@ -232,8 +231,9 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		var parent = node.Parent;
 		try
 		{
-			var replacement = clonedNodeHandler(node); // * new 2
-			if (replacement is null) throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler));
+			var replacement = clonedNodeHandler(node)
+				?? throw new ArgumentException(EvaluationCatalog<T>.ReturnedNull, nameof(clonedNodeHandler)); // * new 2
+
 			try
 			{
 				if (parent is null)
@@ -280,7 +280,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	/// Removes a node from a hierarchy by it's descendant index.
 	/// </summary>
 	/// <param name="sourceNode">The root node to remove a descendant from.</param>
-	/// <param name="descendantIndex">The index of the descendant in the heirarchy (breadth-first).</param>
+	/// <param name="descendantIndex">The index of the descendant in the hierarchy (breadth-first).</param>
 	/// <returns>The resultant root node corrected by .FixHierarchy()</returns>
 	public IEvaluate<T> RemoveDescendantAt(
 		Node<IEvaluate<T>> sourceNode, int descendantIndex)

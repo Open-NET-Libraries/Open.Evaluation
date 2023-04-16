@@ -7,35 +7,23 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
-public interface IEvaluate
+public interface IEvaluate : IDescribe
 {
 	/// <summary>
-	/// Exectues and returns the calculation/evaluation.
+	/// Executes and returns the calculation/evaluation.
 	/// </summary>
 	/// <param name="context">The context object that defines the parameters for the evaluation.</param>
-	/// <returns>The resultant value of this evaluation</returns>
-	[return: NotNull]
-	object Evaluate(object context);
-
-	/// <summary>
-	/// Returns the string representation of this evaluation using the context parameters.
-	/// </summary>
-	/// <param name="context">The context object that defines the parameters for the evaluation.</param>
-	/// <returns>The resultant string that repesents the actual calcuation being done by .Evaluation().</returns>
-	[return: NotNull]
-	string ToString(object context);
-
-	/// <summary>
-	/// Returns the formulaic representation of this evaluation without using the actual parameter values.
-	/// </summary>
-	/// <returns>The resultant string that repesents the underlying formula.</returns>
-	[return: NotNull]
-	string ToStringRepresentation();
+	/// <returns>The result containing the value and representation of the evaluation.</returns>
+	EvaluationResult<object> Evaluate([DisallowNull, NotNull] object context);
 }
 
-public interface IEvaluate<out TResult> : IEvaluate
+public interface IEvaluate<TResult> : IEvaluate
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	/// <inheritdoc cref="IEvaluate.Evaluate(object)" />
+	/// <inheritdoc cref="IEvaluate.Evaluate(object)"/>
 	[return: NotNull]
-	new TResult Evaluate(object context);
+	new EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] object context);
+
+	[return: NotNull]
+	EvaluationResult<object> IEvaluate.Evaluate([DisallowNull, NotNull] object context) => Evaluate(context);
 }

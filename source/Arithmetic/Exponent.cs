@@ -3,27 +3,28 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using OneOf.Types;
 using Open.Evaluation.Core;
-using System;
+using Open.Numeric.Primes;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Numerics;
+using Throw;
 
 namespace Open.Evaluation.Arithmetic;
 
 // ReSharper disable once PossibleInfiniteInheritance
 public class Exponent<TResult> : OperatorBase<TResult>,
 	IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
-	where TResult : notnull, IComparable<TResult>, IComparable
+	where TResult : notnull, INumber<TResult>
 {
 	protected Exponent(
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
-		: base(
-			  Exponent.SYMBOL,
-			  Exponent.SEPARATOR,
+		: base(ArithmeticSymbols.Exponent,
 			  // Need to provide to children so a node tree can be built.
-			  new[] { @base, power }
-		)
+			  new[] { @base, power })
 	{
 		Base = @base ?? throw new ArgumentNullException(nameof(@base));
 		Power = power ?? throw new ArgumentNullException(nameof(power));
@@ -43,25 +44,27 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 		return (TResult)(dynamic)Math.Pow(evaluation, power);
 	}
 
-	protected override IEvaluate<TResult> Reduction(ICatalog<IEvaluate<TResult>> catalog)
+	protected override IEvaluate<TResult> Reduction(
+		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
 	{
-		Debug.Assert(catalog is not null);
+		catalog.ThrowIfNull().OnlyInDebug();
+
 		var pow = catalog!.GetReduced(Power);
 		IEvaluate<TResult> bas;
 		if (pow is Constant<TResult> cPow)
 		{
-			dynamic p = cPow.Value;
-			if (p == 0)
-				return GetConstant(catalog, (dynamic)1);
+			var p = cPow.Value;
+			if (p == TResult.Zero)
+				return catalog.GetConstant(TResult.One);
 
-			if (p == 1)
+			if (p == TResult.One)
 				return catalog.GetReduced(Base);
 
 			bas = catalog.GetReduced(Base);
 			if (bas is Exponent<TResult> basExp && basExp.Power is Constant<TResult> basePow)
 			{
 				// Multiply cascaded exponents.
-				return catalog.Register(NewUsing(catalog, (basExp.Base, GetConstant(catalog, p * basePow.Value))));
+				return catalog.Register(NewUsing(catalog, (basExp.Base, catalog.GetConstant(p * basePow.Value))));
 			}
 		}
 		else
@@ -77,9 +80,9 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (@base is null) throw new ArgumentNullException(nameof(@base));
-		if (power is null) throw new ArgumentNullException(nameof(power));
+		catalog.ThrowIfNull();
+		@base.ThrowIfNull();
+		power.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global
@@ -102,17 +105,26 @@ public static partial class ExponentExtensions
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
-		where TResult : notnull, IComparable<TResult>, IComparable
+		where TResult : notnull, INumber<TResult>
 		=> Exponent<TResult>.Create(catalog, @base, power);
 
-	public static bool IsPowerOf(this Exponent<double> exponent, in double power)
+	public static bool IsPowerOf<T>(this Exponent<T> exponent, in T power)
+		where T : notnull, INumber<T>
 	{
-		// ReSharper disable once CompareOfFloatsByEqualityOperator
-		Debug.Assert(exponent is not null);
-		return exponent!.Power is Constant<double> p && p.Value == power;
+		exponent.ThrowIfNull();
+		return exponent.Power is Constant<T> p && p.Value == power;
 	}
 
 	public static bool IsSquareRoot(this Exponent<double> exponent)
-		// ReSharper disable once CompareOfFloatsByEqualityOperator
 		=> exponent.IsPowerOf(0.5);
+
+	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
+		where T : notnull, INumber<T>, IFloatingPoint<T>, IDivisionOperators<T, T, T>
+		=> exponent.IsPowerOf(Value<T>.Half);
+
+	static class Value<T> where T : notnull, INumber<T>, IFloatingPoint<T>, IDivisionOperators<T, T, T>
+	{
+		public static readonly T Two = T.One + T.One;
+		public static readonly T Half = T.One / Two;
+	}
 }

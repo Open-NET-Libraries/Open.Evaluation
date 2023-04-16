@@ -3,36 +3,30 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
 using System.Diagnostics.CodeAnalysis;
+using Throw;
 
 namespace Open.Evaluation.Core;
 
 public abstract class OperationBase<TResult>
 	: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<IEvaluate<TResult>>
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	protected OperationBase(char symbol, string symbolString)
-	{
-		SymbolString = symbolString ?? throw new ArgumentNullException(nameof(symbolString));
-		Symbol = symbol;
-	}
+	protected OperationBase(Symbol symbol) => Symbol = symbol;
 
-	public char Symbol { get; }
+	public Symbol Symbol { get; }
 
-	public string SymbolString { get; }
-
-	protected override string ToStringInternal(object context)
-		=> $"{SymbolString}({context})";
-
+	[return: NotNull]
 	protected virtual IEvaluate<TResult> Reduction(
-		ICatalog<IEvaluate<TResult>> catalog)
+		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
 		=> this;
 
 	// Override this if reduction is possible.  Return null if you can't reduce.
 	public bool TryGetReduced(
-		ICatalog<IEvaluate<TResult>> catalog,
+		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog,
 		[NotNull] out IEvaluate<TResult> reduction)
 	{
+		catalog.ThrowIfNull().OnlyInDebug();
 		reduction = Reduction(catalog);
 		return reduction != this;
 	}

@@ -13,8 +13,8 @@ public static class ParameterContextTests
 		// Shouldn't throw.
 		var context = new ParameterContext(new object());
 		var c0 = catalog.GetConstant(0);
-		context.GetOrAdd(c0, _ => 0);
+		context.GetOrAdd(c0, 0d);
 		var c1 = catalog.GetConstant(1);
-		context.GetOrAdd(c1, _ => 1);
+		context.GetOrAdd(c1, 1d);
 	}
 }

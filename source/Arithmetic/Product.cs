@@ -3,28 +3,26 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Globalization;
-using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
+using Throw;
 
 namespace Open.Evaluation.Arithmetic;
 
-public class Product<TResult> :
+public partial class Product<TResult> :
 	OperatorBase<TResult>,
 	IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
-	where TResult : notnull, IComparable<TResult>, IComparable
+	where TResult : notnull, INumber<TResult>
 {
 	protected Product(IEnumerable<IEvaluate<TResult>> children)
-		: base(Product.SYMBOL, Product.SEPARATOR, children, true, 2) { }
+		: base(ArithmeticSymbols.Product, children, true, 2) { }
 
 	protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
 		: this(Enumerable.Repeat(first, 1).Concat(rest)) { }
@@ -38,16 +36,16 @@ public class Product<TResult> :
 			.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
 
 	protected override IEvaluate<TResult> Reduction(
-		ICatalog<IEvaluate<TResult>> catalog)
+		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
 	{
-		Debug.Assert(catalog is not null);
-		var one = catalog.GetConstant(Constant<TResult>.One.Value);
+		catalog.ThrowIfNull().OnlyInDebug();
+		var one = catalog.GetConstant(TResult.MultiplicativeIdentity);
 
 		// Phase 1: Flatten products of products.
 		var children = catalog
 			.Flatten<Product<TResult>>(Children)
 			.Where(c => c != one)
-			.ToList(); // ** chidren's reduction is done here.
+			.ToList(); // ** children's reduction is done here.
 
 		// Phase 3: Try to extract common multiples...
 		var len = children.Count;
@@ -77,14 +75,15 @@ public class Product<TResult> :
 		}
 
 		// Phase 4: Deal with special case constants.
-		if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-			return GetConstant(catalog, Constant<TResult>.FloatNaN.Value);
+		IConstant<TResult>? zero = null;
+		foreach (var e in children.OfType<IConstant<TResult>>())
+		{
+			var cValue = c.Value;
+			if (TResult.IsNaN(cValue)) return c;
+			if (TResult.IsZero(cValue)) zero = c;
+		}
 
-		if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-			return GetConstant(catalog, Constant<TResult>.DoubleNaN.Value);
-
-		var zero = catalog.GetConstant(Constant<TResult>.Zero.Value); // This could be a problem in the future. What zero?  0d?  0f? :/
-		if (children.Any(c => c == zero))
+		if (zero is not null)
 			return zero;
 
 		var cat = catalog;
@@ -94,12 +93,17 @@ public class Product<TResult> :
 			? (Base: cat.GetReduced(e.Base), e.Power)
 			: (Base: c, Power: one)).ToArray();
 
-		if (exponents.Any(c => c.Base == zero))
+		zero = exponents
+			.Select(e => e.Base)
+			.OfType<IConstant<TResult>>()
+			.FirstOrDefault(c => TResult.IsZero(c.Value));
+
+		if (zero is not null)
 			return zero;
 
 		children = exponents
 			.Where(e => e.Power != zero)
-			.GroupBy(e => e.Base.ToStringRepresentation())
+			.GroupBy(e => e.Base.Description)
 			.Select(g =>
 			{
 				var @base = g.First().Base;
@@ -110,15 +114,17 @@ public class Product<TResult> :
 					: GetExponent(catalog, @base, power);
 			}).ToList();
 
-		var multiple = children.OfType<IConstant<TResult>>().FirstOrDefault();
-		// ReSharper disable once InvertIf
+		var multiple = children
+			.OfType<IConstant<TResult>>()
+			.FirstOrDefault();
+
 		if (multiple is not null)
 		{
-			var multipleValue = Convert.ToDouble(multiple.Value, CultureInfo.InvariantCulture);
+			var multipleValue = multiple.Value;
 			// ReSharper disable once InvertIf
-			if (multipleValue != 1 && Math.Floor(multipleValue) == multipleValue)
+			if (multipleValue != TResult.MultiplicativeIdentity && Math.Floor(multipleValue) == multipleValue)
 			{
-				var oneNeg = catalog.GetConstant(Constant<TResult>.NegativeOne.Value);
+				var oneNeg = catalog.GetConstant(-TResult.MultiplicativeIdentity);
 				var muValue = (long)multipleValue;
 				var originalMultiple = muValue;
 				var multipleIndex = children.IndexOf(multiple);
@@ -138,9 +144,7 @@ public class Product<TResult> :
 
 					// We won't mess with factional divisors yet.
 					if (Math.Floor(divisor) != divisor)
-					{
 						continue;
-					}
 
 					var d = (long)divisor;
 					if (muValue % d == 0)
@@ -164,8 +168,8 @@ public class Product<TResult> :
 						if (f != 1L)
 						{
 							children[i] = catalog.GetExponent(
-								catalog.GetConstant((TResult)(dynamic)(d / f)),
-								catalog.GetConstant(Constant<TResult>.NegativeOne.Value));
+								catalog.GetConstant(d / f),
+								catalog.GetConstant(-TResult.MultiplicativeIdentity));
 						}
 					}
 
@@ -174,9 +178,7 @@ public class Product<TResult> :
 				}
 
 				if (muValue != originalMultiple)
-				{
 					children[multipleIndex] = catalog.GetConstant((TResult)(dynamic)muValue);
-				}
 			}
 		}
 
@@ -185,15 +187,15 @@ public class Product<TResult> :
 				: catalog.ProductOf(children);
 	}
 
-	// ReSharper disable once StaticMemberInGenericType
-	static readonly Regex IsInverted = new(@"^\(1/(.+)\)$", RegexOptions.Compiled);
+	[GeneratedRegex("^\\(1/(.+)\\)$", RegexOptions.Compiled)]
+	private static partial Regex IsInvertedPattern();
 
 	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 	{
 		Debug.Assert(result is not null);
 		if (index != 0 && child is string c)
 		{
-			var m = IsInverted.Match(c);
+			var m = IsInvertedPattern().Match(c);
 			if (m.Success)
 			{
 				result.Append(" / ");
@@ -248,8 +250,11 @@ public class Product<TResult> :
 		return false;
 	}
 
-	public override int Compare(IEvaluate<TResult> x, IEvaluate<TResult> y)
+	public override int Compare(IEvaluate<TResult>? x, IEvaluate<TResult>? y)
 	{
+		if (x is null) return y is null ? 0 : -1;
+		if (y is null) return +1;
+
 		// Constants always get priority in products and are moved to the front.  They should collapse in reduction to a 'multiple'.
 		if (x is IConstant<TResult> || y is IConstant<TResult>)
 			return base.Compare(x, y);
@@ -263,18 +268,16 @@ public class Product<TResult> :
 		}
 		else if (aFound)
 		{
-			var v = (dynamic)aConstant;
-			if (1 > v)
+			if (TResult.MultiplicativeIdentity > aConstant.Value)
 				return +1;
-			if (1 < v)
+			if (TResult.MultiplicativeIdentity < aConstant.Value)
 				return -1;
 		}
 		else if (bFound)
 		{
-			var v = (dynamic)bConstant;
-			if (1 > v)
+			if (TResult.MultiplicativeIdentity > bConstant.Value)
 				return -1;
-			if (1 < v)
+			if (TResult.MultiplicativeIdentity < bConstant.Value)
 				return +1;
 		}
 
@@ -285,7 +288,7 @@ public class Product<TResult> :
 		ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (param is null) throw new ArgumentNullException(nameof(param));
 		Contract.EndContractBlock();
 
@@ -307,140 +310,4 @@ public class Product<TResult> :
 		=> param is IReadOnlyList<IEvaluate<TResult>> p
 		? NewUsing(catalog, p)
 		: ConditionalTransform(param, p => Create(catalog, p));
-}
-
-public static partial class ProductExtensions
-{
-	public static IEnumerable<(string Hash, IConstant<TResult>? Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
-		where TResult : notnull, IComparable<TResult>, IComparable
-	{
-		foreach (var c in source)
-		{
-			if (c is not Product<TResult> p)
-			{
-				yield return (c.ToStringRepresentation(), default(IConstant<TResult>?), c);
-				continue;
-			}
-
-			var reduced = reduce
-				? p.ReductionWithMutlipleExtracted(catalog, out var multiple)
-				: p.ExtractMultiple(catalog, out multiple);
-
-			yield return (
-				reduced.ToStringRepresentation(),
-				multiple,
-				reduced
-			);
-		}
-	}
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : notnull, IComparable<TResult>, IComparable
-	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count == 0)
-			throw new NotSupportedException("Cannot produce a product of an empty set.");
-
-		using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
-		var childList = childListRH.Item;
-		childList.AddRange(children);
-		if (childList.Count == 0)
-			throw new NotSupportedException("Cannot produce a product of an empty set.");
-		var constants = childList.ExtractType<IConstant<TResult>>();
-
-		if (constants.Count > 0)
-		{
-			var c = constants.Count == 1
-				? constants[0]
-				: catalog.ProductOfConstants(constants);
-			if (childList.Count == 0)
-				return c;
-
-			switch (c)
-			{
-				case IConstant<float> f when float.IsNaN(f.Value):
-					return catalog.GetConstant(Constant<TResult>.FloatNaN.Value);
-				case IConstant<double> d when double.IsNaN(d.Value):
-					return catalog.GetConstant(Constant<TResult>.DoubleNaN.Value);
-			}
-
-			// No need to multiply by 1.
-			if (c != catalog.GetConstant((TResult)(dynamic)1))
-				childList.Add(c);
-		}
-
-		switch (childList.Count)
-		{
-			case 0:
-				Debug.Fail("Extraction failure.", "Should not have occured.");
-				throw new InvalidOperationException("Extraction failure.");
-			case 1:
-				return childList[0];
-			default:
-				return Product<TResult>.Create(catalog, childList);
-		}
-	}
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> multiple,
-		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : notnull, IComparable<TResult>, IComparable
-		=> ProductOf(catalog, children.Append(multiple));
-
-	public static IEvaluate<TResult> ProductOfSum<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> multiple,
-		Sum<TResult> sum)
-		where TResult : notnull, IComparable<TResult>, IComparable
-		=> multiple is Sum<TResult> m
-		? ProductOfSums(catalog, m, sum)
-		: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
-
-	public static IEvaluate<TResult> ProductOfSums<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		Sum<TResult> a,
-		Sum<TResult> b)
-		where TResult : notnull, IComparable<TResult>, IComparable
-		=> catalog.GetReduced(catalog.SumOf(a.Children.Select(c => ProductOfSum(catalog, c, b))));
-
-	public static IEvaluate<TResult> ProductOfSums<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IReadOnlyCollection<Sum<TResult>> sums)
-		where TResult : notnull, IComparable<TResult>, IComparable
-	{
-		if (sums.Count == 0) return catalog.GetConstant((TResult)(dynamic)1);
-		using var e = sums.GetEnumerator();
-		if (!e.MoveNext()) throw new NotSupportedException("Collection empty with count > 0.");
-		IEvaluate<TResult> p = e.Current;
-		while (e.MoveNext()) p = ProductOfSum(catalog, p, e.Current);
-		return catalog.GetReduced(p);
-	}
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> child1,
-		IEvaluate<TResult> child2,
-		params IEvaluate<TResult>[] moreChildren)
-		where TResult : notnull, IComparable<TResult>, IComparable
-		=> ProductOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		in TResult multiple,
-		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : notnull, IComparable<TResult>, IComparable
-		=> ProductOf(catalog, catalog.GetConstant(multiple), children);
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		in TResult multiple,
-		IEvaluate<TResult> first,
-		params IEvaluate<TResult>[] rest)
-		where TResult : notnull, IComparable<TResult>, IComparable
-		=> ProductOf(catalog, rest.Prepend(first).Prepend(catalog.GetConstant(multiple)));
 }

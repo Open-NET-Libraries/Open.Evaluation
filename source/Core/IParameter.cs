@@ -10,6 +10,8 @@ public interface IParameter : IEvaluate
 	ushort ID { get; }
 }
 
-public interface IParameter<out TResult> : IEvaluate<TResult>, IParameter
+public interface IParameter<T> : IEvaluate<T>, IParameter
+	where T : notnull, IEquatable<T>, IComparable<T>
+
 {
 }

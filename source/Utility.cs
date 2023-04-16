@@ -1,11 +1,17 @@
 ﻿using Open.Disposable;
-using System;
 using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using Throw;
 
 namespace Open.Evaluation;
+
+internal static class Lazy
+{
+	public static Lazy<T> New<T>(Func<T> factory) => new(factory);
+	public static Lazy<T> New<T>(T value) => new(value);
+}
 
 internal static class Utility
 {
@@ -51,7 +57,11 @@ internal static class Utility
 		}
 	}
 
-	public static TResult Rent<T, TParam, TResult>(this ArrayPool<T> pool, int minLength, TParam param, Func<TParam, T[], TResult> action)
+	public static TResult Rent<T, TParam, TResult>(
+		[DisallowNull, NotNull] this ArrayPool<T> pool,
+		int minLength,
+		[DisallowNull, NotNull] TParam param,
+		[DisallowNull, NotNull] Func<TParam, T[], TResult> action)
 	{
 		if (minLength is > POOL_ARRAY_LEN and < MAX_ARRAY_LEN)
 		{
@@ -71,8 +81,14 @@ internal static class Utility
 		}
 	}
 
-	public static TResult Rent<T, TResult>(this ArrayPool<T> pool, int minLength, Func<T[], TResult> action)
+	public static TResult Rent<T, TResult>(
+		[DisallowNull, NotNull] this ArrayPool<T> pool,
+		int minLength,
+		[DisallowNull, NotNull] Func<T[], TResult> action)
 	{
+		pool.ThrowIfNull().OnlyInDebug();
+		action.ThrowIfNull().OnlyInDebug();
+
 		if (minLength is > POOL_ARRAY_LEN and < MAX_ARRAY_LEN)
 		{
 			var a = pool.Rent(minLength);
@@ -91,10 +107,12 @@ internal static class Utility
 		}
 	}
 
-	public static IEnumerable<T> SkipAt<T>(this IEnumerable<T> source, int index)
+	public static IEnumerable<T> SkipAt<T>(
+		[DisallowNull, NotNull] this IEnumerable<T> source,
+		int index)
 	{
-		if (source is null) throw new ArgumentNullException(nameof(source));
-		if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
+		source.ThrowIfNull().OnlyInDebug();
+		index.Throw().IfLessThan(0);
 		Contract.EndContractBlock();
 
 		return SkipAtCore(source, index);
@@ -110,10 +128,13 @@ internal static class Utility
 		}
 	}
 
-	public static IEnumerable<T> ReplaceAt<T>(this IEnumerable<T> source, int index, T replacement)
+	public static IEnumerable<T> ReplaceAt<T>(
+		[DisallowNull, NotNull] this IEnumerable<T> source,
+		int index,
+		T replacement)
 	{
-		if (source is null) throw new ArgumentNullException(nameof(source));
-		if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
+		source.ThrowIfNull().OnlyInDebug();
+		index.Throw().IfLessThan(0);
 		Contract.EndContractBlock();
 
 		return ReplaceAtCore(source, index, replacement);
@@ -128,10 +149,14 @@ internal static class Utility
 		}
 	}
 
-	public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int index, IEnumerable<T> injection)
+	public static IEnumerable<T> InsertAt<T>(
+		[DisallowNull, NotNull] this IEnumerable<T> source,
+		int index,
+		[DisallowNull, NotNull] IEnumerable<T> injection)
 	{
-		if (source is null) throw new ArgumentNullException(nameof(source));
-		if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
+		source.ThrowIfNull().OnlyInDebug();
+		index.Throw().IfLessThan(0);
+		injection.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		return InsertAtCore(source, index, injection);
@@ -153,7 +178,10 @@ internal static class Utility
 		}
 	}
 
-	public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int index, T injection)
+	public static IEnumerable<T> InsertAt<T>(
+		[DisallowNull, NotNull] this IEnumerable<T> source,
+		int index,
+		T injection)
 	{
 		return index < 0
 			? throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.")
@@ -172,8 +200,13 @@ internal static class Utility
 		}
 	}
 
-	public static List<T> Extract<T>(this IList<T> target, Func<T, bool> predicate)
+	public static List<T> Extract<T>(
+		[DisallowNull, NotNull] this IList<T> target,
+		[DisallowNull, NotNull] Func<T, bool> predicate)
 	{
+		target.ThrowIfNull().OnlyInDebug();
+		predicate.ThrowIfNull().OnlyInDebug();
+
 		var extracted = ListPool<T>.Shared.Take();
 		using var lease = MemoryPool<int>.Shared.Rent(target.Count);
 		var removed = lease.Memory.Span;
@@ -195,8 +228,10 @@ internal static class Utility
 		return extracted;
 	}
 
-	public static List<TExtract> ExtractType<TExtract>(this IList target)
+	public static List<TExtract> ExtractType<TExtract>(
+		[DisallowNull, NotNull] this IList target)
 	{
+		target.ThrowIfNull().OnlyInDebug();
 		var extracted = ListPool<TExtract>.Shared.Take();
 		using var lease = MemoryPool<int>.Shared.Rent(target.Count);
 		var removed = lease.Memory.Span;

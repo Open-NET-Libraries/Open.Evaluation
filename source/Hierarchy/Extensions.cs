@@ -1,7 +1,5 @@
 ﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
-using System;
-using System.Linq;
 
 namespace Open.Evaluation.Hierarchy;
 
@@ -57,5 +55,5 @@ public static class Extensions
 			.Count();
 
 	public static int CountDistinctParameters<T>(this Node<T> node)
-		=> node.CountDistinctDescendantValuesOfType<T, Parameter, ushort>(p => p.ID);
+		=> node.CountDistinctDescendantValuesOfType<T, IParameter, ushort>(p => p.ID);
 }

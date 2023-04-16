@@ -5,15 +5,14 @@
 
 using Open.Disposable;
 using Open.Hierarchy;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using Throw;
 
 namespace Open.Evaluation.Core;
 
@@ -21,22 +20,24 @@ public abstract class OperatorBase<TChild, TResult>
 	: OperationBase<TResult>, IOperator<TChild, TResult>, IComparer<TChild>
 
 	where TChild : class, IEvaluate
-	where TResult : notnull, IComparable<TResult>, IComparable
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1) : base(symbol, separator)
+	protected OperatorBase(Symbol symbol, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1)
+		: base(symbol)
 	{
-		if (children is null) throw new ArgumentNullException(nameof(children));
+		children.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		if (reorderChildren) children = children.OrderBy(c => c, this);
 		Children = children is ImmutableArray<TChild> c ? c : children.ToImmutableArray();
-		if (Children.Length < minimumChildren)
-			throw new ArgumentException($"{GetType()} must be constructed with at least {minimumChildren} child(ren).");
+		minimumChildren.Throw(() => new ArgumentException($"{GetType()} must be constructed with at least {minimumChildren} child(ren).", nameof(minimumChildren)))
+			.IfGreaterThan(Children.Length);
 	}
 
 	public ImmutableArray<TChild> Children { get; }
 
 	IReadOnlyList<TChild> IParent<TChild>.Children => Children;
+
 	IReadOnlyList<object> IParent.Children => Children;
 
 	protected override string ToStringInternal(object context)
@@ -61,12 +62,12 @@ public abstract class OperatorBase<TChild, TResult>
 		var isEmpty = r == "()";
 		Debug.Assert(!isEmpty, "Operator has no children.");
 		// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-		return isEmpty ? $"({Symbol})" : r;
+		return isEmpty ? $"({Symbol.Character})" : r;
 	}
 
 	protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
 	{
-		if (index is not 0) result.Append(SymbolString);
+		if (index is not 0) result.Append(Symbol.Text);
 		result.Append(child);
 	}
 
@@ -74,99 +75,98 @@ public abstract class OperatorBase<TChild, TResult>
 	public override string ToString(object context)
 		=> ToStringInternal(ChildToString(context));
 
-	protected IEnumerable<string> ChildToString(object context)
-	{
-		foreach (var child in Children)
-			yield return child.ToString(context);
-	}
-
-	protected IEnumerable<object> ChildResults(object context)
+	protected IEnumerable<EvaluationResult<object>> ChildResults(object context)
 	{
 		foreach (var child in Children)
 			yield return child.Evaluate(context);
 	}
 
-	protected IEnumerable<string> ChildRepresentations()
+	protected IEnumerable<string> ChildDescriptions()
 	{
 		foreach (var child in Children)
-			yield return child.ToStringRepresentation();
+			yield return child.Description;
 	}
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	protected override string ToStringRepresentationInternal()
-		=> ToStringInternal(ChildRepresentations());
+	protected override string Describe()
+		=> ToStringInternal(ChildDescriptions());
 
 	protected virtual int ConstantPriority => +1;
 
 	// Need a standardized way to order so that comparisons are easier.
 	// ReSharper disable once VirtualMemberNeverOverridden.Global
-	public virtual int Compare(TChild x, TChild y)
+	public virtual int Compare(TChild? x, TChild? y)
 	{
+		if (x is null)
+		{
+			return y is null ? 0 : -1;
+		}
+		else if (y is null)
+		{
+			return +1;
+		}
+
 		switch (x)
 		{
-			case Constant<TResult> aC when y is Constant<TResult> bC:
+			case IConstant<TResult> aC when y is IConstant<TResult> bC:
 				return bC.Value.CompareTo(aC.Value); // Descending...
-			case Constant<TResult> _:
+			case IConstant<TResult> _:
 				return +1 * ConstantPriority;
-			default:
-				if (y is Constant<TResult>)
-					return -1 * ConstantPriority;
-				break;
 		}
+
+		if (y is IConstant<TResult>)
+			return -1 * ConstantPriority;
 
 		switch (x)
 		{
-			case Parameter<TResult> aP when y is Parameter<TResult> bP:
+			case IParameter<TResult> aP when y is IParameter<TResult> bP:
 				return aP.ID.CompareTo(bP.ID);
-			case Parameter<TResult> _:
+			case IParameter<TResult> _:
 				return +1;
-			default:
-				if (y is Parameter<TResult>)
-					return -1;
-				break;
 		}
 
-		var aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant) ?? 0) + 1;
-		var bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant) ?? 0) + 1;
+		if (y is IParameter<TResult>)
+			return -1;
+
+		var aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant<TResult>) ?? 0) + 1;
+		var bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant<TResult>) ?? 0) + 1;
 
 		if (aChildCount > bChildCount) return -1;
 		if (aChildCount < bChildCount) return +1;
 
-		var ats = x.ToStringRepresentation();
-		var bts = y.ToStringRepresentation();
+		var ats = x.Description;
+		var bts = y.Description;
 
 		return string.CompareOrdinal(ats, bts);
 	}
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	protected virtual Constant<TResult> GetConstant(ICatalog<IEvaluate<TResult>> catalog, in TResult value)
-		=> catalog.GetConstant(value);
 }
 
 public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, TResult>
-	where TResult : notnull, IComparable<TResult>, IComparable
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
 	protected OperatorBase(
-		char symbol,
-		string separator,
+		Symbol symbol,
 		IEnumerable<IEvaluate<TResult>> children,
 		bool reorderChildren = false,
 		int minimumChildren = 1)
-		: base(symbol, separator, children, reorderChildren, minimumChildren)
+		: base(symbol, children, reorderChildren, minimumChildren)
 	{
 	}
 
-	protected new IEnumerable<TResult> ChildResults(object context)
+	protected new IEnumerable<EvaluationResult<TResult>> ChildResults(object context)
 	{
 		foreach (var child in Children)
 			yield return child.Evaluate(context);
 	}
 
 	internal static IEvaluate<TResult> ConditionalTransform(
-		IEnumerable<IEvaluate<TResult>> param,
-		Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
+		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> param,
+		[DisallowNull, NotNull] Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
 	{
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		param.ThrowIfNull().OnlyInDebug();
+		transform.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
 		using var e = param.GetEnumerator();
 		if (!e.MoveNext()) return transform(ImmutableArray<IEvaluate<TResult>>.Empty);
 		var v0 = e.Current;

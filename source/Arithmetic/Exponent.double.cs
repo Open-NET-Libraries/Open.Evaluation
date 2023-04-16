@@ -4,19 +4,15 @@
  */
 
 using Open.Evaluation.Core;
-using System;
 using System.Buffers;
 using System.Diagnostics;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation.Arithmetic;
 
-public sealed class Exponent : Exponent<double>
+public sealed partial class Exponent : Exponent<double>
 {
-	public const char SYMBOL = '^';
-	public const string SEPARATOR = "^";
-
 	public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
 	public static string ConvertToSuperScript(string number)
@@ -35,25 +31,28 @@ public sealed class Exponent : Exponent<double>
 		});
 	}
 
-	static readonly Regex SquareRootPattern = new(@"^\((.+)\^0\.5\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
-	static readonly Regex ConstantPowerPattern = new(@"^\((.+)\^(-)?([0-9\.]+)\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled);
+	[GeneratedRegex("^\\((.+)\\^0\\.5\\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+	private static partial Regex SquareRootPattern();
+
+	[GeneratedRegex("^\\((.+)\\^(-)?([0-9\\.]+)\\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+	private static partial Regex ConstantPowerPattern();
 
 	protected override string ToStringInternal(object context)
 	{
 		var value = base.ToStringInternal(context);
 		Debug.Assert(value is not null);
-		var m = SquareRootPattern.Match(value);
+		var m = SquareRootPattern().Match(value);
 		if (m.Success)
 			return '√' + m.Groups[1].Value;
 
-		m = ConstantPowerPattern.Match(value);
+		m = ConstantPowerPattern().Match(value);
 		if (!m.Success) return value!;
 
 		var b = m.Groups[1].Value;
 		Debug.Assert(!string.IsNullOrWhiteSpace(b));
 		var p = m.Groups[3].Value;
 		var ps = p.Contains('.')
-			? ('^' + p)
+			? '^' + p
 			: ConvertToSuperScript(p);
 
 		var success = m.Groups[2].Success;
@@ -68,7 +67,8 @@ public sealed class Exponent : Exponent<double>
 		: base(evaluation, power)
 	{ }
 
-	protected override IEvaluate<double> Reduction(ICatalog<IEvaluate<double>> catalog)
+	protected override IEvaluate<double> Reduction(
+		[DisallowNull, NotNull] ICatalog<IEvaluate<double>> catalog)
 	{
 		var pow = catalog.GetReduced(Power);
 		if (pow is not IConstant<double> cPow)

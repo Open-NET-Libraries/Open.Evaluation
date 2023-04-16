@@ -1,19 +1,15 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Threading;
+using Throw;
 
 using EvalDoubleVariationCatalog = Open.Evaluation.Catalogs.EvaluationCatalog<double>.VariationCatalog;
 
 namespace Open.Evaluation.Catalogs;
 public partial class EvaluationCatalog<T>
-	where T : notnull, IComparable<T>, IComparable
 {
 	private VariationCatalog? _variation;
 	public VariationCatalog Variation =>
@@ -33,7 +29,7 @@ public static partial class EvaluationCatalogExtensions
 		where T : notnull, IComparable<T>, IComparable
 	{
 		if (gene == gene.Root) return ifRoot;
-		// Validate worthyness.
+		// Validate worthiness.
 		var parent = gene.Parent;
 		Debug.Assert(parent is not null);
 
@@ -56,14 +52,14 @@ public static partial class EvaluationCatalogExtensions
 	/// <param name="catalog">The catalog to use.</param>
 	/// <param name="node">The node to remove from the tree.</param>
 	/// <param name="newRoot">The resultant root node corrected by .FixHierarchy()</param>
-	/// <returns>true if sucessful</returns>
+	/// <returns>true if successful</returns>
 	public static bool TryRemoveValid(
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> node,
 		[NotNullWhen(true)] out IEvaluate<double> newRoot)
 	{
 		Debug.Assert(catalog is not null);
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		if (IsValidForRemoval(node))
 		{
@@ -81,9 +77,9 @@ public static partial class EvaluationCatalogExtensions
 	/// </summary>
 	/// <param name="catalog">The catalog to use.</param>
 	/// <param name="sourceNode">The root node to remove a descendant from.</param>
-	/// <param name="descendantIndex">The index of the descendant in the heirarchy (breadth-first).</param>
+	/// <param name="descendantIndex">The index of the descendant in the hierarchy (breadth-first).</param>
 	/// <param name="newRoot">The resultant root node corrected by .FixHierarchy()</param>
-	/// <returns>true if sucessful</returns>
+	/// <returns>true if successful</returns>
 	public static bool TryRemoveValidAt(
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> sourceNode,
@@ -91,8 +87,8 @@ public static partial class EvaluationCatalogExtensions
 		out IEvaluate<double> newRoot)
 	{
 		Debug.Assert(catalog is not null);
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return TryRemoveValid(
@@ -105,18 +101,18 @@ public static partial class EvaluationCatalogExtensions
 
 	static bool CheckPromoteChildrenValidity(
 		IParent parent)
-		// Validate worthyness.
+		// Validate worthiness.
 		=> parent?.Children.Count == 1;
 
 	public static IEvaluate<double>? PromoteChildren(
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		Contract.EndContractBlock();
 
-		// Validate worthyness.
+		// Validate worthiness.
 		return CheckPromoteChildrenValidity(node)
 			? catalog.Catalog.ApplyClone(node, newNode => newNode.Children.Single().Value!)
 			: null;
@@ -127,7 +123,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> root, int descendantIndex)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (root is null) throw new ArgumentNullException(nameof(root));
 		Contract.EndContractBlock();
 
@@ -140,7 +136,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> node, char fn, IEnumerable<IEvaluate<double>> parameters)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		Contract.EndContractBlock();
 
@@ -156,7 +152,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		Contract.EndContractBlock();
 
@@ -169,7 +165,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvalDoubleVariationCatalog catalog,
 		Node<IEvaluate<double>> root, int descendantIndex, char fn, IEnumerable<IEvaluate<double>> parameters)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (root is null) throw new ArgumentNullException(nameof(root));
 		Contract.EndContractBlock();
 
@@ -182,7 +178,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvalDoubleVariationCatalog catalog,
 		IEvaluate<double> root)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (root is null) throw new ArgumentNullException(nameof(root));
 		Contract.EndContractBlock();
 
@@ -231,7 +227,7 @@ public static partial class EvaluationCatalogExtensions
 		IEvaluate<TResult> root)
 		where TResult : notnull, IComparable<TResult>, IComparable
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (root is null) throw new ArgumentNullException(nameof(root));
 		Contract.EndContractBlock();
 

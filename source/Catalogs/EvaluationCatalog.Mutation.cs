@@ -2,12 +2,11 @@
 using Open.Evaluation.Core;
 using Open.Hierarchy;
 using Open.RandomizationExtensions;
-using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Threading;
+using System.Numerics;
+using Throw;
 
 using IFunction = Open.Evaluation.Core.IFunction<double>;
 using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<double>, double>;
@@ -16,7 +15,6 @@ namespace Open.Evaluation.Catalogs;
 
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 public partial class EvaluationCatalog<T>
-	where T : notnull, IComparable<T>, IComparable
 {
 	private MutationCatalog? _mutation;
 	public MutationCatalog Mutation =>
@@ -38,7 +36,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node, byte options = 3)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
 		Contract.EndContractBlock();
@@ -157,11 +155,12 @@ public static partial class EvaluationCatalogExtensions
 			: Registry.Arithmetic.GetRandomOperator(c, o.Children, symbol)!);
 	}
 
-	public static IEvaluate<double>? AddParameter(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T>? AddParameter<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T: notnull, INumber<T>
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		Contract.EndContractBlock();
 
@@ -174,7 +173,7 @@ public static partial class EvaluationCatalogExtensions
 					Randomizer.Random.Next(
 						p.GetDescendants().OfType<IParameter>().Distinct().Count() + 1)))),
 
-			_ => throw new ArgumentException("Invalid node type for adding a paremeter.", nameof(node)),
+			_ => throw new ArgumentException("Invalid node type for adding a parameter.", nameof(node)),
 		};
 	}
 
@@ -182,7 +181,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		Contract.EndContractBlock();
 
@@ -210,7 +209,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node, double value)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		if (value == 0) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
 		Contract.EndContractBlock();
@@ -230,7 +229,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (node is null) throw new ArgumentNullException(nameof(node));
 		Contract.EndContractBlock();
 

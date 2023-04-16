@@ -5,11 +5,10 @@
 
 using Open.Disposable;
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using System.Diagnostics.CodeAnalysis;
+using Throw;
 
 namespace Open.Evaluation.Arithmetic;
 
@@ -27,7 +26,6 @@ public class Product : Product<double>
 		: this(Enumerable.Repeat(first, 1).Concat(rest))
 	{ }
 
-	[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1725:Parameter names should match base declaration")]
 	protected override Exponent<double> GetExponent(ICatalog<IEvaluate<double>> catalog,
 		IEvaluate<double> @base,
 		IEvaluate<double> power)
@@ -48,7 +46,7 @@ public class Product : Product<double>
 		ICatalog<IEvaluate<double>> catalog,
 		IEnumerable<IEvaluate<double>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (param is null) throw new ArgumentNullException(nameof(param));
 		Contract.EndContractBlock();
 
@@ -63,7 +61,7 @@ public static partial class ProductExtensions
 		this ICatalog<IEvaluate<double>> catalog,
 		IEnumerable<IEvaluate<double>> children)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (children is IReadOnlyCollection<IEvaluate<double>> ch && ch.Count == 0)
 			throw new NotSupportedException("Cannot produce a product of an empty set.");
 

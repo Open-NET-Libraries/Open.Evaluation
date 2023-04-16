@@ -3,8 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System.Diagnostics.CodeAnalysis;
-
 namespace Open.Evaluation.Core;
 
 /// <summary>
@@ -13,12 +11,7 @@ namespace Open.Evaluation.Core;
 public interface ISymbolized
 {
 	/// <summary>
-	/// A single character which differentiates this.
+	/// The symbol that differentiates this.
 	/// </summary>
-	char Symbol { get; }
-
-	/// <summary>
-	/// A potential longer form version of the symbol.
-	/// </summary>
-	string SymbolString { get; }
+	Symbol Symbol { get; }
 }

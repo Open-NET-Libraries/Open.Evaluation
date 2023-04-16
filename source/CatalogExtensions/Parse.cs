@@ -1,22 +1,19 @@
 ﻿using Open.Disposable;
 using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation;
 
-public static class CatalogExtensions
+public static partial class CatalogExtensions
 {
-	static readonly Regex openParen = new("[(]", RegexOptions.Compiled);
-	static readonly Regex closeParen = new("[)]", RegexOptions.Compiled);
-	static readonly Regex unnecessaryParaenthesis = new(@"\(({\w+})\)", RegexOptions.Compiled);
-	static readonly Regex paramOnly = new(@"^(?:{(\d+)})$", RegexOptions.Compiled);
-	static readonly Regex registeredOnly = new(@"^(?:{(\w+)})$", RegexOptions.Compiled);
+	static readonly Regex openParen = OpenParenPattern();
+	static readonly Regex closeParen = CloseParenPattern();
+	static readonly Regex unnecessaryParaenthesis = UnnecessaryParenPattern();
+	static readonly Regex paramOnly = ParamOnlyPattern();
+	static readonly Regex registeredOnly = RegisteredOnlyPattern();
 
 	static Regex GetOperatorRegex(string op) => new(
 			string.Format(CultureInfo.InvariantCulture, @"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
@@ -122,4 +119,15 @@ public static class CatalogExtensions
 			? registry[checkRegisteredOnly.Groups[1].Value]
 			: throw new FormatException($"Could not parse sequence: {original}");
 	}
+
+	[GeneratedRegex("[(]", RegexOptions.Compiled)]
+	private static partial Regex OpenParenPattern();
+	[GeneratedRegex("[)]", RegexOptions.Compiled)]
+	private static partial Regex CloseParenPattern();
+	[GeneratedRegex("\\(({\\w+})\\)", RegexOptions.Compiled)]
+	private static partial Regex UnnecessaryParenPattern();
+	[GeneratedRegex("^(?:{(\\d+)})$", RegexOptions.Compiled)]
+	private static partial Regex ParamOnlyPattern();
+	[GeneratedRegex("^(?:{(\\w+)})$", RegexOptions.Compiled)]
+	private static partial Regex RegisteredOnlyPattern();
 }

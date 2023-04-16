@@ -3,29 +3,17 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System.Threading.Tasks;
-
 namespace Open.Evaluation.Core;
 
-public interface IEvaluateAsync : IEvaluate
+public interface IEvaluateAsync
 {
-	/// <summary>
-	/// Exectues and returns the calculation/evaluation.
-	/// </summary>
-	/// <param name="context">The context object that defines the parameters for the evaluation.</param>
-	/// <returns>The resultant value of this evaluation</returns>
+	/// <inheritdoc cref="IEvaluate.Evaluate(object)"/>
 	ValueTask<object> EvaluateAsync(object context);
-
-	/// <summary>
-	/// Returns the string representation of this evaluation using the context parameters.
-	/// </summary>
-	/// <param name="context">The context object that defines the parameters for the evaluation.</param>
-	/// <returns>The resultant string that repesents the actual calcuation being done by .Evaluation().</returns>
-	ValueTask<string> ToStringAsync(object context);
 }
 
-public interface IEvaluateAsync<TResult> : IEvaluate<TResult>, IEvaluateAsync
+public interface IEvaluateAsync<TResult> : IEvaluateAsync
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	/// <inheritdoc />
+	/// <inheritdoc cref="IEvaluate.Evaluate(object)"/>
 	new ValueTask<TResult> EvaluateAsync(object context);
 }

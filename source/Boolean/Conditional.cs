@@ -4,21 +4,22 @@
  */
 
 using Open.Evaluation.Core;
-using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using Throw;
 
 namespace Open.Evaluation.Boolean;
 
 // ReSharper disable once PossibleInfiniteInheritance
 public class Conditional<TResult> : OperationBase<TResult>,
 	IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
 	public Conditional(
 		IEvaluate<bool> condition,
 		IEvaluate<TResult> ifTrue,
 		IEvaluate<TResult> ifFalse)
-		: base(Conditional.SYMBOL, Conditional.SEPARATOR)
+		: base(BooleanSymbols.Conditional)
 	{
 		Condition = condition ?? throw new ArgumentNullException(nameof(condition));
 		IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue));
@@ -46,7 +47,7 @@ public class Conditional<TResult> : OperationBase<TResult>,
 			IfFalse.Evaluate(context)!);
 
 	[return: NotNull]
-	protected override string ToStringRepresentationInternal()
+	protected override string Describe()
 		=> ToStringInternal(
 			Condition.ToStringRepresentation(),
 			IfTrue.ToStringRepresentation(),
@@ -63,7 +64,7 @@ public class Conditional<TResult> : OperationBase<TResult>,
 		ICatalog<IEvaluate<TResult>> catalog,
 		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return catalog.Register(
@@ -79,16 +80,11 @@ public class Conditional<TResult> : OperationBase<TResult>,
 		=> Create(catalog, param);
 }
 
-public static class Conditional
-{
-	public const char SYMBOL = '?';
-	public const string SEPARATOR = " ? ";
-}
-
 public static class ConditionalExtensions
 {
 	public static IEvaluate<TResult> Conditional<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
+		where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 		=> Boolean.Conditional<TResult>.Create(catalog, param);
 }

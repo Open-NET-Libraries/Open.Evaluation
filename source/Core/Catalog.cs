@@ -1,26 +1,29 @@
 ﻿using Open.Disposable;
 using Open.Hierarchy;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
+using Throw;
 
 namespace Open.Evaluation.Core;
 
 public class Catalog<T> : DisposableBase, ICatalog<T>
 	where T : class, IEvaluate
 {
-	protected override void OnDispose() => Registry.Clear();//Reductions.Clear();
+	//private static Catalog<T>? _instance;
+	//internal static Catalog<T> Instance
+	//	=> LazyInitializer.EnsureInitialized(ref _instance);
+
+	protected override void OnDispose() => Registry.Clear(); //Reductions.Clear();
 
 	readonly ConcurrentDictionary<string, T> Registry = new();
 
 	public void Register<TItem>([NotNull] ref TItem item)
 		where TItem : T
 	{
-		if (item is null) throw new ArgumentNullException(nameof(item));
+		item.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		item = Register(item);
@@ -33,10 +36,11 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public TItem Register<TItem>(TItem item)
 		where TItem : T
 	{
-		if (item is null) throw new ArgumentNullException(nameof(item));
-		Contract.Ensures(Contract.Result<TItem>() is not null);
+		item.ThrowIfNull();
 		Contract.EndContractBlock();
-		var result = Registry.GetOrAdd(item.ToStringRepresentation(), OnBeforeRegistration(item));
+
+		string key = item.ToString().ThrowIfNull();
+		var result = Registry.GetOrAdd(key, OnBeforeRegistration(item));
 		Debug.Assert(result is not null);
 		Debug.Assert(result is TItem);
 		return (TItem)result;
@@ -46,18 +50,17 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public TItem Register<TItem>(string id, Func<string, TItem> factory)
 		where TItem : T
 	{
-		if (id is null) throw new ArgumentNullException(nameof(id));
-		if (factory is null) throw new ArgumentNullException(nameof(factory));
-		Contract.Ensures(Contract.Result<TItem>() is not null);
+		id.ThrowIfNull();
+		factory.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
 			var e = factory(k);
 			Debug.Assert(e is not null);
-			var hash = e.ToStringRepresentation();
+			var hash = e.ToString();
 			Debug.Assert(hash == k);
-			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
+			return hash != k ? throw new ArgumentException($"Does not match instance.ToString().\nkey: {k}\nhash: {hash}", nameof(id))
 				: (T)OnBeforeRegistration(e);
 		});
 	}
@@ -75,7 +78,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		{
 			var e = factory(k, param);
 			Debug.Assert(e is not null);
-			var hash = e.ToStringRepresentation();
+			var hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
 				: (T)OnBeforeRegistration(e);
@@ -89,6 +92,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		Contract.EndContractBlock();
 
 		var result = Registry.TryGetValue(id, out var e);
+		Debug.Assert(e is not null);
 		item = (TItem)e;
 		return result;
 	}
@@ -125,7 +129,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	}
 
 	public bool TryGetReduced(
-		T source, [NotNullWhen(true)] out T reduction)
+		T source, [NotNull] out T reduction)
 	{
 		reduction = GetReduced(source);
 		return !reduction.Equals(source);

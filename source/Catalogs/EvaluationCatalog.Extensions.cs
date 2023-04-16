@@ -1,11 +1,10 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
-using System;
-using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Linq;
+using System.Numerics;
+using Throw;
 
 namespace Open.Evaluation.Catalogs;
 
@@ -18,96 +17,109 @@ public static partial class EvaluationCatalogExtensions
 	/// Applies a multiple to any node.
 	/// </summary>
 	/// <param name="catalog">The catalog to use.</param>
-	/// <param name="sourceNode">The node to multply by.</param>
+	/// <param name="sourceNode">The node to multiply by.</param>
 	/// <param name="multiple">The value to multiply by.</param>
 	/// <returns>The resultant root evaluation.</returns>
-	public static IEvaluate<double> MultiplyNode(
-		this EvaluationCatalog<double> catalog,
-		Node<IEvaluate<double>> sourceNode, double multiple)
+	[SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Preferred verbosity")]
+	public static IEvaluate<T> MultiplyNode<T>(
+		[DisallowNull, NotNull] this EvaluationCatalog<T> catalog,
+		[DisallowNull, NotNull] Node<IEvaluate<T>> sourceNode, T multiple)
+		where T : notnull, INumber<T>
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		if (multiple == 1) // No change...
+		if (multiple == T.MultiplicativeIdentity) // No change...
 		{
 			return sourceNode.Root.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
 		}
 
-		if (multiple == 0 || double.IsNaN(multiple)) // Neutralized.
+		if (T.IsZero(multiple) || T.IsNaN(multiple)) // Neutralized.
 		{
 			return catalog.ApplyClone(sourceNode, _ =>
 				catalog.GetConstant(multiple));
 		}
 
-#pragma warning disable IDE0046 // Convert to conditional expression
-		if (sourceNode.Value is not Product<double> p)
+		if (sourceNode.Value is not Product<T> p)
 		{
 			return catalog.ApplyClone(sourceNode,
-				newNode => catalog.ProductOf(multiple, newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue)));
+				newNode => catalog.ProductOf(multiple,
+					newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue)));
 		}
-#pragma warning restore IDE0046 // Convert to conditional expression
 
-		return p.Children.OfType<IConstant<double>>().Any()
-			? catalog.ApplyClone(sourceNode, newNode =>
+		if (p.Children.OfType<IConstant<T>>().Any())
+		{
+			return catalog.ApplyClone(sourceNode, newNode =>
 			{
-				var n = newNode.Children.First(s => s.Value is IConstant<double>);
-				var c = (IConstant<double>)(n.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue));
+				var n = newNode.Children.First(s => s.Value is IConstant<T>);
+				var c = (IConstant<T>)(n.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue));
 				n.Value = catalog.ProductOfConstants(multiple, c);
-			})
-			: catalog.TryAddConstant(sourceNode, multiple)!;
+			});
+		}
+
+		return catalog.TryAddConstant(sourceNode, multiple)!;
 	}
 
-	public static IEvaluate<double> MultiplyNodeDescendant(
-		this EvaluationCatalog<double> catalog,
-		Node<IEvaluate<double>> sourceNode, int descendantIndex, double multiple)
+	public static IEvaluate<T> MultiplyNodeDescendant<T>(
+		[DisallowNull, NotNull] this EvaluationCatalog<T> catalog,
+		[DisallowNull, NotNull] Node<IEvaluate<T>> sourceNode, int descendantIndex, T multiple)
+		where T : notnull, INumber<T>
 		=> catalog.MultiplyNode(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), multiple);
 
-	public static Constant<double> GetMultiple<TParent>(this EvaluationCatalog<double> catalog, TParent n)
-		where TParent : IParent<IEvaluate<double>>
-		=> catalog.ProductOfConstants(n.Children.OfType<IConstant<double>>());
+	public static Constant<T> GetMultiple<T, TParent>(
+		[DisallowNull, NotNull] this EvaluationCatalog<T> catalog,
+		[DisallowNull, NotNull] TParent n)
+		where T : notnull, INumber<T>
+		where TParent : IParent<IEvaluate<T>>
+		=> catalog.ProductOfConstants(n.Children.OfType<IConstant<T>>());
 
-	public static Constant<double> GetMultiple(this EvaluationCatalog<double> catalog, IEvaluate<double>? node)
-		=> node is IParent<IEvaluate<double>> n ? catalog.GetMultiple(n) : catalog.GetConstant(1);
+	public static Constant<T> GetMultiple<T>(
+		[DisallowNull, NotNull] this EvaluationCatalog<T> catalog,
+		IEvaluate<T>? node)
+		where T : notnull, INumber<T>
+		=> node is IParent<IEvaluate<T>> n ? catalog.GetMultiple(n) : catalog.GetConstant(T.MultiplicativeIdentity);
 
 	/// <summary>
 	/// Applies a multiple to any node.
 	/// </summary>
 	/// <param name="catalog">The catalog to use.</param>
-	/// <param name="sourceNode">The node to multply by.</param>
+	/// <param name="sourceNode">The node to multiply by.</param>
 	/// <param name="delta">The value to multiply by.</param>
 	/// <returns>The resultant root evaluation.</returns>
-	public static IEvaluate<double> AdjustNodeMultiple(
-		this EvaluationCatalog<double> catalog,
-		Node<IEvaluate<double>> sourceNode, double delta)
+	public static IEvaluate<T> AdjustNodeMultiple<T>(
+		[DisallowNull, NotNull] this EvaluationCatalog<T> catalog,
+		[DisallowNull, NotNull] Node<IEvaluate<T>> sourceNode, T delta)
+		where T : notnull, INumber<T>
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		if (delta == 0) // No change... 
+		if (T.IsZero(delta)) // No change... 
 			return sourceNode.Root.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
 
-		if (sourceNode.Value is not Product<double> p)
-			return MultiplyNode(catalog, sourceNode, delta + 1);
+		if (sourceNode.Value is not Product<T> p)
+			return MultiplyNode(catalog, sourceNode, delta + T.One);
 
 		var multiple = catalog.GetMultiple(p);
 		return multiple.Value switch
 		{
-			1 => catalog.MultiplyNode(sourceNode, delta + 1),
+			1 => catalog.MultiplyNode(sourceNode, delta + T.One),
 			_ => catalog.ApplyClone(sourceNode, newNode =>
 			{
-				var constantNodes = newNode.Children.Where(s => s.Value is IConstant<double>).ToArray();
+				var constantNodes = newNode.Children.Where(s => s.Value is IConstant<T>).ToArray();
 				constantNodes[0].Value = catalog.SumOfConstants(delta, multiple);
 
 				for (var i = 1; i < constantNodes.Length; i++)
-				newNode.Remove(constantNodes[i]);
+					newNode.Remove(constantNodes[i]);
 			})
 		};
 	}
 
-	public static IEvaluate<double> AdjustNodeMultipleOfDescendant(
-		this EvaluationCatalog<double> catalog,
-		Node<IEvaluate<double>> sourceNode, int descendantIndex, double delta)
+	public static IEvaluate<T> AdjustNodeMultipleOfDescendant<T>(
+		[DisallowNull, NotNull] this EvaluationCatalog<T> catalog,
+		[DisallowNull, NotNull] Node<IEvaluate<T>> sourceNode, int descendantIndex, T delta)
+		where T : notnull, INumber<T>
 		=> catalog.AdjustNodeMultiple(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), delta);
 }

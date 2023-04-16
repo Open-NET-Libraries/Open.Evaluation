@@ -1,56 +1,88 @@
-﻿using Open.Evaluation.Core;
-using System;
-using System.Collections.Concurrent;
+﻿using Open.Disposable;
+using Open.Evaluation.Core;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation;
 
-public class ParameterContext // Using a Lazy to differentiate between the value and the factories.  Also ensures execution and publication.
-	: ConcurrentDictionary<IEvaluate, Lazy<object>>, IDisposable
+// Using a Lazy to differentiate between the value and the factories.
+// Also ensures execution and publication.
+public class ParameterContext : DisposableBase
 {
-	public object Context { get; private set; }
+	public object Context { get; }
 
-	public ParameterContext(object context)
+	private readonly Dictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = new();
+
+	public ParameterContext([DisallowNull, NotNull] object context)
 		=> Context = context ?? throw new ArgumentNullException(nameof(context));
 
-	private const string DoesntMatch = "Result doesn't match factory return type.";
-
-	public TResult GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, TResult> factory)
-		=> Context is null
-			? throw new ObjectDisposedException(nameof(ParameterContext))
-			: base.GetOrAdd(key, k => new Lazy<object>(() => factory(k)!)).Value is TResult r
-			? r : throw new InvalidCastException(DoesntMatch);
-
-	public TResult GetOrAdd<TResult>(IEvaluate key, Func<TResult> factory)
-		=> Context is null
-			? throw new ObjectDisposedException(nameof(ParameterContext))
-			: base.GetOrAdd(key, _ => new Lazy<object>(() => factory()!)).Value is TResult r
-			? r : throw new InvalidCastException(DoesntMatch);
-
-	#region IDisposable Support
-	private bool disposedValue; // To detect redundant calls
-
-	protected virtual void Dispose(bool disposing)
+	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, EvaluationResult<TResult>> factory)
 	{
-		if (!disposedValue)
+		IEvaluationResult result;
+		if (_registry.TryGetValue(key, out var lazy))
 		{
-			if (disposing)
+			result = lazy.Value;
+			goto resultAcquired;
+		}
+
+		AssertIsAlive();
+		Lazy<EvaluationResult<TResult>> tLazy;
+		lock (_registry)
+		{
+			if (_registry.TryGetValue(key, out lazy))
 			{
-				Context = null!;
-				Clear();
+				result = lazy.Value;
+				goto resultAcquired;
 			}
 
-			// TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-			// TODO: set large fields to null.
-
-			disposedValue = true;
+			tLazy = new Lazy<EvaluationResult<TResult>>(() => factory(key));
+			_registry[key] = new Lazy<IEvaluationResult>(() => tLazy.Value);
 		}
+
+		return tLazy.Value;
+
+	resultAcquired:
+		return result is EvaluationResult<TResult> r ? r
+			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(TResult)}.");
 	}
 
-	// This code added to correctly implement the disposable pattern.
-	[SuppressMessage("Usage", "CA1816:Dispose methods should call SuppressFinalize", Justification = "<Pending>")]
-	public void Dispose() =>
-		// Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-		Dispose(true);// TODO: uncomment the following line if the finalizer is overridden above.// GC.SuppressFinalize(this);
-	#endregion
+	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, Func<EvaluationResult<TResult>> factory)
+	{
+		IEvaluationResult result;
+		if (_registry.TryGetValue(key, out var lazy))
+		{
+			result = lazy.Value;
+			goto resultAcquired;
+		}
+
+		AssertIsAlive();
+		Lazy<EvaluationResult<TResult>> tLazy;
+		lock (_registry)
+		{
+			if (_registry.TryGetValue(key, out lazy))
+			{
+				result = lazy.Value;
+				goto resultAcquired;
+			}
+
+			tLazy = new Lazy<EvaluationResult<TResult>>(factory);
+			_registry[key] = new Lazy<IEvaluationResult>(() => tLazy.Value);
+		}
+
+		return tLazy.Value;
+
+	resultAcquired:
+		return result is EvaluationResult<TResult> r ? r
+			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(TResult)}.");
+	}
+
+	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, [DisallowNull, NotNull] TResult value)
+		=> GetOrAdd(key, () => new EvaluationResult<TResult>(value));
+
+	// Allows for re-use.
+	public void Clear()
+	{
+		lock(_registry) _registry.Clear();
+	}
+
+	protected override void OnDispose() => Clear();
 }

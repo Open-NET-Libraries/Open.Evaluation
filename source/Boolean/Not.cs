@@ -4,12 +4,9 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Linq;
 
 namespace Open.Evaluation.Boolean;
 
-[System.Diagnostics.CodeAnalysis.SuppressMessage("Naming", "CA1716:Identifiers should not match keywords")]
 public class Not : OperatorBase<bool>,
 	IReproducable<IEvaluate<bool>, IEvaluate<bool>>
 {
@@ -17,7 +14,7 @@ public class Not : OperatorBase<bool>,
 	public const string SYMBOL_STRING = "!";
 
 	internal Not(IEvaluate<bool> contents)
-		: base(SYMBOL, SYMBOL_STRING,
+		: base(BooleanSymbols.Not,
 			  Enumerable.Repeat(contents ?? throw new ArgumentNullException(nameof(contents)), 1))
 	{ }
 
