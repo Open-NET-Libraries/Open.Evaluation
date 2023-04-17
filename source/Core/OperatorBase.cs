@@ -30,8 +30,10 @@ public abstract class OperatorBase<TChild, TResult>
 
 		if (reorderChildren) children = children.OrderBy(c => c, this);
 		Children = children is ImmutableArray<TChild> c ? c : children.ToImmutableArray();
-		minimumChildren.Throw(() => new ArgumentException($"{GetType()} must be constructed with at least {minimumChildren} child(ren).", nameof(minimumChildren)))
-			.IfGreaterThan(Children.Length);
+		minimumChildren.Throw().IfLessThan(0);
+		Children.Length
+			.Throw(() => new ArgumentException($"{GetType()} must be constructed with at least " + (minimumChildren==1 ? "1 child" : $"{minimumChildren} children."), nameof(minimumChildren)))
+			.IfLessThan(minimumChildren);
 	}
 
 	public ImmutableArray<TChild> Children { get; }
@@ -40,7 +42,7 @@ public abstract class OperatorBase<TChild, TResult>
 
 	IReadOnlyList<object> IParent.Children => Children;
 
-	protected override string ToStringInternal(object context)
+	protected virtual string ToStringInternal(object context)
 	{
 		if (context is not IEnumerable collection)
 			return base.ToStringInternal(context);
@@ -73,7 +75,7 @@ public abstract class OperatorBase<TChild, TResult>
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public override string ToString(object context)
-		=> ToStringInternal(ChildToString(context));
+		=> ToStringInternal(ChildResults(context));
 
 	protected IEnumerable<EvaluationResult<object>> ChildResults(object context)
 	{
@@ -97,19 +99,14 @@ public abstract class OperatorBase<TChild, TResult>
 	// ReSharper disable once VirtualMemberNeverOverridden.Global
 	public virtual int Compare(TChild? x, TChild? y)
 	{
-		if (x is null)
-		{
-			return y is null ? 0 : -1;
-		}
-		else if (y is null)
-		{
-			return +1;
-		}
+		if (x is null) return y is null ? 0 : -1;
+		if (y is null) return +1;
 
 		switch (x)
 		{
 			case IConstant<TResult> aC when y is IConstant<TResult> bC:
 				return bC.Value.CompareTo(aC.Value); // Descending...
+
 			case IConstant<TResult> _:
 				return +1 * ConstantPriority;
 		}
@@ -121,6 +118,7 @@ public abstract class OperatorBase<TChild, TResult>
 		{
 			case IParameter<TResult> aP when y is IParameter<TResult> bP:
 				return aP.ID.CompareTo(bP.ID);
+
 			case IParameter<TResult> _:
 				return +1;
 		}

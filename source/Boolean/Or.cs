@@ -13,7 +13,7 @@ public class Or : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
 	public Or(IEnumerable<IEvaluate<bool>> children)
-		: base(BooleanSymbols.Or, children, true)
+		: base(Symbols.Or, children, true)
 	{ }
 
 	protected override bool EvaluateInternal(object context)

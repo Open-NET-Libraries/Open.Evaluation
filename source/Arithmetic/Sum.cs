@@ -23,14 +23,23 @@ public partial class Sum<TResult> :
 	where TResult : notnull, INumber<TResult>
 {
 	protected Sum([DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> children)
-		: base(ArithmeticSymbols.Sum, children, true)
+		: base(Symbols.Sum, children, true)
 	{ }
 
 	protected override EvaluationResult<TResult> EvaluateInternal(object context)
 	{
-		var result = Children.Length == 0
-			? throw new NotSupportedException("Cannot resolve sum of empty set.")
-			: ChildResults(context).Cast<TResult>().Sum();
+		var count = Children.Length;
+		if (count == 0)
+			throw new NotSupportedException("Cannot resolve sum of empty set.");
+		var childResults = ChildResults(context).ToArray();
+		var result = TResult.Zero;
+		foreach (var r in ChildResults(context))
+			result += r.Result;
+
+		return new(result, () =>
+		{
+
+		});			
 	}
 
 	static bool IsProductWithSingleConstant(

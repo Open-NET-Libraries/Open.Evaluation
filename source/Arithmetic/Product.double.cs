@@ -12,48 +12,48 @@ using Throw;
 
 namespace Open.Evaluation.Arithmetic;
 
-public class Product : Product<double>
-{
-	public const char SYMBOL = '*';
-	public const string SEPARATOR = " * ";
+//public class Product : Product<double>
+//{
+//	public const char SYMBOL = '*';
+//	public const string SEPARATOR = " * ";
 
-	internal Product(IEnumerable<IEvaluate<double>> children)
-		: base(children)
-	{
-	}
+//	internal Product(IEnumerable<IEvaluate<double>> children)
+//		: base(children)
+//	{
+//	}
 
-	internal Product(IEvaluate<double> first, params IEvaluate<double>[] rest)
-		: this(Enumerable.Repeat(first, 1).Concat(rest))
-	{ }
+//	internal Product(IEvaluate<double> first, params IEvaluate<double>[] rest)
+//		: this(Enumerable.Repeat(first, 1).Concat(rest))
+//	{ }
 
-	protected override Exponent<double> GetExponent(ICatalog<IEvaluate<double>> catalog,
-		IEvaluate<double> @base,
-		IEvaluate<double> power)
-		=> Exponent.Create(catalog, @base, power);
+//	protected override Exponent<double> GetExponent(ICatalog<IEvaluate<double>> catalog,
+//		IEvaluate<double> @base,
+//		IEvaluate<double> power)
+//		=> Exponent.Create(catalog, @base, power);
 
-	internal new static Product Create(
-		ICatalog<IEvaluate<double>> catalog,
-		IEnumerable<IEvaluate<double>> param)
-		=> catalog.Register(new Product(param));
+//	internal new static Product Create(
+//		ICatalog<IEvaluate<double>> catalog,
+//		IEnumerable<IEvaluate<double>> param)
+//		=> catalog.Register(new Product(param));
 
-	//internal static Product<TResult> Create<TResult>(
-	//	ICatalog<IEvaluate<TResult>> catalog,
-	//	IEnumerable<IEvaluate<TResult>> param)
-	//	where TResult : notnull, IComparable<TResult>, IComparable
-	//	=> Product<TResult>.Create(catalog, param);
+//	//internal static Product<TResult> Create<TResult>(
+//	//	ICatalog<IEvaluate<TResult>> catalog,
+//	//	IEnumerable<IEvaluate<TResult>> param)
+//	//	where TResult : notnull, IComparable<TResult>, IComparable
+//	//	=> Product<TResult>.Create(catalog, param);
 
-	public override IEvaluate<double> NewUsing(
-		ICatalog<IEvaluate<double>> catalog,
-		IEnumerable<IEvaluate<double>> param)
-	{
-		catalog.ThrowIfNull();
-		if (param is null) throw new ArgumentNullException(nameof(param));
-		Contract.EndContractBlock();
+//	public override IEvaluate<double> NewUsing(
+//		ICatalog<IEvaluate<double>> catalog,
+//		IEnumerable<IEvaluate<double>> param)
+//	{
+//		catalog.ThrowIfNull();
+//		if (param is null) throw new ArgumentNullException(nameof(param));
+//		Contract.EndContractBlock();
 
-		var p = param as IEvaluate<double>[] ?? param.ToArray();
-		return p.Length == 1 ? p[0] : Create(catalog, p);
-	}
-}
+//		var p = param as IEvaluate<double>[] ?? param.ToArray();
+//		return p.Length == 1 ? p[0] : Create(catalog, p);
+//	}
+//}
 
 public static partial class ProductExtensions
 {
@@ -89,12 +89,11 @@ public static partial class ProductExtensions
 		switch (childList.Count)
 		{
 			case 0:
-				Debug.Fail("Extraction failure.", "Should not have occured.");
-				throw new InvalidOperationException("Extraction failure.");
+				Debug.Fail("Extraction failure.", "Should not have occurred.");
+				throw new UnreachableException("Extraction failure.");
+
 			case 1:
 				return childList[0];
-			default:
-				break;
 		}
 
 		return Product.Create(catalog, childList);

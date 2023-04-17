@@ -14,7 +14,7 @@ public class Not : OperatorBase<bool>,
 	public const string SYMBOL_STRING = "!";
 
 	internal Not(IEvaluate<bool> contents)
-		: base(BooleanSymbols.Not,
+		: base(Symbols.Not,
 			  Enumerable.Repeat(contents ?? throw new ArgumentNullException(nameof(contents)), 1))
 	{ }
 

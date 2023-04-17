@@ -19,7 +19,7 @@ public class Conditional<TResult> : OperationBase<TResult>,
 		IEvaluate<bool> condition,
 		IEvaluate<TResult> ifTrue,
 		IEvaluate<TResult> ifFalse)
-		: base(BooleanSymbols.Conditional)
+		: base(Symbols.Conditional)
 	{
 		Condition = condition ?? throw new ArgumentNullException(nameof(condition));
 		IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue));

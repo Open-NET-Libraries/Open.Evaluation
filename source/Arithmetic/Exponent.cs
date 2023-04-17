@@ -22,7 +22,7 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 	protected Exponent(
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
-		: base(ArithmeticSymbols.Exponent,
+		: base(Symbols.Exponent,
 			  // Need to provide to children so a node tree can be built.
 			  new[] { @base, power })
 	{

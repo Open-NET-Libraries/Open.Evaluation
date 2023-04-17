@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
 using System.Diagnostics;
@@ -22,7 +23,7 @@ public partial class Product<TResult> :
 	where TResult : notnull, INumber<TResult>
 {
 	protected Product(IEnumerable<IEvaluate<TResult>> children)
-		: base(ArithmeticSymbols.Product, children, true, 2) { }
+		: base(Symbols.Product, children, true, 2) { }
 
 	protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
 		: this(Enumerable.Repeat(first, 1).Concat(rest)) { }
@@ -41,11 +42,12 @@ public partial class Product<TResult> :
 		catalog.ThrowIfNull().OnlyInDebug();
 		var one = catalog.GetConstant(TResult.MultiplicativeIdentity);
 
+		using var lease = ListPool<IEvaluate<TResult>>.Shared.Rent();
 		// Phase 1: Flatten products of products.
-		var children = catalog
+		var children = lease.Item;
+		children.AddRange(catalog
 			.Flatten<Product<TResult>>(Children)
-			.Where(c => c != one)
-			.ToList(); // ** children's reduction is done here.
+			.Where(c => c != one)); // ** children's reduction is done here.
 
 		// Phase 3: Try to extract common multiples...
 		var len = children.Count;
@@ -76,7 +78,7 @@ public partial class Product<TResult> :
 
 		// Phase 4: Deal with special case constants.
 		IConstant<TResult>? zero = null;
-		foreach (var e in children.OfType<IConstant<TResult>>())
+		foreach (var c in children.OfType<IConstant<TResult>>())
 		{
 			var cValue = c.Value;
 			if (TResult.IsNaN(cValue)) return c;
@@ -88,10 +90,12 @@ public partial class Product<TResult> :
 
 		var cat = catalog;
 		// Phase 5: Convert to exponents.
-		var exponents = children.Select(c =>
+		using var lease2 = ListPool<(IEvaluate<TResult> Base, IEvaluate<TResult> Power)>.Shared.Rent();
+		var exponents = lease2.Item;
+		exponents.AddRange(children.Select(c =>
 			c is Exponent<TResult> e
 			? (Base: cat.GetReduced(e.Base), e.Power)
-			: (Base: c, Power: one)).ToArray();
+			: (Base: c, Power: one)));
 
 		zero = exponents
 			.Select(e => e.Base)
@@ -101,7 +105,8 @@ public partial class Product<TResult> :
 		if (zero is not null)
 			return zero;
 
-		children = exponents
+		children.Clear();
+		children.AddRange(exponents
 			.Where(e => e.Power != zero)
 			.GroupBy(e => e.Base.Description)
 			.Select(g =>
@@ -112,7 +117,8 @@ public partial class Product<TResult> :
 				return power == zero ? one
 					: power == one ? @base
 					: GetExponent(catalog, @base, power);
-			}).ToList();
+			}));
+		lease2.Dispose(); // release early.
 
 		var multiple = children
 			.OfType<IConstant<TResult>>()
@@ -289,20 +295,19 @@ public partial class Product<TResult> :
 		IEnumerable<IEvaluate<TResult>> param)
 	{
 		catalog.ThrowIfNull();
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		// ReSharper disable once SuspiciousTypeConversion.Global
-		return catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p
-			? (Product<TResult>)(dynamic)Product.Create(dCat, p)
-			: catalog.Register(new Product<TResult>(param));
+		return catalog.Register(new Product<TResult>(param));
 	}
 
 	public virtual IEvaluate<TResult> NewUsing(
 		ICatalog<IEvaluate<TResult>> catalog,
 		IReadOnlyList<IEvaluate<TResult>> param)
-		=> param is null ? throw new ArgumentNullException(nameof(param))
-		: param.Count == 1 ? param[0] : Create(catalog, param);
+	{
+		param.ThrowIfNull();
+		return param.Count == 1 ? param[0] : Create(catalog, param);
+	}
 
 	public virtual IEvaluate<TResult> NewUsing(
 		ICatalog<IEvaluate<TResult>> catalog,
