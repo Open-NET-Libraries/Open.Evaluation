@@ -2,15 +2,9 @@
 using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Boolean;
 using Open.Evaluation.Boolean.Counting;
-using Open.Evaluation.Catalogs;
 using Open.Evaluation.Core;
 using Open.RandomizationExtensions;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-
 using EvaluationCatalogSubmodule = Open.Evaluation.Catalogs.EvaluationCatalog<double>.SubmoduleBase;
 
 namespace Open.Evaluation;
@@ -37,8 +31,8 @@ public static class Registry
 			char op,
 			IEnumerable<IEvaluate<double>> children)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is null) throw new ArgumentNullException(nameof(children));
+			catalog.ThrowIfNull();
+			children.ThrowIfNull();
 			Contract.EndContractBlock();
 			Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
 			return op switch
@@ -62,8 +56,8 @@ public static class Registry
 			ICatalog<IEvaluate<double>> catalog,
 			IEnumerable<IEvaluate<double>> children)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is null) throw new ArgumentNullException(nameof(children));
+			catalog.ThrowIfNull();
+			children.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			return GetOperator(catalog, Operators.RandomSelectOne(), children);
@@ -75,8 +69,8 @@ public static class Registry
 			char except,
 			params char[] moreExcept)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is null) throw new ArgumentNullException(nameof(children));
+			catalog.ThrowIfNull();
+			children.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			using var lease = HashSetPool<char>.Rent();
@@ -112,8 +106,8 @@ public static class Registry
 			char op,
 			IReadOnlyList<IEvaluate<double>> children)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is null) throw new ArgumentNullException(nameof(children));
+			catalog.ThrowIfNull();
+			children.ThrowIfNull();
 
 			Contract.EndContractBlock();
 
@@ -135,8 +129,8 @@ public static class Registry
 			char op,
 			IEvaluate<double> child)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (child is null) throw new ArgumentNullException(nameof(child));
+			catalog.ThrowIfNull();
+			child.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			return op switch
@@ -160,7 +154,7 @@ public static class Registry
 			ICatalog<IEvaluate<double>> catalog,
 			IReadOnlyList<IEvaluate<double>> children)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			catalog.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			return GetFunction(catalog, Functions.RandomSelectOne(), children);
@@ -172,7 +166,7 @@ public static class Registry
 			char except,
 			params char[] moreExcept)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+			catalog.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			using var lease = HashSetPool<char>.Rent();
@@ -206,8 +200,8 @@ public static class Registry
 			IEvaluate<double> child,
 			params char[] except)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (child is null) throw new ArgumentNullException(nameof(child));
+			catalog.ThrowIfNull();
+			child.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			char op;
@@ -255,8 +249,8 @@ public static class Registry
 			char op,
 			IEnumerable<IEvaluate<bool>> children)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is null) throw new ArgumentNullException(nameof(children));
+			catalog.ThrowIfNull();
+			children.ThrowIfNull();
 			Contract.EndContractBlock();
 			Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
 			return op switch
@@ -273,8 +267,8 @@ public static class Registry
 			IEnumerable<IEvaluate<bool>> children,
 			params char[] except)
 		{
-			if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-			if (children is null) throw new ArgumentNullException(nameof(children));
+			catalog.ThrowIfNull();
+			children.ThrowIfNull();
 			Contract.EndContractBlock();
 
 			return except is null || except.Length == 0

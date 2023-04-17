@@ -6,14 +6,7 @@
 using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation.Arithmetic;
@@ -29,7 +22,7 @@ public class Sum<TResult> :
 
 	static bool IsProductWithSingleConstant(
 		IEvaluate<TResult> a,
-		[NotNullWhen(true)]	out IConstant<TResult> value)
+		[NotNullWhen(true)] out IConstant<TResult> value)
 	{
 		if (a is Product<TResult> aP)
 		{
@@ -164,8 +157,8 @@ public class Sum<TResult> :
 		ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		catalog.ThrowIfNull();
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global
@@ -189,9 +182,9 @@ public class Sum<TResult> :
 	public bool TryExtractGreatestFactor(
 		ICatalog<IEvaluate<TResult>> catalog,
 		[NotNullWhen(true)] out IEvaluate<TResult> sum,
-		[NotNullWhen(true)]	out IConstant<TResult> greatestFactor)
+		[NotNullWhen(true)] out IConstant<TResult> greatestFactor)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var one = GetConstant(catalog, Constant<TResult>.One.Value);
@@ -294,8 +287,8 @@ public static partial class SumExtensions
 		IReadOnlyList<IEvaluate<TResult>> children)
 		where TResult : notnull, IComparable<TResult>, IComparable
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (children is null) throw new ArgumentNullException(nameof(children));
+		catalog.ThrowIfNull();
+		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		switch (children.Count)
@@ -323,8 +316,8 @@ public static partial class SumExtensions
 	{
 		if (children is IReadOnlyList<IEvaluate<TResult>> ch) return SumOf(catalog, ch);
 
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (children is null) throw new ArgumentNullException(nameof(children));
+		catalog.ThrowIfNull();
+		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		using var e = children.GetEnumerator();

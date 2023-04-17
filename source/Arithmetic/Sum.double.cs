@@ -5,10 +5,6 @@
 
 using Open.Disposable;
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Open.Evaluation.Arithmetic;
 
@@ -44,8 +40,8 @@ public class Sum : Sum<double>
 		ICatalog<IEvaluate<double>> catalog,
 		IEnumerable<IEvaluate<double>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		catalog.ThrowIfNull();
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var p = param as IEvaluate<double>[] ?? param.ToArray();
@@ -83,8 +79,8 @@ public static partial class SumExtensions
 		this ICatalog<IEvaluate<double>> catalog,
 		IReadOnlyList<IEvaluate<double>> children)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (children is null) throw new ArgumentNullException(nameof(children));
+		catalog.ThrowIfNull();
+		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		switch (children.Count)
@@ -96,12 +92,12 @@ public static partial class SumExtensions
 				return children[0];
 
 			default:
-				{
-					using var childListRH = ListPool<IEvaluate<double>>.Rent();
-					var childList = childListRH.Item;
-					childList.AddRange(children);
-					return SumOfCollection(catalog, childList);
-				}
+			{
+				using var childListRH = ListPool<IEvaluate<double>>.Rent();
+				var childList = childListRH.Item;
+				childList.AddRange(children);
+				return SumOfCollection(catalog, childList);
+			}
 		}
 	}
 
@@ -111,8 +107,8 @@ public static partial class SumExtensions
 	{
 		if (children is IReadOnlyList<IEvaluate<double>> ch) return SumOf(catalog, ch);
 
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (children is null) throw new ArgumentNullException(nameof(children));
+		catalog.ThrowIfNull();
+		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		using var e = children.GetEnumerator();

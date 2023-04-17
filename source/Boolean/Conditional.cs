@@ -4,9 +4,6 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation.Boolean;
 
@@ -63,7 +60,7 @@ public class Conditional<TResult> : OperationBase<TResult>,
 		ICatalog<IEvaluate<TResult>> catalog,
 		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return catalog.Register(

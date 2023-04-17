@@ -12,7 +12,7 @@ public sealed class Parameter : Parameter<double>
 	}
 
 	internal new static Parameter Create(ICatalog<IEvaluate<double>> catalog, ushort id)
-		=> catalog.Register(ToStringRepresentation(id), id, (_,id) => new Parameter(id));
+		=> catalog.Register(ToStringRepresentation(id), id, (_, id) => new Parameter(id));
 
 	public override IEvaluate<double> NewUsing(ICatalog<IEvaluate<double>> catalog, ushort param)
 		=> catalog.Register(ToStringRepresentation(param), param, (_, id) => new Parameter(id));

@@ -3,9 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
-using System.Diagnostics.CodeAnalysis;
-
 namespace Open.Evaluation.Core;
 
 public abstract class OperationBase<TResult>

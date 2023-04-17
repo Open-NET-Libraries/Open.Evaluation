@@ -3,11 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
-
 namespace Open.Evaluation.Core;
 
 public sealed class Constant : Constant<double>
@@ -55,8 +50,8 @@ public static partial class ConstantExtensions
 		this ICatalog<IEvaluate<double>> catalog,
 		in IConstant<double> c1, in IConstant<double> c2, params IConstant<double>[] rest)
 	{
-		if (c1 is null) throw new ArgumentNullException(nameof(c1));
-		if (c2 is null) throw new ArgumentNullException(nameof(c2));
+		c1.ThrowIfNull();
+		c2.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return ProductOfConstants(catalog, c1.Value, rest);

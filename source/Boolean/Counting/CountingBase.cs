@@ -4,8 +4,6 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 
 namespace Open.Evaluation.Boolean.Counting;
 

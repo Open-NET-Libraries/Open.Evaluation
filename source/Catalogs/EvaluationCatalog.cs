@@ -1,12 +1,6 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Open.Evaluation.Catalogs;
 
@@ -38,7 +32,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		Node<IEvaluate<T>> target,
 		bool operateDirectly = false)
 	{
-		if (target is null) throw new ArgumentNullException(nameof(target));
+		target.ThrowIfNull();
 		Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() is not null);
 		Contract.EndContractBlock();
 
@@ -142,8 +136,8 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		Node<IEvaluate<T>> sourceNode,
 		Func<Node<IEvaluate<T>>, IEvaluate<T>> clonedNodeHandler)
 	{
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
-		if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
+		sourceNode.ThrowIfNull();
+		clonedNodeHandler.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var node = sourceNode.CloneTree(); // * new 1
@@ -185,8 +179,8 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		TParam param, // allow passthrough of data to avoid allocation.
 		Func<Node<IEvaluate<T>>, TParam, IEvaluate<T>> clonedNodeHandler)
 	{
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
-		if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
+		sourceNode.ThrowIfNull();
+		clonedNodeHandler.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var node = sourceNode.CloneTree(); // * new 1
@@ -267,7 +261,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	public Node<IEvaluate<T>> RemoveNode(
 		Node<IEvaluate<T>> node)
 	{
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 		var parent = node.Parent ?? throw new ArgumentException("node cannot be removed without a parent.", nameof(node));
 		Contract.EndContractBlock();
 

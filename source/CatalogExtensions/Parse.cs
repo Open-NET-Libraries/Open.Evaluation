@@ -1,11 +1,8 @@
 ﻿using Open.Disposable;
 using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Globalization;
-using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation;

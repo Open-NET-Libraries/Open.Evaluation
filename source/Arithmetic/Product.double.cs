@@ -5,11 +5,6 @@
 
 using Open.Disposable;
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Open.Evaluation.Arithmetic;
 
@@ -48,8 +43,8 @@ public class Product : Product<double>
 		ICatalog<IEvaluate<double>> catalog,
 		IEnumerable<IEvaluate<double>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		catalog.ThrowIfNull();
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var p = param as IEvaluate<double>[] ?? param.ToArray();
@@ -63,7 +58,7 @@ public static partial class ProductExtensions
 		this ICatalog<IEvaluate<double>> catalog,
 		IEnumerable<IEvaluate<double>> children)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (children is IReadOnlyCollection<IEvaluate<double>> ch && ch.Count == 0)
 			throw new NotSupportedException("Cannot produce a product of an empty set.");
 

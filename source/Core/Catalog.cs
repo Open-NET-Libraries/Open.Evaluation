@@ -1,11 +1,6 @@
 ﻿using Open.Disposable;
 using Open.Hierarchy;
-using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 
 namespace Open.Evaluation.Core;
@@ -20,7 +15,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public void Register<TItem>([NotNull] ref TItem item)
 		where TItem : T
 	{
-		if (item is null) throw new ArgumentNullException(nameof(item));
+		item.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		item = Register(item);
@@ -33,7 +28,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public TItem Register<TItem>(TItem item)
 		where TItem : T
 	{
-		if (item is null) throw new ArgumentNullException(nameof(item));
+		item.ThrowIfNull();
 		Contract.Ensures(Contract.Result<TItem>() is not null);
 		Contract.EndContractBlock();
 		var result = Registry.GetOrAdd(item.ToStringRepresentation(), OnBeforeRegistration(item));
@@ -46,8 +41,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public TItem Register<TItem>(string id, Func<string, TItem> factory)
 		where TItem : T
 	{
-		if (id is null) throw new ArgumentNullException(nameof(id));
-		if (factory is null) throw new ArgumentNullException(nameof(factory));
+		id.ThrowIfNull();
+		factory.ThrowIfNull();
 		Contract.Ensures(Contract.Result<TItem>() is not null);
 		Contract.EndContractBlock();
 
@@ -66,8 +61,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
 		where TItem : T
 	{
-		if (id is null) throw new ArgumentNullException(nameof(id));
-		if (factory is null) throw new ArgumentNullException(nameof(factory));
+		id.ThrowIfNull();
+		factory.ThrowIfNull();
 		Contract.Ensures(Contract.Result<TItem>() is not null);
 		Contract.EndContractBlock();
 
@@ -85,7 +80,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
 		where TItem : T
 	{
-		if (id is null) throw new ArgumentNullException(nameof(id));
+		id.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var result = Registry.TryGetValue(id, out var e);

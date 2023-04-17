@@ -4,9 +4,6 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation.Arithmetic;
 
@@ -77,9 +74,9 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (@base is null) throw new ArgumentNullException(nameof(@base));
-		if (power is null) throw new ArgumentNullException(nameof(power));
+		catalog.ThrowIfNull();
+		@base.ThrowIfNull();
+		power.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global

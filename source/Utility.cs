@@ -1,9 +1,6 @@
 ﻿using Open.Disposable;
-using System;
 using System.Buffers;
 using System.Collections;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 
 namespace Open.Evaluation;
 
@@ -93,7 +90,7 @@ internal static class Utility
 
 	public static IEnumerable<T> SkipAt<T>(this IEnumerable<T> source, int index)
 	{
-		if (source is null) throw new ArgumentNullException(nameof(source));
+		source.ThrowIfNull();
 		if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 		Contract.EndContractBlock();
 
@@ -112,7 +109,7 @@ internal static class Utility
 
 	public static IEnumerable<T> ReplaceAt<T>(this IEnumerable<T> source, int index, T replacement)
 	{
-		if (source is null) throw new ArgumentNullException(nameof(source));
+		source.ThrowIfNull();
 		if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 		Contract.EndContractBlock();
 
@@ -130,7 +127,7 @@ internal static class Utility
 
 	public static IEnumerable<T> InsertAt<T>(this IEnumerable<T> source, int index, IEnumerable<T> injection)
 	{
-		if (source is null) throw new ArgumentNullException(nameof(source));
+		source.ThrowIfNull();
 		if (index < 0) throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.");
 		Contract.EndContractBlock();
 

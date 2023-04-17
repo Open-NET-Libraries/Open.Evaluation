@@ -4,10 +4,6 @@
  */
 
 using Open.Evaluation.Core;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Open.Evaluation.Boolean;
 
@@ -31,8 +27,8 @@ public class And : OperatorBase<bool>,
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		catalog.ThrowIfNull();
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return catalog.Register(new And(param));

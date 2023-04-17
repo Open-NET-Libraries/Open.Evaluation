@@ -3,14 +3,10 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Threading;
-
 namespace Open.Evaluation.Core;
 
 /*
- * The main idea here is to envorce an immutable class and it's related sub classes.  No changes allowed after construction
+ * The main idea here is to enforce an immutable class and it's related sub classes.  No changes allowed after construction
  * A clone can only be created by 'recreating' or 'reconstructing'.
  */
 

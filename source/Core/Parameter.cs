@@ -3,10 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-
 namespace Open.Evaluation.Core;
 
 [DebuggerDisplay(@"\{{ID}\}")]
@@ -49,7 +45,7 @@ public class Parameter<TValue>
 		=> Evaluate(context).ToString();
 
 	internal static Parameter<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, ushort id)
-		=> catalog.Register(ToStringRepresentation(id), id, (_,id) => new Parameter<TValue>(id));
+		=> catalog.Register(ToStringRepresentation(id), id, (_, id) => new Parameter<TValue>(id));
 
 	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, ushort param)
 		=> catalog.Register(ToStringRepresentation(param), param, (_, id) => new Parameter<TValue>(id));

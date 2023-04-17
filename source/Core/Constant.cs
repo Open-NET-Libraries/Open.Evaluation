@@ -3,12 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Linq;
-
 namespace Open.Evaluation.Core;
 
 [DebuggerDisplay("Value = {Value}")]
@@ -85,8 +79,8 @@ public static partial class ConstantExtensions
 		in TValue c1, IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (constants is null) throw new ArgumentNullException(nameof(constants));
+		catalog.ThrowIfNull();
+		constants.ThrowIfNull();
 
 		if (typeof(TValue) == typeof(float))
 		{
@@ -129,8 +123,8 @@ public static partial class ConstantExtensions
 		in IConstant<TValue> c1, in IConstant<TValue> c2, params IConstant<TValue>[] rest)
 		where TValue : notnull, IComparable<TValue>, IComparable
 	{
-		if (c1 is null) throw new ArgumentNullException(nameof(c1));
-		if (c2 is null) throw new ArgumentNullException(nameof(c2));
+		c1.ThrowIfNull();
+		c2.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return SumOfConstants(catalog, c1.Value, rest.Prepend(c2));
@@ -141,8 +135,8 @@ public static partial class ConstantExtensions
 		in TValue c1, IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (constants is null) throw new ArgumentNullException(nameof(constants));
+		catalog.ThrowIfNull();
+		constants.ThrowIfNull();
 
 		if (typeof(TValue) == typeof(float))
 		{
@@ -183,8 +177,8 @@ public static partial class ConstantExtensions
 		params IConstant<TValue>[] rest)
 		where TValue : notnull, IComparable<TValue>, IComparable
 	{
-		if (c1 is null) throw new ArgumentNullException(nameof(c1));
-		if (c2 is null) throw new ArgumentNullException(nameof(c2));
+		c1.ThrowIfNull();
+		c2.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return ProductOfConstants(catalog, c1.Value, rest.Prepend(c2));

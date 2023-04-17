@@ -2,13 +2,6 @@
 using Open.Evaluation.Core;
 using Open.Hierarchy;
 using Open.RandomizationExtensions;
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Linq;
-using System.Threading;
-
 using IFunction = Open.Evaluation.Core.IFunction<double>;
 using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<double>, double>;
 
@@ -38,8 +31,8 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node, byte options = 3)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		catalog.ThrowIfNull();
+		node.ThrowIfNull();
 		if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
 		Contract.EndContractBlock();
 
@@ -161,8 +154,8 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		catalog.ThrowIfNull();
+		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return node.Value switch
@@ -182,8 +175,8 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		catalog.ThrowIfNull();
+		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return catalog.Catalog.ApplyClone(node, (catalog, node), (newNode, param) =>
@@ -210,8 +203,8 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node, double value)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		catalog.ThrowIfNull();
+		node.ThrowIfNull();
 		if (value == 0) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
 		Contract.EndContractBlock();
 
@@ -230,8 +223,8 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		catalog.ThrowIfNull();
+		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return node.Value is Exponent<double>

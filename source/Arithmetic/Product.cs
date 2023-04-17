@@ -6,14 +6,7 @@
 using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
 using System.Globalization;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation.Arithmetic;
@@ -33,7 +26,7 @@ public class Product<TResult> :
 
 	[return: NotNull]
 	protected override TResult EvaluateInternal(object context)
-		=> Children.Length == 0	? throw new NotSupportedException("Cannot resolve product of empty set.")
+		=> Children.Length == 0 ? throw new NotSupportedException("Cannot resolve product of empty set.")
 		: (TResult)ChildResults(context)
 			.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
 
@@ -285,8 +278,8 @@ public class Product<TResult> :
 		ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> param)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		catalog.ThrowIfNull();
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global
@@ -341,7 +334,7 @@ public static partial class ProductExtensions
 		IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, IComparable<TResult>, IComparable
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
+		catalog.ThrowIfNull();
 		if (children is IReadOnlyCollection<IEvaluate<TResult>> ch && ch.Count == 0)
 			throw new NotSupportedException("Cannot produce a product of an empty set.");
 

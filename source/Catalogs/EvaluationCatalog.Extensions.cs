@@ -1,11 +1,6 @@
 ﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
-using System;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Linq;
 
 namespace Open.Evaluation.Catalogs;
 
@@ -18,15 +13,15 @@ public static partial class EvaluationCatalogExtensions
 	/// Applies a multiple to any node.
 	/// </summary>
 	/// <param name="catalog">The catalog to use.</param>
-	/// <param name="sourceNode">The node to multply by.</param>
+	/// <param name="sourceNode">The node to multiply by.</param>
 	/// <param name="multiple">The value to multiply by.</param>
 	/// <returns>The resultant root evaluation.</returns>
 	public static IEvaluate<double> MultiplyNode(
 		this EvaluationCatalog<double> catalog,
 		Node<IEvaluate<double>> sourceNode, double multiple)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		if (multiple == 1) // No change...
@@ -74,15 +69,15 @@ public static partial class EvaluationCatalogExtensions
 	/// Applies a multiple to any node.
 	/// </summary>
 	/// <param name="catalog">The catalog to use.</param>
-	/// <param name="sourceNode">The node to multply by.</param>
+	/// <param name="sourceNode">The node to multiply by.</param>
 	/// <param name="delta">The value to multiply by.</param>
 	/// <returns>The resultant root evaluation.</returns>
 	public static IEvaluate<double> AdjustNodeMultiple(
 		this EvaluationCatalog<double> catalog,
 		Node<IEvaluate<double>> sourceNode, double delta)
 	{
-		if (catalog is null) throw new ArgumentNullException(nameof(catalog));
-		if (sourceNode is null) throw new ArgumentNullException(nameof(sourceNode));
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		if (delta == 0) // No change... 
@@ -101,7 +96,7 @@ public static partial class EvaluationCatalogExtensions
 				constantNodes[0].Value = catalog.SumOfConstants(delta, multiple);
 
 				for (var i = 1; i < constantNodes.Length; i++)
-				newNode.Remove(constantNodes[i]);
+					newNode.Remove(constantNodes[i]);
 			})
 		};
 	}

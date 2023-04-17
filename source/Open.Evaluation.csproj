@@ -5,6 +5,7 @@
 		<Version>1.1.2</Version>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
 		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 		<Authors>electricessence</Authors>
 		<Copyright>© electricessence (Oren F.) All rights reserved.</Copyright>

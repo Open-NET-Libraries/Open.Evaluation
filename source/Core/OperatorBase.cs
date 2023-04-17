@@ -5,15 +5,9 @@
 
 using Open.Disposable;
 using Open.Hierarchy;
-using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
 
 namespace Open.Evaluation.Core;
 
@@ -25,7 +19,7 @@ public abstract class OperatorBase<TChild, TResult>
 {
 	protected OperatorBase(char symbol, string separator, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1) : base(symbol, separator)
 	{
-		if (children is null) throw new ArgumentNullException(nameof(children));
+		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		if (reorderChildren) children = children.OrderBy(c => c, this);
@@ -166,7 +160,7 @@ public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, T
 		IEnumerable<IEvaluate<TResult>> param,
 		Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
 	{
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		param.ThrowIfNull();
 		using var e = param.GetEnumerator();
 		if (!e.MoveNext()) return transform(ImmutableArray<IEvaluate<TResult>>.Empty);
 		var v0 = e.Current;
@@ -184,7 +178,7 @@ public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, T
 	//	Func<IEvaluate<TResult>> onZero,
 	//	Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
 	//{
-	//	if (param is null) throw new ArgumentNullException(nameof(param));
+	//	param.ThrowIfNull();
 	//	var e = param.GetEnumerator();
 	//	if (!e.MoveNext()) return onZero();
 	//	var v0 = e.Current;
