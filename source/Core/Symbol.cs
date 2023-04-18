@@ -10,7 +10,7 @@ public readonly record struct Symbol
 
 	public Symbol(char character, [DisallowNull, NotNull] string text)
 	{
-		text.ThrowIfNull().OnlyInDebug();
+		text.ThrowIfNull();
 
 		Character = character;
 		Text = text;
