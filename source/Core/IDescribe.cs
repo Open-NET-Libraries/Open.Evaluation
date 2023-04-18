@@ -4,5 +4,5 @@ namespace Open.Evaluation.Core;
 public interface IDescribe
 {
 	[NotNull]
-	string Description { get; }
+	Lazy<string> Description { get; }
 }

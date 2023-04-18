@@ -16,7 +16,7 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 		[DisallowNull, NotNull] Lazy<string> description)
 	{
 		Result = result ?? throw new ArgumentNullException(nameof(result));
-		_description = description ?? throw new ArgumentNullException(nameof(description));
+		Description = description ?? throw new ArgumentNullException(nameof(description));
 	}
 
 	public EvaluationResult(
@@ -39,22 +39,21 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 	[NotNull]
 	public T Result { get; }
 
-	private readonly Lazy<string> _description;
 	[NotNull]
-	public string Description => _description.Value ?? throw new Exception("Description Lazy<string> returned null");
+	public Lazy<string> Description { get; }
 
 	object IEvaluationResult.Result => Result;
 
 	public static implicit operator T(EvaluationResult<T> result) => result.Result;
 
 	public static implicit operator EvaluationResult<object>(EvaluationResult<T> result)
-		=> new(result.Result, result._description);
+		=> new(result.Result, result.Description);
 
 	public static explicit operator EvaluationResult<T>(EvaluationResult<object> result)
 	{
 		var r = result.Result;
 		return r is T v
-			? new(v, result._description)
+			? new(v, result.Description)
 			: throw new InvalidCastException($"Cannot coerce from {r.GetType()} to {typeof(T)}.");
 	}
 }

@@ -5,7 +5,6 @@
 
 using Open.Disposable;
 using Open.Hierarchy;
-using System.Collections;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
@@ -42,18 +41,15 @@ public abstract class OperatorBase<TChild, TResult>
 
 	IReadOnlyList<object> IParent.Children => Children;
 
-	protected virtual string ToStringInternal(object context)
+	protected virtual string Describe(IEnumerable<Lazy<string>> children)
 	{
-		if (context is not IEnumerable collection)
-			return base.ToStringInternal(context);
-
 		string r;
 		using (var lease = StringBuilderPool.Rent())
 		{
 			var result = lease.Item;
 			result.Append('(');
 			var index = -1;
-			foreach (var o in collection)
+			foreach (var o in children)
 			{
 				ToStringInternal_OnAppendNextChild(result, ++index, o);
 			}
@@ -67,23 +63,19 @@ public abstract class OperatorBase<TChild, TResult>
 		return isEmpty ? $"({Symbol.Character})" : r;
 	}
 
-	protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
+	protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
 		if (index is not 0) result.Append(Symbol.Text);
-		result.Append(child);
+		result.Append(child.Value);
 	}
 
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public override string ToString(object context)
-		=> ToStringInternal(ChildResults(context));
-
-	protected IEnumerable<EvaluationResult<object>> ChildResults(object context)
+	protected IEnumerable<EvaluationResult<object>> ChildResults(Context context)
 	{
 		foreach (var child in Children)
 			yield return child.Evaluate(context);
 	}
 
-	protected IEnumerable<string> ChildDescriptions()
+	protected IEnumerable<Lazy<string>> ChildDescriptions()
 	{
 		foreach (var child in Children)
 			yield return child.Description;
@@ -91,7 +83,7 @@ public abstract class OperatorBase<TChild, TResult>
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected override string Describe()
-		=> ToStringInternal(ChildDescriptions());
+		=> Describe(ChildDescriptions());
 
 	protected virtual int ConstantPriority => +1;
 
@@ -132,8 +124,8 @@ public abstract class OperatorBase<TChild, TResult>
 		if (aChildCount > bChildCount) return -1;
 		if (aChildCount < bChildCount) return +1;
 
-		var ats = x.Description;
-		var bts = y.Description;
+		var ats = x.Description.Value;
+		var bts = y.Description.Value;
 
 		return string.CompareOrdinal(ats, bts);
 	}
@@ -151,7 +143,7 @@ public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, T
 	{
 	}
 
-	protected new IEnumerable<EvaluationResult<TResult>> ChildResults(object context)
+	protected new IEnumerable<EvaluationResult<TResult>> ChildResults(Context context)
 	{
 		foreach (var child in Children)
 			yield return child.Evaluate(context);

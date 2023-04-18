@@ -17,19 +17,18 @@ namespace Open.Evaluation.Core;
 public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
+	protected EvaluationBase() => Description = new(Describe);
+
 	[return: NotNull]
 	protected abstract string Describe();
 
-	string? _description; // Was using a Lazy<string> before, but seems overkill for an immutable structure.
-
 	[NotNull]
-	public string Description
-		=> LazyInitializer.EnsureInitialized(ref _description, Describe)!;
+	public Lazy<string> Description { get; }
 
-	protected abstract EvaluationResult<TResult> EvaluateInternal(ParameterContext context); // **
+	protected abstract EvaluationResult<TResult> EvaluateInternal(Context context); // **
 
 	/// <inheritdoc />
-	public EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] ParameterContext context)
+	public EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] Context context)
 	{
 		context.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
