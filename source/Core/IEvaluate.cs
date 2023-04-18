@@ -14,7 +14,7 @@ public interface IEvaluate : IDescribe
 	/// </summary>
 	/// <param name="context">The context object that defines the parameters for the evaluation.</param>
 	/// <returns>The result containing the value and representation of the evaluation.</returns>
-	EvaluationResult<object> Evaluate([DisallowNull, NotNull] object context);
+	EvaluationResult<object> Evaluate([DisallowNull, NotNull] Context context);
 }
 
 public interface IEvaluate<TResult> : IEvaluate
@@ -22,8 +22,8 @@ public interface IEvaluate<TResult> : IEvaluate
 {
 	/// <inheritdoc cref="IEvaluate.Evaluate(object)"/>
 	[return: NotNull]
-	new EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] object context);
+	new EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] Context context);
 
 	[return: NotNull]
-	EvaluationResult<object> IEvaluate.Evaluate([DisallowNull, NotNull] object context) => Evaluate(context);
+	EvaluationResult<object> IEvaluate.Evaluate([DisallowNull, NotNull] Context context) => Evaluate(context);
 }

@@ -1,4 +1,6 @@
-﻿using Open.Evaluation.Core;
+﻿using Open.Evaluation.Boolean.Counting;
+using Open.Evaluation.Core;
+using System.Collections.Immutable;
 
 namespace Open.Evaluation.Boolean;
 public static class Symbols

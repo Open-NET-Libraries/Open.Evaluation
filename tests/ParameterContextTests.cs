@@ -11,7 +11,7 @@ public static class ParameterContextTests
 	{
 		var catalog = new EvaluationCatalog<double>();
 		// Shouldn't throw.
-		var context = new ParameterContext(new object());
+		var context = new Context(new object());
 		var c0 = catalog.GetConstant(0);
 		context.GetOrAdd(c0, 0d);
 		var c1 = catalog.GetConstant(1);

@@ -43,7 +43,7 @@ public class Parameter<T>
 
 	protected override EvaluationResult<T> EvaluateInternal(object context)
 	{
-		var value = _evaluator(context is ParameterContext p ? p.Context : context, ID);
+		var value = _evaluator(context is Context p ? p.Context : context, ID);
 		Debug.Assert(value is not null);
 
 		return new(value, v =>

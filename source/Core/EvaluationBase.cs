@@ -26,20 +26,15 @@ public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
 	public string Description
 		=> LazyInitializer.EnsureInitialized(ref _description, Describe)!;
 
-	protected abstract EvaluationResult<TResult> EvaluateInternal(object context); // **
+	protected abstract EvaluationResult<TResult> EvaluateInternal(ParameterContext context); // **
 
 	/// <inheritdoc />
-	public EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] object context)
+	public EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] ParameterContext context)
 	{
 		context.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		// Use existing context... // Caches results...
-		if (context is ParameterContext pc)
-			return pc.GetOrAdd(this, () => EvaluateInternal(pc))!; // **
-
-		// Create a new one for this tree...
-		using var newPc = new ParameterContext(context!);
-		return Evaluate(newPc);
+		// Cache results...
+		return context.GetOrAdd(this, () => EvaluateInternal(context))!;
 	}
 }

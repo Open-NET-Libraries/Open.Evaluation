@@ -4,16 +4,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation;
 
-// Using a Lazy to differentiate between the value and the factories.
-// Also ensures execution and publication.
-public class ParameterContext : DisposableBase
+public class Context : DisposableBase
 {
-	public object Context { get; }
-
 	private readonly Dictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = new();
-
-	public ParameterContext([DisallowNull, NotNull] object context)
-		=> Context = context ?? throw new ArgumentNullException(nameof(context));
 
 	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, EvaluationResult<TResult>> factory)
 	{
