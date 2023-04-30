@@ -69,8 +69,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
 		where TItem : T
 	{
-		if (id is null) throw new ArgumentNullException(nameof(id));
-		if (factory is null) throw new ArgumentNullException(nameof(factory));
+		id.ThrowIfNull();
+		factory.ThrowIfNull();
 		Contract.Ensures(Contract.Result<TItem>() is not null);
 		Contract.EndContractBlock();
 
@@ -88,7 +88,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
 		where TItem : T
 	{
-		if (id is null) throw new ArgumentNullException(nameof(id));
+		id.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var result = Registry.TryGetValue(id, out var e);

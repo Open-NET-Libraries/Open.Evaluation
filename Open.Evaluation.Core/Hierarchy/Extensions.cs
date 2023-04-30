@@ -7,8 +7,7 @@ public static class Extensions
 {
 	public static bool AreChildrenAligned(this Node<IEvaluate> target)
 	{
-		if (target is null)
-			throw new ArgumentNullException(nameof(target));
+		ArgumentNullException.ThrowIfNull(target);
 
 		switch (target.Value)
 		{

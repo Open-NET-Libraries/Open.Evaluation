@@ -37,7 +37,7 @@ public static partial class EvaluationCatalogExtensions
 		Node<IEvaluate<double>> node, byte options = 3)
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 		if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
 		Contract.EndContractBlock();
 
@@ -123,8 +123,7 @@ public static partial class EvaluationCatalogExtensions
 	{
 		if (catalog is null)
 			throw new ArgumentNullException(nameof(catalog));
-		if (node is null)
-			throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 
 		if (node.Value is not IOperator o)
 			throw new ArgumentException("Does not contain an Operation.", nameof(node));

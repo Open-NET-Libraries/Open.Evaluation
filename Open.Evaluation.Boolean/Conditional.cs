@@ -15,6 +15,8 @@ public class Conditional<TResult> : OperationBase<TResult>,
 	IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
+	public const char Glyph = '?';
+
 	public Conditional(
 		IEvaluate<bool> condition,
 		IEvaluate<TResult> ifTrue,

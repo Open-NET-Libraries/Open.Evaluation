@@ -10,10 +10,10 @@ namespace Open.Evaluation.Boolean.Counting
 	public class Exactly : CountingBase,
 		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
-		public const string PREFIX = "Exactly";
+		public const string Prefix = "Exactly";
 
 		internal Exactly(int count, IEnumerable<IEvaluate<bool>> children)
-			: base(PREFIX, count, children)
+			: base(Prefix, count, children)
 		{
 		}
 

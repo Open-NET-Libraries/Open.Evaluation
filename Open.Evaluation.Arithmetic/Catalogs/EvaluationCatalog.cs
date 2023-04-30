@@ -184,7 +184,7 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 		Func<Node<IEvaluate<T>>, TParam, IEvaluate<T>> clonedNodeHandler)
 	{
 		sourceNode.ThrowIfNull();
-		if (clonedNodeHandler is null) throw new ArgumentNullException(nameof(clonedNodeHandler));
+		clonedNodeHandler.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var node = sourceNode.CloneTree(); // * new 1
@@ -267,8 +267,9 @@ public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	public Node<IEvaluate<T>> RemoveNode(
 		Node<IEvaluate<T>> node)
 	{
-		if (node is null) throw new ArgumentNullException(nameof(node));
-		var parent = node.Parent ?? throw new ArgumentException("node cannot be removed without a parent.", nameof(node));
+		node.ThrowIfNull();
+		var parent = node.Parent
+			?? throw new ArgumentException("node cannot be removed without a parent.", nameof(node));
 		Contract.EndContractBlock();
 
 		var root = node.Root;

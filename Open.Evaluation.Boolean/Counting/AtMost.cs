@@ -7,38 +7,36 @@ using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Boolean.Counting
 {
-	public class AtLeast : CountingBase,
-		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
+	public class AtMost : CountingBase,
+			IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
-		public const string PREFIX = "AtLeast";
+		public const string Prefix = "AtMost";
 
-		internal AtLeast(int count, IEnumerable<IEvaluate<bool>> children)
-			: base(PREFIX, count, children)
+		internal AtMost(int count, IEnumerable<IEvaluate<bool>> children)
+			: base(Prefix, count, children)
 		{
-			if (count < 1)
-				throw new ArgumentOutOfRangeException(nameof(count), count, "Must be at least 1.");
 		}
 
 		internal static IEvaluate<bool> Create(
 			ICatalog<IEvaluate<bool>> catalog,
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
-			=> catalog.Register(new AtLeast(param.count, param.children));
+			=> catalog.Register(new AtMost(param.count, param.children));
 
 		public IEvaluate<bool> NewUsing(
 			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)
 			=> Create(catalog, param);
 
-		protected override EvaluationResult<bool> EvaluateInternal(Context context)
+		protected override bool EvaluateInternal(object context)
 		{
 			var count = 0;
 			foreach (var result in ChildResults(context))
 			{
 				if ((bool)result) count++;
-				if (count == Count) return true;
+				if (count > Count) return false;
 			}
 
-			return false;
+			return true;
 		}
 	}
 }
@@ -47,9 +45,9 @@ namespace Open.Evaluation.Boolean
 {
 	public static partial class BooleanExtensions
 	{
-		public static IEvaluate<bool> CountAtLeast(
+		public static IEvaluate<bool> CountAtMost(
 			this ICatalog<IEvaluate<bool>> catalog,
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
-			=> Counting.AtLeast.Create(catalog, param);
+			=> Counting.AtMost.Create(catalog, param);
 	}
 }

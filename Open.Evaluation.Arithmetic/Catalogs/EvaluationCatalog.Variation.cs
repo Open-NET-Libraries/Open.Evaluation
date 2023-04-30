@@ -124,7 +124,7 @@ public static partial class EvaluationCatalogExtensions
 		Node<IEvaluate<double>> root, int descendantIndex)
 	{
 		catalog.ThrowIfNull();
-		if (root is null) throw new ArgumentNullException(nameof(root));
+		root.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return PromoteChildren(catalog,

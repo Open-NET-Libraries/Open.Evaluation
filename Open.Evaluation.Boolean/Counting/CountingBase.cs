@@ -8,16 +8,23 @@ using Throw;
 
 namespace Open.Evaluation.Boolean.Counting;
 
-public abstract class CountingBase : OperatorBase<bool>
+public abstract class CountingBase
+	: OperatorBase<bool>
 {
-	protected CountingBase(string prefix, int count, IEnumerable<IEvaluate<bool>> children, int minimumChildren = 0)
+	protected CountingBase(
+		string prefix,
+		int count,
+		IEnumerable<IEvaluate<bool>> children,
+		int minimumChildren = 0)
 		: base(Symbols.Counting, children, true, minimumChildren)
 	{
-		Prefix = prefix.ThrowIfNull();
+		PrefixValue = prefix.ThrowIfNull();
 		Count = count.Throw().IfLessThan(0);
 	}
 
-	protected string Prefix { get; }
+	public const char Glyph = ',';
+
+	protected string PrefixValue { get; }
 
 	// ReSharper disable once MemberCanBeProtected.Global
 	public int Count
@@ -26,5 +33,5 @@ public abstract class CountingBase : OperatorBase<bool>
 	}
 
 	protected override string ToStringInternal(object context)
-		=> $"{Prefix}({Count}, {base.ToStringInternal(context)})";
+		=> $"{PrefixValue}({Count}, {base.ToStringInternal(context)})";
 }

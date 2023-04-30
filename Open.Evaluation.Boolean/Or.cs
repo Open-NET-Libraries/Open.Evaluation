@@ -9,22 +9,21 @@ using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public class And : OperatorBase<bool>,
+public class Or : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
-	public And(IEnumerable<IEvaluate<bool>> children)
-		: base(Symbols.And, children, true)
+	public const char Glyph = '|';
+
+	public Or(IEnumerable<IEvaluate<bool>> children)
+		: base(Symbols.Or, children, true)
 	{ }
 
-	protected override EvaluationResult<bool> EvaluateInternal(object context)
-	{
-		if (Children.Length == 0)
-			throw new NotSupportedException("Cannot resolve boolean of empty set.");
+	protected override bool EvaluateInternal(object context)
+		=> Children.Length == 0
+			? throw new NotSupportedException("Cannot resolve boolean of empty set.")
+			: ChildResults(context).Cast<bool>().Any();
 
-		var r = ChildResults(context).All(result => (bool)result);
-	}
-
-	internal static And Create(
+	internal static Or Create(
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)
 	{
@@ -32,7 +31,7 @@ public class And : OperatorBase<bool>,
 		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new And(param));
+		return catalog.Register(new Or(param));
 	}
 
 	public IEvaluate<bool> NewUsing(
@@ -41,10 +40,10 @@ public class And : OperatorBase<bool>,
 		=> Create(catalog, param);
 }
 
-public static class AndExtensions
+public static class OrExtensions
 {
-	public static IEvaluate<bool> And(
+	public static IEvaluate<bool> Or(
 		this ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> children)
-		=> Boolean.And.Create(catalog, children);
+		=> Boolean.Or.Create(catalog, children);
 }

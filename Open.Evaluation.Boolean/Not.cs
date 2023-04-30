@@ -10,8 +10,7 @@ namespace Open.Evaluation.Boolean;
 public class Not : OperatorBase<bool>,
 	IReproducable<IEvaluate<bool>, IEvaluate<bool>>
 {
-	public const char SYMBOL = '!';
-	public const string SYMBOL_STRING = "!";
+	public const char Glyph = '!';
 
 	internal Not(IEvaluate<bool> contents)
 		: base(Symbols.Not,
