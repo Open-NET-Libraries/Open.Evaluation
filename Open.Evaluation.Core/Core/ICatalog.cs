@@ -13,7 +13,7 @@ public interface ICatalog<T> : IDisposable
 	TItem Register<TItem>(TItem item)
 		where TItem : T;
 
-	void Register<TItem>([NotNull] ref TItem item)
+	void Register<TItem>([DisallowNull, NotNull] ref TItem item)
 		where TItem : T;
 
 	[return: NotNull]

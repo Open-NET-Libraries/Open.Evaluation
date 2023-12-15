@@ -8,7 +8,7 @@ public readonly record struct Symbol
 		: this(character, pad ? $" {character} " : new string(character, 1))
 	{ }
 
-	public Symbol(char character, [DisallowNull, NotNull] string text)
+	public Symbol(char character, string text)
 	{
 		text.ThrowIfNull();
 
@@ -21,6 +21,5 @@ public readonly record struct Symbol
 
 	public static implicit operator char(Symbol symbol) => symbol.Character;
 
-	[return: NotNull]
 	public static implicit operator string(Symbol symbol) => symbol.Text;
 }

@@ -152,8 +152,8 @@ public abstract class OperatorBase<TResult>
 	}
 
 	internal static IEvaluate<TResult> ConditionalTransform(
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> param,
-		[DisallowNull, NotNull] Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
+		IEnumerable<IEvaluate<TResult>> param,
+		Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
 	{
 		param.ThrowIfNull().OnlyInDebug();
 		transform.ThrowIfNull().OnlyInDebug();

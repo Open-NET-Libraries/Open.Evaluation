@@ -4,15 +4,18 @@
  */
 
 using Open.Evaluation.Core;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public class And(IEnumerable<IEvaluate<bool>> children)
-	: OperatorBase<bool>(Symbols.And, children, true),
-		IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
+public sealed class And : OperatorBase<bool>,
+	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
+	private And(IEnumerable<IEvaluate<bool>> children)
+		: base(Symbols.And, children, true) { }
+
 	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
 		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);

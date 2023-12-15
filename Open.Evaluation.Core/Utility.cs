@@ -7,13 +7,13 @@ using Throw;
 
 namespace Open.Evaluation;
 
-internal static class Lazy
+public static class Lazy
 {
 	public static Lazy<T> New<T>(Func<T> factory) => new(factory);
 	public static Lazy<T> New<T>(T value) => new(value);
 }
 
-internal static class Utility
+public static class Utility
 {
 	const int POOL_ARRAY_LEN = 128;
 	const int MAX_ARRAY_LEN = int.MaxValue / 2;
@@ -58,10 +58,10 @@ internal static class Utility
 	}
 
 	public static TResult Rent<T, TParam, TResult>(
-		[DisallowNull, NotNull] this ArrayPool<T> pool,
+		this ArrayPool<T> pool,
 		int minLength,
-		[DisallowNull, NotNull] TParam param,
-		[DisallowNull, NotNull] Func<TParam, T[], TResult> action)
+		[DisallowNull] TParam param,
+		Func<TParam, T[], TResult> action)
 	{
 		if (minLength is > POOL_ARRAY_LEN and < MAX_ARRAY_LEN)
 		{
@@ -82,9 +82,9 @@ internal static class Utility
 	}
 
 	public static TResult Rent<T, TResult>(
-		[DisallowNull, NotNull] this ArrayPool<T> pool,
+		this ArrayPool<T> pool,
 		int minLength,
-		[DisallowNull, NotNull] Func<T[], TResult> action)
+		Func<T[], TResult> action)
 	{
 		pool.ThrowIfNull().OnlyInDebug();
 		action.ThrowIfNull().OnlyInDebug();
@@ -108,7 +108,7 @@ internal static class Utility
 	}
 
 	public static IEnumerable<T> SkipAt<T>(
-		[DisallowNull, NotNull] this IEnumerable<T> source,
+		this IEnumerable<T> source,
 		int index)
 	{
 		source.ThrowIfNull().OnlyInDebug();
@@ -129,7 +129,7 @@ internal static class Utility
 	}
 
 	public static IEnumerable<T> ReplaceAt<T>(
-		[DisallowNull, NotNull] this IEnumerable<T> source,
+		this IEnumerable<T> source,
 		int index,
 		T replacement)
 	{
@@ -150,9 +150,9 @@ internal static class Utility
 	}
 
 	public static IEnumerable<T> InsertAt<T>(
-		[DisallowNull, NotNull] this IEnumerable<T> source,
+		this IEnumerable<T> source,
 		int index,
-		[DisallowNull, NotNull] IEnumerable<T> injection)
+		IEnumerable<T> injection)
 	{
 		source.ThrowIfNull().OnlyInDebug();
 		index.Throw().IfLessThan(0);
@@ -179,7 +179,7 @@ internal static class Utility
 	}
 
 	public static IEnumerable<T> InsertAt<T>(
-		[DisallowNull, NotNull] this IEnumerable<T> source,
+		this IEnumerable<T> source,
 		int index,
 		T injection)
 	{
@@ -201,8 +201,8 @@ internal static class Utility
 	}
 
 	public static List<T> Extract<T>(
-		[DisallowNull, NotNull] this IList<T> target,
-		[DisallowNull, NotNull] Func<T, bool> predicate)
+		this IList<T> target,
+		Func<T, bool> predicate)
 	{
 		target.ThrowIfNull().OnlyInDebug();
 		predicate.ThrowIfNull().OnlyInDebug();
@@ -229,7 +229,7 @@ internal static class Utility
 	}
 
 	public static List<TExtract> ExtractType<TExtract>(
-		[DisallowNull, NotNull] this IList target)
+		this IList target)
 	{
 		target.ThrowIfNull().OnlyInDebug();
 		var extracted = ListPool<TExtract>.Shared.Take();

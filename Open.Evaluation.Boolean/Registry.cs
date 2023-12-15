@@ -15,9 +15,9 @@ public static class Registry
 	public static readonly ImmutableArray<string> CountingFunctions = [nameof(AtLeast), nameof(AtMost), nameof(Exactly)];
 
 	public static IEvaluate<bool> GetOperator(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<bool>> catalog,
+		ICatalog<IEvaluate<bool>> catalog,
 		char op,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<bool>> children)
+		IEnumerable<IEvaluate<bool>> children)
 	{
 		catalog.ThrowIfNull();
 		children.ThrowIfNull();
@@ -34,8 +34,8 @@ public static class Registry
 	}
 
 	public static IEvaluate<bool>? GetRandomOperator(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<bool>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<bool>> children)
+		ICatalog<IEvaluate<bool>> catalog,
+		IEnumerable<IEvaluate<bool>> children)
 	{
 		catalog.ThrowIfNull();
 		children.ThrowIfNull();
@@ -45,8 +45,8 @@ public static class Registry
 	}
 
 	public static IEvaluate<bool>? GetRandomOperator(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<bool>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<bool>> children,
+		ICatalog<IEvaluate<bool>> catalog,
+		IEnumerable<IEvaluate<bool>> children,
 		char except, params char[] others)
 	{
 		catalog.ThrowIfNull();
@@ -59,8 +59,8 @@ public static class Registry
 	}
 
 	public static IEvaluate<bool>? GetRandomOperator(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<bool>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<bool>> children,
+		ICatalog<IEvaluate<bool>> catalog,
+		IEnumerable<IEvaluate<bool>> children,
 		IEnumerable<char> except)
 	{
 		catalog.ThrowIfNull();

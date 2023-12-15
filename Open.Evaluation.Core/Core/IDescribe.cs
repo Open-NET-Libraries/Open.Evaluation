@@ -7,6 +7,5 @@ namespace Open.Evaluation.Core;
 /// </summary>
 public interface IDescribe
 {
-	[NotNull]
 	Lazy<string> Description { get; }
 }

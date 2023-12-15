@@ -68,7 +68,7 @@ public sealed partial class Exponent : Exponent<double>
 	{ }
 
 	protected override IEvaluate<double> Reduction(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<double>> catalog)
+		ICatalog<IEvaluate<double>> catalog)
 	{
 		var pow = catalog.GetReduced(Power);
 		if (pow is not IConstant<double> cPow)

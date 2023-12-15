@@ -21,7 +21,6 @@ public abstract class EvaluationBase<TResult>
 	protected EvaluationBase()
 		=> Description = new(Describe);
 
-	[return: NotNull]
 	protected abstract string Describe();
 
 	/// <summary>
@@ -33,7 +32,7 @@ public abstract class EvaluationBase<TResult>
 	protected abstract EvaluationResult<TResult> EvaluateInternal(Context context); // **
 
 	/// <inheritdoc />
-	public EvaluationResult<TResult> Evaluate([DisallowNull, NotNull] Context context)
+	public EvaluationResult<TResult> Evaluate(Context context)
 	{
 		context.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();

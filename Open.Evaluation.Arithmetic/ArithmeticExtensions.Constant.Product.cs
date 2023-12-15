@@ -9,11 +9,10 @@ using Throw;
 namespace Open.Evaluation.Arithmetic;
 public static partial class ArithmeticExtensions
 {
-	[return: NotNull]
 	public static Constant<TValue> ProductOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull, NotNull] in TValue c1,
-		[DisallowNull, NotNull] IEnumerable<IConstant<TValue>> constants)
+		this ICatalog<IEvaluate<TValue>> catalog,
+		[DisallowNull] in TValue c1,
+		IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -43,18 +42,16 @@ public static partial class ArithmeticExtensions
 		return catalog.GetConstant(result);
 	}
 
-	[return: NotNull]
 	public static Constant<TValue> ProductOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IConstant<TValue>> constants)
+		this ICatalog<IEvaluate<TValue>> catalog,
+		IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 		=> ProductOfConstants(catalog, TValue.MultiplicativeIdentity, constants);
 
-	[return: NotNull]
 	public static Constant<TValue> ProductOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull, NotNull] in IConstant<TValue> c1,
-		[DisallowNull, NotNull] in IConstant<TValue> c2,
+		this ICatalog<IEvaluate<TValue>> catalog,
+		in IConstant<TValue> c1,
+		in IConstant<TValue> c2,
 		params IConstant<TValue>[] rest)
 		where TValue : notnull, INumber<TValue>
 	{
@@ -66,26 +63,24 @@ public static partial class ArithmeticExtensions
 		return ProductOfConstants(catalog, c1.Value, rest.Prepend(c2));
 	}
 
-	[return: NotNull]
 	public static Constant<TValue> ProductOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull, NotNull] in TValue c1,
-		[DisallowNull, NotNull] IConstant<TValue> c2,
+		this ICatalog<IEvaluate<TValue>> catalog,
+		[DisallowNull] in TValue c1,
+		IConstant<TValue> c2,
 		params IConstant<TValue>[] rest)
 		where TValue : notnull, INumber<TValue>
 		=> ProductOfConstants(catalog, c1, rest.Prepend(c2));
 
-	[return: NotNull]
 	public static IEnumerable<(string Hash, IConstant<TResult>? Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
 		where TResult : notnull, INumber<TResult>
 	{
 		foreach (var c in source)
 		{
 			if (c is not Product<TResult> p)
 			{
-				yield return (c.Description, default(IConstant<TResult>?), c);
+				yield return (c.Description.Value, default(IConstant<TResult>?), c);
 				continue;
 			}
 
@@ -94,17 +89,16 @@ public static partial class ArithmeticExtensions
 				: p.ExtractMultiple(catalog, out multiple);
 
 			yield return (
-				reduced.Description,
+				reduced.Description.Value,
 				multiple,
 				reduced
 			);
 		}
 	}
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> children)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 	{
 		catalog.ThrowIfNull();
@@ -147,62 +141,55 @@ public static partial class ArithmeticExtensions
 		}
 	}
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEvaluate<TResult> multiple,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> children)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEvaluate<TResult> multiple,
+		IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 		=> ProductOf(catalog, children.Append(multiple));
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEvaluate<TResult> child1,
-		[DisallowNull, NotNull] IEvaluate<TResult> child2,
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEvaluate<TResult> child1,
+		IEvaluate<TResult> child2,
 		params IEvaluate<TResult>[] moreChildren)
 		where TResult : notnull, INumber<TResult>
 		=> ProductOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] in TResult multiple,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> children)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		[DisallowNull] in TResult multiple,
+		IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 		=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] in TResult multiple,
-		[DisallowNull, NotNull] IEvaluate<TResult> first,
+		this ICatalog<IEvaluate<TResult>> catalog,
+		[DisallowNull] in TResult multiple,
+		IEvaluate<TResult> first,
 		params IEvaluate<TResult>[] rest)
 		where TResult : notnull, INumber<TResult>
 		=> ProductOf(catalog, rest.Prepend(first).Prepend(catalog.GetConstant(multiple)));
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOfSum<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEvaluate<TResult> multiple,
-		[DisallowNull, NotNull] Sum<TResult> sum)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEvaluate<TResult> multiple,
+		Sum<TResult> sum)
 		where TResult : notnull, INumber<TResult>
 		=> multiple is Sum<TResult> m
 		? ProductOfSums(catalog, m, sum)
 		: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOfSums<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] Sum<TResult> a,
-		[DisallowNull, NotNull] Sum<TResult> b)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		Sum<TResult> a,
+		Sum<TResult> b)
 		where TResult : notnull, INumber<TResult>
 		=> catalog.GetReduced(catalog.SumOf(a.Children.Select(c => ProductOfSum(catalog, c, b))));
 
-	[return: NotNull]
 	public static IEvaluate<TResult> ProductOfSums<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IReadOnlyCollection<Sum<TResult>> sums)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IReadOnlyCollection<Sum<TResult>> sums)
 		where TResult : notnull, INumber<TResult>
 	{
 		if (sums.Count == 0) return catalog.GetConstant((TResult)(dynamic)1);

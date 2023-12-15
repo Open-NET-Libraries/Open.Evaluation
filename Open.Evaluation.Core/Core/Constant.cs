@@ -47,8 +47,8 @@ public class Constant<TValue>
 	/// <inheritdoc />
 	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue param)
 		=> catalog.Register(ToStringRepresentation(in param), _ => new Constant<TValue>(param));
-	[return: NotNull]
 
+	[return: NotNull]
 	public static implicit operator TValue(Constant<TValue> c)
 		=> c.Value;
 }
@@ -57,7 +57,7 @@ public static partial class ConstantExtensions
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Constant<TValue> GetConstant<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
+		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue value)
 		where TValue : notnull, IEquatable<TValue>, IComparable<TValue>
 	{

@@ -45,7 +45,7 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 	}
 
 	protected override IEvaluate<TResult> Reduction(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
+		ICatalog<IEvaluate<TResult>> catalog)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 

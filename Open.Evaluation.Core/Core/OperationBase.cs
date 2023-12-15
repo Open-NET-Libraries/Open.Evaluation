@@ -16,14 +16,13 @@ public abstract class OperationBase<TResult>
 
 	public Symbol Symbol { get; }
 
-	[return: NotNull]
 	protected virtual IEvaluate<TResult> Reduction(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
+		ICatalog<IEvaluate<TResult>> catalog)
 		=> this;
 
 	// Override this if reduction is possible.  Return null if you can't reduce.
 	public bool TryGetReduced(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog,
+		ICatalog<IEvaluate<TResult>> catalog,
 		[NotNull] out IEvaluate<TResult> reduction)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();

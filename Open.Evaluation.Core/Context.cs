@@ -68,7 +68,7 @@ public class Context : DisposableBase
 			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(TResult)}.");
 	}
 
-	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, [DisallowNull, NotNull] TResult value)
+	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, [DisallowNull] TResult value)
 		=> GetOrAdd(key, () => new EvaluationResult<TResult>(value));
 
 	// Allows for re-use.

@@ -21,7 +21,6 @@ public abstract class ArithmeticOperatorBase<TResult>
 		: base(symbol, children, reorderChildren, minimumChildren)
 	{ }
 
-	[return: NotNull]
 	public abstract IEvaluate<TResult> NewUsing(
 		ICatalog<IEvaluate<TResult>> catalog,
 		IEnumerable<IEvaluate<TResult>> param);

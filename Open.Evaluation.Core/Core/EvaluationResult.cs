@@ -11,34 +11,30 @@ public interface IEvaluationResult : IDescribe
 public readonly record struct EvaluationResult<T> : IEvaluationResult
 {
 	public EvaluationResult(
-		[DisallowNull, NotNull] T result,
-		[DisallowNull, NotNull] Lazy<string> description)
+		[DisallowNull] T result,
+		Lazy<string> description)
 	{
 		Result = result ?? throw new ArgumentNullException(nameof(result));
 		Description = description ?? throw new ArgumentNullException(nameof(description));
 	}
 
 	public EvaluationResult(
-		[DisallowNull, NotNull] T result,
-		[DisallowNull, NotNull] Func<T, string> descriptionFactory)
-		: this(result, Lazy.New(() => descriptionFactory(result)))
-	{ }
+		[DisallowNull] T result,
+		Func<T, string> descriptionFactory)
+		: this(result, Lazy.New(() => descriptionFactory(result))) { }
 
 	public EvaluationResult(
-		[DisallowNull, NotNull] T result,
-		[DisallowNull, NotNull] string description)
-		: this(result, Lazy.New(description ?? throw new ArgumentNullException(nameof(description))))
-	{ }
+		[DisallowNull] T result,
+		string description)
+		: this(result, Lazy.New(description ?? throw new ArgumentNullException(nameof(description)))) { }
 
 	public EvaluationResult(
-		[DisallowNull, NotNull] T result)
-		: this(result, Lazy.New(() => result.ToString() ?? throw new Exception("result.ToString() returned null")))
-	{ }
+		[DisallowNull] T result)
+		: this(result, Lazy.New(() => result.ToString() ?? throw new Exception("result.ToString() returned null"))) { }
 
 	[NotNull]
 	public T Result { get; }
 
-	[NotNull]
 	public Lazy<string> Description { get; }
 
 	object IEvaluationResult.Result => Result;

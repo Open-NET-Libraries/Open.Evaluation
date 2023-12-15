@@ -37,7 +37,7 @@ public partial class Product<TResult> :
 			.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
 
 	protected override IEvaluate<TResult> Reduction(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
+		ICatalog<IEvaluate<TResult>> catalog)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 		var one = catalog.GetConstant(TResult.MultiplicativeIdentity);

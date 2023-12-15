@@ -3,7 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using OneOf.Types;
 using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
@@ -22,7 +21,7 @@ public partial class Sum<TResult> :
 	ArithmeticOperatorBase<TResult>
 	where TResult : notnull, INumber<TResult>
 {
-	protected Sum([DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> children)
+	protected Sum(IEnumerable<IEvaluate<TResult>> children)
 		: base(Symbols.Sum, children, true)
 	{ }
 
@@ -122,7 +121,7 @@ public partial class Sum<TResult> :
 			.Aggregate<TResult, dynamic>(0, (current, r) => current + r);
 
 	protected override IEvaluate<TResult> Reduction(
-		[DisallowNull, NotNull] ICatalog<IEvaluate<TResult>> catalog)
+		ICatalog<IEvaluate<TResult>> catalog)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 		var zero = catalog.GetConstant(TResult.Zero);

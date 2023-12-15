@@ -20,7 +20,6 @@ public interface IConstant : IEvaluate
 public interface IConstant<T> : IEvaluate<T>, IConstant
 	where T : notnull, IEquatable<T>, IComparable<T>
 {
-	[NotNull]
 	new T Value { get; }
 
 	object IConstant.Value => Value;

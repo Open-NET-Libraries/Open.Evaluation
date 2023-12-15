@@ -7,7 +7,7 @@ using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Boolean;
 
-public class Not : OperatorBase<bool>,
+public sealed class Not : OperatorBase<bool>,
 	IReproducable<IEvaluate<bool>, IEvaluate<bool>>
 {
 	internal Not(IEvaluate<bool> contents)

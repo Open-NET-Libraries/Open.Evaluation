@@ -3,16 +3,20 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using OneOf.Types;
 using Open.Evaluation.Core;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public class Or(IEnumerable<IEvaluate<bool>> children)
-	: OperatorBase<bool>(Symbols.Or, children, true),
+public sealed class Or : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
+	private Or(IEnumerable<IEvaluate<bool>> children)
+		: base(Symbols.Or, children, true) { }
+
 	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
 		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);

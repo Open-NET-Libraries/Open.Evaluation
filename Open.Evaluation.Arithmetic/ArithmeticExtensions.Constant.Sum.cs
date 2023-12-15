@@ -36,8 +36,8 @@ public static partial class ArithmeticExtensions
 	}
 
 	public static IEvaluate<TResult> SumOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IReadOnlyList<IEvaluate<TResult>> children)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IReadOnlyList<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -63,8 +63,8 @@ public static partial class ArithmeticExtensions
 	}
 
 	public static IEvaluate<TResult> SumOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IEvaluate<TResult>> children)
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -88,25 +88,25 @@ public static partial class ArithmeticExtensions
 	}
 
 	public static IEvaluate<TResult> SumOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull, NotNull] IEvaluate<TResult> child1,
-		[DisallowNull, NotNull] IEvaluate<TResult> child2,
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEvaluate<TResult> child1,
+		IEvaluate<TResult> child2,
 		params IEvaluate<TResult>[] moreChildren)
 		where TResult : notnull, INumber<TResult>
 		=> SumOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
 
 	public static IEvaluate<TResult> SumOf<TResult>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TResult>> catalog,
+		this ICatalog<IEvaluate<TResult>> catalog,
 		in TResult value,
-		[DisallowNull, NotNull] IEvaluate<TResult> child,
+		IEvaluate<TResult> child,
 		params IEvaluate<TResult>[] moreChildren)
 		where TResult : notnull, INumber<TResult>
 		=> SumOf(catalog, moreChildren.Prepend(child).Prepend(catalog.GetConstant(value)));
 
 	public static Constant<TValue> SumOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
+		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue c1,
-		[DisallowNull, NotNull] IEnumerable<IConstant<TValue>> constants)
+		IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, INumber<TValue>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -131,22 +131,22 @@ public static partial class ArithmeticExtensions
 	}
 
 	public static Constant<TValue> SumOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull, NotNull] IEnumerable<IConstant<TValue>> constants)
+		this ICatalog<IEvaluate<TValue>> catalog,
+		IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, INumber<TValue>
 		=> SumOfConstants(catalog, TValue.AdditiveIdentity, constants);
 
 	public static Constant<TValue> SumOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		in TValue c1, [DisallowNull, NotNull] in IConstant<TValue> c2,
+		this ICatalog<IEvaluate<TValue>> catalog,
+		in TValue c1, in IConstant<TValue> c2,
 		params IConstant<TValue>[] rest)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 		=> SumOfConstants(catalog, c1, rest.Prepend(c2));
 
 	public static Constant<TValue> SumOfConstants<TValue>(
-		[DisallowNull, NotNull] this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull, NotNull] in IConstant<TValue> c1,
-		[DisallowNull, NotNull] in IConstant<TValue> c2,
+		this ICatalog<IEvaluate<TValue>> catalog,
+		in IConstant<TValue> c1,
+		in IConstant<TValue> c2,
 		params IConstant<TValue>[] rest)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 	{
