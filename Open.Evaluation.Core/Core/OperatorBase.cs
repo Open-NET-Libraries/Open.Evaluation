@@ -31,7 +31,7 @@ public abstract class OperatorBase<TChild, TResult>
 		Children = children is ImmutableArray<TChild> c ? c : children.ToImmutableArray();
 		minimumChildren.Throw().IfLessThan(0);
 		Children.Length
-			.Throw(() => new ArgumentException($"{GetType()} must be constructed with at least " + (minimumChildren==1 ? "1 child" : $"{minimumChildren} children."), nameof(minimumChildren)))
+			.Throw(() => new ArgumentException($"{GetType()} must be constructed with at least " + (minimumChildren == 1 ? "1 child" : $"{minimumChildren} children."), nameof(minimumChildren)))
 			.IfLessThan(minimumChildren);
 	}
 

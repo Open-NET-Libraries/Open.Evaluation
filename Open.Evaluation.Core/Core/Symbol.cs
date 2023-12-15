@@ -5,7 +5,7 @@ namespace Open.Evaluation.Core;
 public readonly record struct Symbol
 {
 	public Symbol(char character, bool pad = false)
-		: this(character, pad ? $" {character} " : new string(character,1))
+		: this(character, pad ? $" {character} " : new string(character, 1))
 	{ }
 
 	public Symbol(char character, [DisallowNull, NotNull] string text)

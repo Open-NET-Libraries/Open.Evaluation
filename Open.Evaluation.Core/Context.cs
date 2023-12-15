@@ -74,7 +74,7 @@ public class Context : DisposableBase
 	// Allows for re-use.
 	public void Clear()
 	{
-		lock(_registry) _registry.Clear();
+		lock (_registry) _registry.Clear();
 	}
 
 	protected override void OnDispose() => Clear();

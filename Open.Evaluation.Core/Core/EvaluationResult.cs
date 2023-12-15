@@ -1,5 +1,4 @@
-﻿using OneOf.Types;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 

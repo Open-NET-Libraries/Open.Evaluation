@@ -10,7 +10,7 @@ namespace Open.Evaluation.Core;
 /// <summary>
 /// An evaluation that it's value never changes.
 /// </summary>
-public interface IConstant: IEvaluate
+public interface IConstant : IEvaluate
 {
 	[NotNull]
 	object Value { get; }
