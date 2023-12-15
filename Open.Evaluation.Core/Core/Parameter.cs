@@ -41,9 +41,9 @@ public class Parameter<T>
 	protected override string Describe()
 		=> ToStringRepresentation(ID);
 
-	protected override EvaluationResult<T> EvaluateInternal(object context)
+	protected override EvaluationResult<T> EvaluateInternal(Context context)
 	{
-		var value = _evaluator(context is Context p ? p.Context : context, ID);
+		var value = _evaluator(context, ID);
 		Debug.Assert(value is not null);
 
 		return new(value, v =>
@@ -61,7 +61,7 @@ public class Parameter<T>
 		=> catalog.Register(ToStringRepresentation(param), param, (_, id) => new Parameter<T>(id));
 }
 
-public static partial class ParameterExtensions
+public static class ParameterExtensions
 {
 	public static IParameter<T> GetParameter<T>(
 		this ICatalog<IEvaluate<T>> catalog, ushort id)

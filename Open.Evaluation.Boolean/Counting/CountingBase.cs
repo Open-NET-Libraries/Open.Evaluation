@@ -26,12 +26,8 @@ public abstract class CountingBase
 
 	protected string PrefixValue { get; }
 
-	// ReSharper disable once MemberCanBeProtected.Global
-	public int Count
-	{
-		get;
-	}
+	public int Count { get; }
 
-	protected override string ToStringInternal(object context)
-		=> $"{PrefixValue}({Count}, {base.ToStringInternal(context)})";
+	protected override Lazy<string> Describe(IEnumerable<Lazy<string>> children)
+		=> new(() => $"{PrefixValue}({Count} from {base.Describe(children).Value})");
 }

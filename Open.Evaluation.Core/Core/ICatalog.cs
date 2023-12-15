@@ -3,6 +3,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
+/// <summary>
+/// A catalog of evaluations.
+/// </summary>
 public interface ICatalog<T> : IDisposable
 	where T : IEvaluate
 {

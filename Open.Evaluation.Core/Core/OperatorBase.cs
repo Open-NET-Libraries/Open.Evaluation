@@ -41,27 +41,28 @@ public abstract class OperatorBase<TChild, TResult>
 
 	IReadOnlyList<object> IParent.Children => Children;
 
-	protected virtual string Describe(IEnumerable<Lazy<string>> children)
-	{
-		string r;
-		using (var lease = StringBuilderPool.Rent())
+	protected virtual Lazy<string> Describe(IEnumerable<Lazy<string>> children)
+		=> new(() =>
 		{
-			var result = lease.Item;
-			result.Append('(');
-			var index = -1;
-			foreach (var o in children)
+			string r;
+			using (var lease = StringBuilderPool.Rent())
 			{
-				ToStringInternal_OnAppendNextChild(result, ++index, o);
+				var result = lease.Item;
+				result.Append('(');
+				var index = -1;
+				foreach (var o in children)
+				{
+					ToStringInternal_OnAppendNextChild(result, ++index, o);
+				}
+				result.Append(')');
+				r = result.ToString();
 			}
-			result.Append(')');
-			r = result.ToString();
-		}
 
-		var isEmpty = r == "()";
-		Debug.Assert(!isEmpty, "Operator has no children.");
-		// ReSharper disable once ConditionIsAlwaysTrueOrFalse
-		return isEmpty ? $"({Symbol.Character})" : r;
-	}
+			var isEmpty = r == "()";
+			Debug.Assert(!isEmpty, "Operator has no children.");
+			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
+			return isEmpty ? $"({Symbol.Character})" : r;
+		});
 
 	protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
@@ -83,7 +84,7 @@ public abstract class OperatorBase<TChild, TResult>
 
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	protected override string Describe()
-		=> Describe(ChildDescriptions());
+		=> Describe(ChildDescriptions()).Value;
 
 	protected virtual int ConstantPriority => +1;
 
@@ -131,7 +132,8 @@ public abstract class OperatorBase<TChild, TResult>
 	}
 }
 
-public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, TResult>
+public abstract class OperatorBase<TResult>
+	: OperatorBase<IEvaluate<TResult>, TResult>
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
 	protected OperatorBase(
@@ -158,7 +160,7 @@ public abstract class OperatorBase<TResult> : OperatorBase<IEvaluate<TResult>, T
 		Contract.EndContractBlock();
 
 		using var e = param.GetEnumerator();
-		if (!e.MoveNext()) return transform(ImmutableArray<IEvaluate<TResult>>.Empty);
+		if (!e.MoveNext()) return transform([]);
 		var v0 = e.Current;
 		if (!e.MoveNext()) return v0;
 		var builder = ImmutableArray.CreateBuilder<IEvaluate<TResult>>();

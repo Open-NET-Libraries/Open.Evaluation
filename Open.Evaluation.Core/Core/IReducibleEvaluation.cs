@@ -7,6 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
+/// <summary>
+/// A type of evaluation that can be reduced.
+/// </summary>
 public interface IReducibleEvaluation<T> : IEvaluate
 	where T : IEvaluate
 {

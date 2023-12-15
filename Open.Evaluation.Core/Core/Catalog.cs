@@ -99,7 +99,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 	public Node<T>.Factory Factory { get; } = new Node<T>.Factory();
 
-	readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = new();
+	readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = [];
 
 	[return: NotNull]
 	public T GetReduced(T source)

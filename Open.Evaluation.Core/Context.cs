@@ -6,7 +6,7 @@ namespace Open.Evaluation;
 
 public class Context : DisposableBase
 {
-	private readonly Dictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = new();
+	private readonly Dictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = [];
 
 	public EvaluationResult<TResult> GetOrAdd<TResult>(IEvaluate key, Func<IEvaluate, EvaluationResult<TResult>> factory)
 	{

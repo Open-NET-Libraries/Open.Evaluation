@@ -11,52 +11,39 @@ using Throw;
 namespace Open.Evaluation.Boolean;
 
 // ReSharper disable once PossibleInfiniteInheritance
-public class Conditional<TResult> : OperationBase<TResult>,
-	IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+public class Conditional<TResult>(
+	IEvaluate<bool> condition,
+	IEvaluate<TResult> ifTrue,
+	IEvaluate<TResult> ifFalse)
+	: OperationBase<TResult>(Symbols.Conditional),
+		IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
+		where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	public const char Glyph = '?';
-
-	public Conditional(
-		IEvaluate<bool> condition,
-		IEvaluate<TResult> ifTrue,
-		IEvaluate<TResult> ifFalse)
-		: base(Symbols.Conditional)
-	{
-		Condition = condition ?? throw new ArgumentNullException(nameof(condition));
-		IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue));
-		IfFalse = ifFalse ?? throw new ArgumentNullException(nameof(ifFalse));
-	}
-
 	[NotNull]
 	public IEvaluate<bool> Condition { get; }
+		= condition ?? throw new ArgumentNullException(nameof(condition));
 
 	[NotNull]
 	public IEvaluate<TResult> IfTrue { get; }
+		= ifTrue ?? throw new ArgumentNullException(nameof(ifTrue));
 
 	[NotNull]
 	public IEvaluate<TResult> IfFalse { get; }
+		= ifFalse ?? throw new ArgumentNullException(nameof(ifFalse));
 
 	[return: NotNull]
 	protected string ToStringInternal(object condition, object ifTrue, object ifFalse)
 		=> $"{condition} ? {ifTrue} : {ifFalse}";
 
 	[return: NotNull]
-	public override string ToString(object context)
-		=> ToStringInternal(
-			Condition.Evaluate(context),
-			IfTrue.Evaluate(context)!,
-			IfFalse.Evaluate(context)!);
-
-	[return: NotNull]
 	protected override string Describe()
 		=> ToStringInternal(
-			Condition.ToStringRepresentation(),
-			IfTrue.ToStringRepresentation(),
-			IfFalse.ToStringRepresentation());
+			Condition.Description,
+			IfTrue.Description,
+			IfFalse.Description);
 
 	[return: NotNull]
-	protected override TResult EvaluateInternal(object context)
+	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
 		=> Condition.Evaluate(context)
 			? IfTrue.Evaluate(context)
 			: IfFalse.Evaluate(context);
@@ -80,6 +67,15 @@ public class Conditional<TResult> : OperationBase<TResult>,
 		ICatalog<IEvaluate<TResult>> catalog,
 		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
 		=> Create(catalog, param);
+}
+
+public class Conditional(
+	IEvaluate<bool> condition,
+	IEvaluate<bool> ifTrue,
+	IEvaluate<bool> ifFalse)
+	: Conditional<bool>(condition, ifTrue, ifFalse)
+{
+	public const char Glyph = '?';
 }
 
 public static class ConditionalExtensions

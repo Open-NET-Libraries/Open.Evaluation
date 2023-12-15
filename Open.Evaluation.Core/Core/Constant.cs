@@ -38,7 +38,7 @@ public class Constant<TValue>
 	protected override string Describe()
 		=> ToStringRepresentation(Value);
 
-	protected override EvaluationResult<TValue> EvaluateInternal(object context)
+	protected override EvaluationResult<TValue> EvaluateInternal(Context context)
 		=> _result;
 
 	internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
@@ -47,6 +47,7 @@ public class Constant<TValue>
 	/// <inheritdoc />
 	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue param)
 		=> catalog.Register(ToStringRepresentation(in param), _ => new Constant<TValue>(param));
+	[return: NotNull]
 
 	public static implicit operator TValue(Constant<TValue> c)
 		=> c.Value;

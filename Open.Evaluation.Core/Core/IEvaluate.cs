@@ -7,6 +7,9 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
+/// <summary>
+/// An evaluation that can be executed.
+/// </summary>
 public interface IEvaluate : IDescribe
 {
 	/// <summary>
@@ -17,6 +20,7 @@ public interface IEvaluate : IDescribe
 	EvaluationResult<object> Evaluate([DisallowNull, NotNull] Context context);
 }
 
+/// <inheritdoc cref="IEvaluate"/>
 public interface IEvaluate<TResult> : IEvaluate
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {

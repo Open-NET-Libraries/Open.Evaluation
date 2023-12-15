@@ -7,6 +7,9 @@ using Open.Hierarchy;
 
 namespace Open.Evaluation.Core;
 
+/// <summary>
+/// A type of evaluation that behaves like a operation.
+/// </summary>
 public interface IOperator<out TChild, TResult>
 	: IFunction<TResult>, IParent<TChild>
 	where TChild : class, IEvaluate

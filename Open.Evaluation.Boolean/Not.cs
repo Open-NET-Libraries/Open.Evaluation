@@ -27,8 +27,11 @@ public class Not : OperatorBase<bool>,
 		IEvaluate<bool> param)
 		=> Create(catalog, param);
 
-	protected override bool EvaluateInternal(object context)
-		=> !ChildResults(context).Cast<bool>().Single();
+	protected override EvaluationResult<bool> EvaluateInternal(Context context)
+	{
+		var r = ChildResults(context).Single();
+		return new(!r.Result, v => $"!{v}");
+	}
 }
 
 public static partial class BooleanExtensions

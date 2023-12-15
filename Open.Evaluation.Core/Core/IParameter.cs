@@ -5,13 +5,16 @@
 
 namespace Open.Evaluation.Core;
 
+/// <summary>
+/// A parameter.
+/// </summary>
 public interface IParameter : IEvaluate
 {
 	ushort ID { get; }
 }
 
+/// <inheritdoc cref="IParameter"/>
 public interface IParameter<T> : IEvaluate<T>, IParameter
 	where T : notnull, IEquatable<T>, IComparable<T>
-
 {
 }

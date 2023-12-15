@@ -10,12 +10,9 @@ using Throw;
 namespace Open.Evaluation.Boolean;
 public static class Registry
 {
-	public static readonly ImmutableArray<char> Operators
-		= ImmutableArray.Create(And.Glyph, Or.Glyph);
-	public static readonly ImmutableArray<char> Functions
-		= ImmutableArray.Create(Not.Glyph, '?');
-	public static readonly ImmutableArray<string> Counting
-		= ImmutableArray.Create(AtLeast.Prefix, AtMost.Prefix, Exactly.Prefix);
+	public static readonly ImmutableArray<char> Operators = [And.Glyph, Or.Glyph];
+	public static readonly ImmutableArray<char> Functions = [Not.Glyph, '?'];
+	public static readonly ImmutableArray<string> Counting = [AtLeast.Prefix, AtMost.Prefix, Exactly.Prefix];
 
 	public static IEvaluate<bool> GetOperator(
 		[DisallowNull, NotNull] ICatalog<IEvaluate<bool>> catalog,

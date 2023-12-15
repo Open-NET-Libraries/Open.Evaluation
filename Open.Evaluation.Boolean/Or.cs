@@ -9,19 +9,21 @@ using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public class Or : OperatorBase<bool>,
+public class Or(IEnumerable<IEvaluate<bool>> children)
+	: OperatorBase<bool>(Symbols.Or, children, true),
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
 	public const char Glyph = '|';
 
-	public Or(IEnumerable<IEvaluate<bool>> children)
-		: base(Symbols.Or, children, true)
-	{ }
+	protected override EvaluationResult<bool> EvaluateInternal(Context context)
+	{
+		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);
 
-	protected override bool EvaluateInternal(object context)
-		=> Children.Length == 0
-			? throw new NotSupportedException("Cannot resolve boolean of empty set.")
-			: ChildResults(context).Cast<bool>().Any();
+		var results = ChildResults(context);
+		return new(
+			results.Any(r => r.Result),
+			Describe(results.Select(r => r.Description)));
+	}
 
 	internal static Or Create(
 		ICatalog<IEvaluate<bool>> catalog,

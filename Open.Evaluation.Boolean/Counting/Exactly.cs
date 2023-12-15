@@ -27,16 +27,18 @@ namespace Open.Evaluation.Boolean.Counting
 			(int, IEnumerable<IEvaluate<bool>>) param)
 			=> Create(catalog, param);
 
-		protected override bool EvaluateInternal(object context)
+		protected override EvaluationResult<bool> EvaluateInternal(Context context)
 		{
 			var count = 0;
-			foreach (var result in ChildResults(context))
+			var all = ChildResults(context).ToArray();
+			var desc = Describe(all.Select(c => c.Description));
+			foreach (var result in all)
 			{
-				if ((bool)result) count++;
-				if (count > Count) return false;
+				if (result.Result) count++;
+				if (count > Count) return new(false, desc);
 			}
 
-			return count == Count;
+			return new(count == Count, desc);
 		}
 	}
 }

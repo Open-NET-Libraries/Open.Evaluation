@@ -32,12 +32,14 @@ public class AtLeast : CountingBase,
 	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
 		var count = 0;
-		foreach (var result in ChildResults(context))
+		var all = ChildResults(context).ToArray();
+		var desc = Describe(all.Select(c => c.Description));
+		foreach (var result in all)
 		{
-			if ((bool)result) count++;
-			if (count == Count) return true;
+			if (result.Result) count++;
+			if (count == Count) return new(true, desc);
 		}
 
-		return false;
+		return new(false, desc);
 	}
 }

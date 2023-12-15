@@ -14,14 +14,19 @@ namespace Open.Evaluation.Core;
  * A clone can only be created by 'recreating' or 'reconstructing'.
  */
 
-public abstract class EvaluationBase<TResult> : IEvaluate<TResult>
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+public abstract class EvaluationBase<TResult>
+	: IEvaluate<TResult>
+		where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	protected EvaluationBase() => Description = new(Describe);
+	protected EvaluationBase()
+		=> Description = new(Describe);
 
 	[return: NotNull]
 	protected abstract string Describe();
 
+	/// <summary>
+	/// Provides the non-paramerterized description of this evaluation.
+	/// </summary>
 	[NotNull]
 	public Lazy<string> Description { get; }
 

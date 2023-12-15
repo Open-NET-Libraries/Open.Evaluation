@@ -4,28 +4,26 @@
  */
 
 using Open.Evaluation.Core;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public class And : OperatorBase<bool>,
-	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
+public class And(IEnumerable<IEvaluate<bool>> children)
+	: OperatorBase<bool>(Symbols.And, children, true),
+		IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
 	public const char Glyph = '&';
 
-	static char IHaveGlyph.Glyph => Glyph;
-
-	public And(IEnumerable<IEvaluate<bool>> children)
-		: base(Symbols.And, children, true)
-	{ }
-
-	protected override EvaluationResult<bool> EvaluateInternal(object context)
+	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
-		if (Children.Length == 0)
-			throw new NotSupportedException("Cannot resolve boolean of empty set.");
+		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);
 
-		var r = ChildResults(context).All(result => (bool)result);
+		var results = ChildResults(context);
+		return new(
+			results.All(r => r.Result),
+			Describe(results.Select(r => r.Description)));
 	}
 
 	internal static And Create(

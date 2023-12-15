@@ -5,6 +5,9 @@
 
 namespace Open.Evaluation.Core;
 
+/// <summary>
+/// A type of evaluation that behaves like a function.
+/// </summary>
 public interface IFunction<TResult>
 	: IEvaluate<TResult>, ISymbolized
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
