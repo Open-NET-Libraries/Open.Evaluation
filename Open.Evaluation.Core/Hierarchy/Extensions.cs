@@ -1,40 +1,17 @@
 ﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
+using Throw;
 
 namespace Open.Evaluation.Hierarchy;
 
 public static class Extensions
 {
 	public static bool AreChildrenAligned(this Node<IEvaluate> target)
-	{
-		ArgumentNullException.ThrowIfNull(target);
-
-		switch (target.Value)
+		=> target.ThrowIfNull().Value switch
 		{
-			case IParent parent:
-				// If the value contains children, return true only if they match.
-				var children = target.ToArray();
-				var count = children.Length;
-
-				// The count should match...
-				if (count != parent.Children.Count)
-					return false;
-
-				for (var i = 0; i < count; i++)
-				{
-					// Does the map of the children match the actual?
-					if (children[i] != parent.Children[i])
-						return false;
-				}
-
-				// Everything is the same..
-				return true;
-
-			default:
-				// Value does not have children? Return true only if this has no children.
-				return target.Count == 0;
-		}
-	}
+			IParent parent => target.SequenceEqual(parent.Children),
+			_ => target.Count == 0 // Value does not have children? Return true only if this has no children.
+		};
 
 	public static int CountDistinctDescendantValuesOfType<T, TType, TSelect>(this Node<T> node, Func<TType, TSelect> selector)
 		=> node
