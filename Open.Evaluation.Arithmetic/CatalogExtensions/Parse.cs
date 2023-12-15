@@ -9,20 +9,20 @@ namespace Open.Evaluation;
 
 public static partial class CatalogExtensions
 {
-	static readonly Regex openParen = OpenParenPattern();
-	static readonly Regex closeParen = CloseParenPattern();
-	static readonly Regex unnecessaryParaenthesis = UnnecessaryParenPattern();
-	static readonly Regex paramOnly = ParamOnlyPattern();
-	static readonly Regex registeredOnly = RegisteredOnlyPattern();
+	static readonly Regex OpenParenPattern = GetOpenParenPattern();
+	static readonly Regex CloseParenPattern = GetCloseParenPattern();
+	static readonly Regex UnnecessaryParenPattern = GetUnnecessaryParenPattern();
+	static readonly Regex ParamOnlyPatern = GetParamOnlyPattern();
+	static readonly Regex RegisteredOnlyPattern = GetRegisteredOnlyPattern();
 
 	static Regex GetOperatorRegex(string op) => new(
 			string.Format(CultureInfo.InvariantCulture, @"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
 			RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
 
-	static readonly Regex products = GetOperatorRegex(@"\*");
-	static readonly Regex sums = GetOperatorRegex(@"\+");
-	static readonly Regex exponents = GetOperatorRegex(@"\^");
-	static readonly ImmutableArray<char> plusMinus = ImmutableArray.Create('+', '-');
+	static readonly Regex ProductsPattern = GetOperatorRegex(@"\*");
+	static readonly Regex SumsPattern = GetOperatorRegex(@"\+");
+	static readonly Regex ExponentsPattern = GetOperatorRegex(@"\^");
+	static readonly ImmutableArray<char> PlusMinus = ['+', '-'];
 
 	static IEnumerable<IEvaluate<double>> SubMatches(
 		Catalog<IEvaluate<double>> catalog,
@@ -38,7 +38,7 @@ public static partial class CatalogExtensions
 
 			var span = v.AsSpan().Trim();
 			var negative = !span.IsEmpty && span[0] == '-';
-			span = span.Trim(plusMinus.AsSpan());
+			span = span.Trim(PlusMinus.AsSpan());
 
 			var len = span.Length;
 			if (len == 0 || span[0] != '{' || span[len - 1] != '}')
@@ -66,8 +66,8 @@ public static partial class CatalogExtensions
 		if (string.IsNullOrWhiteSpace(evaluation))
 			throw new ArgumentException("Must be more than just whitespace or empty.", nameof(evaluation));
 
-		var oParenCount = openParen.Matches(evaluation).Count;
-		var cParenCount = closeParen.Matches(evaluation).Count;
+		var oParenCount = OpenParenPattern.Matches(evaluation).Count;
+		var cParenCount = CloseParenPattern.Matches(evaluation).Count;
 		if (oParenCount > cParenCount) throw new FormatException("Missing close parenthesis.");
 		if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
 
@@ -81,53 +81,53 @@ public static partial class CatalogExtensions
 		{
 			last = evaluation;
 
-			evaluation = unnecessaryParaenthesis.Replace(evaluation, "$1");
+			evaluation = UnnecessaryParenPattern.Replace(evaluation, "$1");
 
 			if (double.TryParse(evaluation, out var constantOnly))
 				return catalog.GetConstant(constantOnly);
 
-			var checkParamOnly = paramOnly.Match(evaluation);
+			var checkParamOnly = ParamOnlyPatern.Match(evaluation);
 			if (checkParamOnly.Success) return catalog.GetParameter(ushort.Parse(checkParamOnly.Groups[1].Value, CultureInfo.InvariantCulture));
 
-			evaluation = products.Replace(evaluation, m =>
+			evaluation = ProductsPattern.Replace(evaluation, m =>
 			{
 				var key = $"X{++count}";
 				registry.Add(key, catalog.ProductOf(SubMatches(catalog, registry, m)));
-				return '{' + key + '}';
+				return $"{{{key}}}";
 			});
 
-			evaluation = sums.Replace(evaluation, m =>
+			evaluation = SumsPattern.Replace(evaluation, m =>
 			{
 				var key = $"X{++count}";
 				registry.Add(key, catalog.SumOf(SubMatches(catalog, registry, m)));
-				return '{' + key + '}';
+				return $"{{{key}}}";
 			});
 
-			evaluation = exponents.Replace(evaluation, m =>
+			evaluation = ExponentsPattern.Replace(evaluation, m =>
 			{
 				var key = $"X{++count}";
 				var sm = SubMatches(catalog, registry, m).ToArray();
 				if (sm.Length != 2) throw new FormatException($"Exponent with {sm.Length} elements defined.");
 				registry.Add(key, catalog.GetExponent(sm[0], sm.Last()));
-				return '{' + key + '}';
+				return $"{{{key}}}";
 			});
 		}
 		while (last != evaluation);
 
-		var checkRegisteredOnly = registeredOnly.Match(evaluation);
+		var checkRegisteredOnly = RegisteredOnlyPattern.Match(evaluation);
 		return checkRegisteredOnly.Success
 			? registry[checkRegisteredOnly.Groups[1].Value]
 			: throw new FormatException($"Could not parse sequence: {original}");
 	}
 
 	[GeneratedRegex("[(]", RegexOptions.Compiled)]
-	private static partial Regex OpenParenPattern();
+	private static partial Regex GetOpenParenPattern();
 	[GeneratedRegex("[)]", RegexOptions.Compiled)]
-	private static partial Regex CloseParenPattern();
+	private static partial Regex GetCloseParenPattern();
 	[GeneratedRegex("\\(({\\w+})\\)", RegexOptions.Compiled)]
-	private static partial Regex UnnecessaryParenPattern();
+	private static partial Regex GetUnnecessaryParenPattern();
 	[GeneratedRegex("^(?:{(\\d+)})$", RegexOptions.Compiled)]
-	private static partial Regex ParamOnlyPattern();
+	private static partial Regex GetParamOnlyPattern();
 	[GeneratedRegex("^(?:{(\\w+)})$", RegexOptions.Compiled)]
-	private static partial Regex RegisteredOnlyPattern();
+	private static partial Regex GetRegisteredOnlyPattern();
 }

@@ -18,8 +18,4 @@ public static class Glyphs
 	public const char Square = '²';
 	public const char Invert = '/';
 	public const char SquareRoot = '√';
-
-	public static readonly ImmutableArray<char> Operators = [Sum, Product];
-
-	public static readonly ImmutableArray<char> Functions = [Square, Invert, SquareRoot];
 }

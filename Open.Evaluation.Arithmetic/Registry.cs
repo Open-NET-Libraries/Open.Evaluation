@@ -1,6 +1,8 @@
 ﻿using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.RandomizationExtensions;
+using System.Collections.Immutable;
+using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Throw;
@@ -10,7 +12,11 @@ using EvaluationCatalogSubmodule = Open.Evaluation.Catalogs.EvaluationCatalog<do
 namespace Open.Evaluation.Arithmetic;
 public static class Registry
 {
-		public static IEvaluate<double> GetOperator(
+	public static readonly ImmutableArray<char> Operators = [Glyphs.Sum, Glyphs.Product];
+
+	public static readonly ImmutableArray<char> Functions = [Glyphs.Square, Glyphs.Invert, Glyphs.SquareRoot];
+
+	public static IEvaluate<double> GetOperator(
 			ICatalog<IEvaluate<double>> catalog,
 			char op,
 			IEnumerable<IEvaluate<double>> children)
