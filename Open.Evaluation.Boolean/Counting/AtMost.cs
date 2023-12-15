@@ -10,10 +10,8 @@ namespace Open.Evaluation.Boolean.Counting
 	public class AtMost : CountingBase,
 			IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
-		public const string Prefix = "AtMost";
-
 		internal AtMost(int count, IEnumerable<IEvaluate<bool>> children)
-			: base(Prefix, count, children)
+			: base(nameof(AtMost), count, children)
 		{
 		}
 

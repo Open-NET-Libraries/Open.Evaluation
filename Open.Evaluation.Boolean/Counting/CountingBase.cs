@@ -22,8 +22,6 @@ public abstract class CountingBase
 		Count = count.Throw().IfLessThan(0);
 	}
 
-	public const char Glyph = ',';
-
 	protected string PrefixValue { get; }
 
 	public int Count { get; }

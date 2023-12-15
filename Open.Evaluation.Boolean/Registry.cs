@@ -10,9 +10,9 @@ using Throw;
 namespace Open.Evaluation.Boolean;
 public static class Registry
 {
-	public static readonly ImmutableArray<char> Operators = [And.Glyph, Or.Glyph];
-	public static readonly ImmutableArray<char> Functions = [Not.Glyph, '?'];
-	public static readonly ImmutableArray<string> Counting = [AtLeast.Prefix, AtMost.Prefix, Exactly.Prefix];
+	public static readonly ImmutableArray<char> Operators = [Glyphs.And, Glyphs.Or];
+	public static readonly ImmutableArray<char> Functions = [Glyphs.Not, Glyphs.Conditional];
+	public static readonly ImmutableArray<string> CountingFunctions = [nameof(AtLeast), nameof(AtMost), nameof(Exactly)];
 
 	public static IEvaluate<bool> GetOperator(
 		[DisallowNull, NotNull] ICatalog<IEvaluate<bool>> catalog,
@@ -26,8 +26,8 @@ public static class Registry
 
 		return op switch
 		{
-			And.Glyph => catalog.And(children),
-			Or.Glyph => catalog.Or(children),
+			Glyphs.And => catalog.And(children),
+			Glyphs.Or => catalog.Or(children),
 
 			_ => throw new ArgumentException($"Invalid operator: {op}", nameof(op)),
 		};

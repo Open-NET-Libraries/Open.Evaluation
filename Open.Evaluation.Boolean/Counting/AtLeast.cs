@@ -10,10 +10,8 @@ namespace Open.Evaluation.Boolean.Counting;
 public class AtLeast : CountingBase,
 	IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 {
-	public const string Prefix = "AtLeast";
-
 	internal AtLeast(int count, IEnumerable<IEvaluate<bool>> children)
-		: base(Prefix, count, children)
+		: base(nameof(AtLeast), count, children)
 	{
 		if (count < 1)
 			throw new ArgumentOutOfRangeException(nameof(count), count, "Must be at least 1.");

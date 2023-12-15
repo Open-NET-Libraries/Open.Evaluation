@@ -69,15 +69,6 @@ public class Conditional<TResult>(
 		=> Create(catalog, param);
 }
 
-public class Conditional(
-	IEvaluate<bool> condition,
-	IEvaluate<bool> ifTrue,
-	IEvaluate<bool> ifFalse)
-	: Conditional<bool>(condition, ifTrue, ifFalse)
-{
-	public const char Glyph = '?';
-}
-
 public static class ConditionalExtensions
 {
 	public static IEvaluate<TResult> Conditional<TResult>(

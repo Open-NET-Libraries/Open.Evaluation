@@ -43,4 +43,8 @@
 		<PackageReference Include="Open.Numeric.Primes" Version="3.0.0" />
 	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Open.Evaluation.Core\Open.Evaluation.Core.csproj" />
+	</ItemGroup>
+
 </Project>

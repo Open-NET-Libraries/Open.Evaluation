@@ -13,8 +13,6 @@ public class Or(IEnumerable<IEvaluate<bool>> children)
 	: OperatorBase<bool>(Symbols.Or, children, true),
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
-	public const char Glyph = '|';
-
 	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
 		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);

@@ -9,7 +9,7 @@ public static class Symbols
 	public static readonly Symbol Exponent = new(Glyphs.Exponent);
 }
 
-internal static class Glyphs
+public static class Glyphs
 {
 	public const char Sum = '+';
 	public const char Product = '*';
@@ -19,9 +19,7 @@ internal static class Glyphs
 	public const char Invert = '/';
 	public const char SquareRoot = '√';
 
-	public static readonly ImmutableArray<char> Operators
-		= ImmutableArray.Create(Sum, Product);
+	public static readonly ImmutableArray<char> Operators = [Sum, Product];
 
-	public static readonly ImmutableArray<char> Functions
-		= ImmutableArray.Create(Square, Invert, SquareRoot);
+	public static readonly ImmutableArray<char> Functions = [Square, Invert, SquareRoot];
 }
