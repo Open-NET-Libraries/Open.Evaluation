@@ -3,11 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using OneOf.Types;
 using Open.Evaluation.Core;
-using Open.Numeric.Primes;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Numerics;
 using Throw;
@@ -49,7 +45,7 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 
-		var pow = catalog!.GetReduced(Power);
+		var pow = catalog.GetReduced(Power);
 		IEvaluate<TResult> bas;
 		if (pow is Constant<TResult> cPow)
 		{

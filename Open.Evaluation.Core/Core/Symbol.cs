@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Throw;
+﻿using Throw;
 
 namespace Open.Evaluation.Core;
 public readonly record struct Symbol

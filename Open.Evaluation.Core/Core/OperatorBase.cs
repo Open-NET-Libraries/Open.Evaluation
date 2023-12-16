@@ -7,7 +7,6 @@ using Open.Disposable;
 using Open.Hierarchy;
 using System.Collections.Immutable;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -151,7 +150,7 @@ public abstract class OperatorBase<TResult>
 			yield return child.Evaluate(context);
 	}
 
-	internal static IEvaluate<TResult> ConditionalTransform(
+	internal protected static IEvaluate<TResult> ConditionalTransform(
 		IEnumerable<IEvaluate<TResult>> param,
 		Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
 	{

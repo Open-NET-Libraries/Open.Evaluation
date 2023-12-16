@@ -3,13 +3,13 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Collections;
 using Open.Disposable;
 using Open.Evaluation.Core;
 using Open.Numeric.Primes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,11 +30,38 @@ public partial class Product<TResult> :
 
 	protected override int ConstantPriority => -1;
 
-	[return: NotNull]
-	protected override TResult EvaluateInternal(object context)
-		=> Children.Length == 0	? throw new NotSupportedException("Cannot resolve product of empty set.")
-		: (TResult)ChildResults(context)
-			.Aggregate<TResult, dynamic>(1, (current, r) => current * r);
+	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
+	{
+		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);
+
+		var results = ChildResults(context).Memoize();
+
+		var result = TResult.MultiplicativeIdentity;
+		foreach (var e in results)
+		{
+			var r = e.Result;
+			if (TResult.IsZero(r))
+			{
+				result = TResult.Zero;
+				break;
+			}
+
+			// Check for NaN.
+#pragma warning disable CS1718 // Comparison made to same variable
+			if (r != r)
+			{
+				result = r;
+				break;
+			}
+#pragma warning restore CS1718 // Comparison made to same variable
+
+			result *= r;
+		}
+
+		return new(
+			result,
+			Describe(results.Select(r => r.Description)));
+	}
 
 	protected override IEvaluate<TResult> Reduction(
 		ICatalog<IEvaluate<TResult>> catalog)
@@ -128,10 +155,11 @@ public partial class Product<TResult> :
 		{
 			var multipleValue = multiple.Value;
 			// ReSharper disable once InvertIf
-			if (multipleValue != TResult.MultiplicativeIdentity && Math.Floor(multipleValue) == multipleValue)
+			if (multipleValue != TResult.MultiplicativeIdentity
+				&& multipleValue % TResult.One == TResult.Zero)
 			{
 				var oneNeg = catalog.GetConstant(-TResult.MultiplicativeIdentity);
-				var muValue = (long)multipleValue;
+				var muValue = multipleValue;
 				var originalMultiple = muValue;
 				var multipleIndex = children.IndexOf(multiple);
 				var count = children.Count;
@@ -145,46 +173,45 @@ public partial class Product<TResult> :
 						continue;
 					}
 
-					var divisor = Convert.ToDouble(expC.Value, CultureInfo.InvariantCulture);
+					var divisor = expC.Value;
 					// ReSharper disable once CompareOfFloatsByEqualityOperator
 
 					// We won't mess with factional divisors yet.
-					if (Math.Floor(divisor) != divisor)
+					if (divisor % TResult.One != TResult.Zero)
 						continue;
 
-					var d = (long)divisor;
-					if (muValue % d == 0)
+					if (muValue % divisor == TResult.Zero)
 					{
-						muValue /= d;
+						muValue /= divisor;
 						children[i] = one;
 					}
 					else
 					{
-						var f = 1L;
+						var f = TResult.One;
 						// We might have a potential divisor...
-						foreach (var factor in Prime.Factors(d, true))
+						foreach (var factor in Prime.Factors(divisor, true))
 						{
 							if (factor > muValue) break;
-							if (muValue % factor != 0) continue;
-							Debug.Assert(factor != 0);
+							if (muValue % factor != TResult.Zero) continue;
+							Debug.Assert(factor != TResult.Zero);
 							muValue /= factor;
 							f *= factor;
 						}
 
-						if (f != 1L)
+						if (f != TResult.One)
 						{
 							children[i] = catalog.GetExponent(
-								catalog.GetConstant(d / f),
+								catalog.GetConstant(divisor / f),
 								catalog.GetConstant(-TResult.MultiplicativeIdentity));
 						}
 					}
 
-					if (muValue == 1)
+					if (muValue == TResult.One)
 						break;
 				}
 
 				if (muValue != originalMultiple)
-					children[multipleIndex] = catalog.GetConstant((TResult)(dynamic)muValue);
+					children[multipleIndex] = catalog.GetConstant(muValue);
 			}
 		}
 
@@ -196,12 +223,12 @@ public partial class Product<TResult> :
 	[GeneratedRegex("^\\(1/(.+)\\)$", RegexOptions.Compiled)]
 	private static partial Regex IsInvertedPattern();
 
-	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
+	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
 		Debug.Assert(result is not null);
-		if (index != 0 && child is string c)
+		if (index != 0)
 		{
-			var m = IsInvertedPattern().Match(c);
+			var m = IsInvertedPattern().Match(child.Value);
 			if (m.Success)
 			{
 				result.Append(" / ");

@@ -3,9 +3,8 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using OneOf.Types;
+using Open.Collections;
 using Open.Evaluation.Core;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
@@ -21,7 +20,7 @@ public sealed class Or : OperatorBase<bool>,
 	{
 		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);
 
-		var results = ChildResults(context);
+		var results = ChildResults(context).Memoize();
 		return new(
 			results.Any(r => r.Result),
 			Describe(results.Select(r => r.Description)));

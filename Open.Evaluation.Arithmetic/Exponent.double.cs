@@ -6,7 +6,6 @@
 using Open.Evaluation.Core;
 using System.Buffers;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 
 namespace Open.Evaluation.Arithmetic;

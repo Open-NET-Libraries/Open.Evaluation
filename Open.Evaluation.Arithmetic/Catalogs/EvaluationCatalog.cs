@@ -1,5 +1,4 @@
-﻿using OneOf.Types;
-using Open.Evaluation.Arithmetic;
+﻿using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System.Diagnostics;

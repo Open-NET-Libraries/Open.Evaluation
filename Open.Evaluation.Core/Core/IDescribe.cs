@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-
-namespace Open.Evaluation.Core;
+﻿namespace Open.Evaluation.Core;
 
 /// <summary>
 /// Anything that can be described.

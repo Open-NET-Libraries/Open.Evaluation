@@ -22,23 +22,21 @@ public partial class Sum<TResult> :
 	where TResult : notnull, INumber<TResult>
 {
 	protected Sum(IEnumerable<IEvaluate<TResult>> children)
-		: base(Symbols.Sum, children, true)
-	{ }
+		: base(Symbols.Sum, children, true) { }
 
-	protected override EvaluationResult<TResult> EvaluateInternal(object context)
+	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
 	{
-		var count = Children.Length;
-		if (count == 0)
-			throw new NotSupportedException("Cannot resolve sum of empty set.");
-		var childResults = ChildResults(context).ToArray();
-		var result = TResult.Zero;
+		Children.Length.Throw("Cannot resolve sum of empty set.").IfEquals(0);
+
+		var descs = new List<Lazy<string>>();
+		var result = TResult.AdditiveIdentity;
 		foreach (var r in ChildResults(context))
-			result += r.Result;
-
-		return new(result, () =>
 		{
+			result += r.Result;
+			descs.Add(r.Description);
+		}
 
-		});			
+		return new(result, Describe(descs));
 	}
 
 	static bool IsProductWithSingleConstant(
@@ -115,11 +113,6 @@ public partial class Sum<TResult> :
 		base.ToStringInternal_OnAppendNextChild(result, index, child);
 	}
 
-	protected override TResult EvaluateInternal(object context)
-		=> ChildResults(context)
-			.Cast<TResult>()
-			.Aggregate<TResult, dynamic>(0, (current, r) => current + r);
-
 	protected override IEvaluate<TResult> Reduction(
 		ICatalog<IEvaluate<TResult>> catalog)
 	{
@@ -183,7 +176,7 @@ public partial class Sum<TResult> :
 		IEnumerable<IEvaluate<TResult>> param)
 	{
 		catalog.ThrowIfNull();
-		if (param is null) throw new ArgumentNullException(nameof(param));
+		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global

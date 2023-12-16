@@ -2,12 +2,12 @@
 using Open.Evaluation.Core;
 using Open.RandomizationExtensions;
 using System.Collections.Immutable;
-using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Throw;
 
 using EvaluationCatalogSubmodule = Open.Evaluation.Catalogs.EvaluationCatalog<double>.SubmoduleBase;
+using System.Numerics;
 
 namespace Open.Evaluation.Arithmetic;
 public static class Registry
@@ -16,10 +16,11 @@ public static class Registry
 
 	public static readonly ImmutableArray<char> Functions = [Glyphs.Square, Glyphs.Invert, Glyphs.SquareRoot];
 
-	public static IEvaluate<double> GetOperator(
-			ICatalog<IEvaluate<double>> catalog,
+	public static IEvaluate<T> GetOperator<T>(
+			ICatalog<IEvaluate<T>> catalog,
 			char op,
-			IEnumerable<IEvaluate<double>> children)
+			IEnumerable<IEvaluate<T>> children)
+			where T : notnull, INumber<T>
 		{
 			catalog.ThrowIfNull();
 			children.ThrowIfNull();

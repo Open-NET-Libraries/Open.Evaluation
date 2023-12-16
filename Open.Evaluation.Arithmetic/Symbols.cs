@@ -1,5 +1,4 @@
 ﻿using Open.Evaluation.Core;
-using System.Collections.Immutable;
 
 namespace Open.Evaluation.Arithmetic;
 public static class Symbols
