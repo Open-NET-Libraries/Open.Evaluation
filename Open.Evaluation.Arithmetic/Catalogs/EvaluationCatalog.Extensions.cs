@@ -6,7 +6,7 @@ using System.Diagnostics.Contracts;
 using System.Numerics;
 using Throw;
 
-namespace Open.Evaluation.Catalogs;
+namespace Open.Evaluation.Arithmetic;
 
 [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 public static partial class EvaluationCatalogExtensions

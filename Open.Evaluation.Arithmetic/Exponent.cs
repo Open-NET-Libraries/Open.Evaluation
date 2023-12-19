@@ -4,8 +4,11 @@
  */
 
 using Open.Evaluation.Core;
+using System.Buffers;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Numerics;
+using System.Text.RegularExpressions;
 using Throw;
 
 namespace Open.Evaluation.Arithmetic;
@@ -22,17 +25,17 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 			  // Need to provide to children so a node tree can be built.
 			  new[] { @base, power })
 	{
-		Base = @base ?? throw new ArgumentNullException(nameof(@base));
-		Power = power ?? throw new ArgumentNullException(nameof(power));
+		@base.ThrowIfNull().OnlyInDebug();
+		power.ThrowIfNull().OnlyInDebug();
+		Base = @base;
+		Power = power;
 	}
 
 	public IEvaluate<TResult> Base { get; }
 
 	public IEvaluate<TResult> Power { get; }
 
-	protected static double ConvertToDouble(in dynamic value) => (double)value;
-
-	protected override TResult EvaluateInternal(object context)
+	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
 	{
 		var evaluation = ConvertToDouble(Base.Evaluate(context));
 		var power = ConvertToDouble(Power.Evaluate(context));
@@ -71,22 +74,109 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 		return catalog.Register(NewUsing(catalog, (bas, pow)));
 	}
 
+	protected override string ToStringInternal(object context)
+	{
+		var value = base.ToStringInternal(context);
+		Debug.Assert(value is not null);
+		var m = Exponent.SquareRootPattern().Match(value);
+		if (m.Success)
+			return '√' + m.Groups[1].Value;
+
+		m = Exponent.ConstantPowerPattern().Match(value);
+		if (!m.Success) return value!;
+
+		var b = m.Groups[1].Value;
+		Debug.Assert(!string.IsNullOrWhiteSpace(b));
+		var p = m.Groups[3].Value;
+		var ps = p.Contains('.')
+			? '^' + p
+			: Exponent.ConvertToSuperScript(p);
+
+		var success = m.Groups[2].Success;
+		if (success && ps == "¹") ps = string.Empty;
+		return success ? $"(1/{b}{ps})" : $"({b}{ps})";
+	}
+
+	protected override IEvaluate<TResult> Reduction(
+		ICatalog<IEvaluate<TResult>> catalog)
+	{
+		var pow = catalog.GetReduced(Power);
+		if (pow is not IConstant<TResult> cPow)
+			return catalog.Register(NewUsing(catalog, (catalog.GetReduced(Base), pow)));
+
+		var zero = catalog.GetConstant(TResult.Zero);
+		var one = catalog.GetConstant(TResult.One);
+		if (cPow == zero)
+			return one;
+
+		var bas = catalog.GetReduced(Base);
+
+		if (cPow == one)
+			return bas;
+
+		if (bas is Constant<TResult> cBas)
+		{
+			if (cBas == one)
+				return cBas;
+
+			TResult newExp = cBas.Value.Pow(cPow.Value);
+			// ReSharper disable once CompareOfFloatsByEqualityOperator
+			if (newExp.IsInteger())
+				return catalog.GetConstant(newExp);
+		}
+
+		// ReSharper disable once InvertIf
+		if (bas is Exponent<TResult> bEx
+		&& bEx.Power is Constant<TResult> cP)
+		{
+			bas = bEx.Base;
+			pow = catalog.GetConstant(cPow.Value * cP.Value);
+		}
+
+		while (bas is Product<TResult> pProd)
+		{
+			if (pProd.Children.Length == 1)
+			{
+				bas = pProd.Children[0];
+			}
+			else
+			{
+				// Exponents of products can be converted into products of exponents.
+				return catalog.Register(
+					catalog.ProductOf(
+						pProd.Children.Select(c => catalog.GetReduced(NewUsing(catalog, (c, pow))))));
+			}
+		}
+
+		//cPow = pow as IConstant<double>;
+		//if (cPow is not null && cPow.Value < 0 && bas is Product<double> pProd)
+		//{
+		//	var nBas = pProd.ExtractMultiple(catalog, out var multiple);
+		//	if (multiple is not null && nBas != bas && multiple.Value < 0)
+		//	{
+		//		multiple = catalog.ProductOfConstants(-1, multiple);
+		//		var divisor = catalog.ProductOf(multiple, nBas);
+		//		return catalog.Register(
+		//			catalog.ProductOf(-1,
+		//				NewUsing(catalog, (divisor, pow))));
+		//	}
+		//}
+
+		return catalog.Register(NewUsing(catalog, (bas, pow)));
+	}
+
 	internal static Exponent<TResult> Create(
 		ICatalog<IEvaluate<TResult>> catalog,
 		IEvaluate<TResult> @base,
 		IEvaluate<TResult> power)
 	{
-		catalog.ThrowIfNull();
-		@base.ThrowIfNull();
-		power.ThrowIfNull();
+		catalog.ThrowIfNull().OnlyInDebug();
+		@base.ThrowIfNull().OnlyInDebug();
+		power.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		// ReSharper disable once SuspiciousTypeConversion.Global
-		return catalog is ICatalog<IEvaluate<double>> dCat
-				&& @base is IEvaluate<double> b
-				&& power is IEvaluate<double> p
-			? (Exponent<TResult>)(dynamic)Exponent.Create(dCat, b, p)
-			: catalog.Register(new Exponent<TResult>(@base, power));
+		return catalog.Register(new Exponent<TResult>(@base, power));
 	}
 
 	public virtual IEvaluate<TResult> NewUsing(
@@ -95,8 +185,32 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 		=> Create(catalog, param.Item1, param.Item2);
 }
 
-public static partial class ExponentExtensions
+public static partial class Exponent
 {
+	public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
+
+	[GeneratedRegex("^\\((.+)\\^0\\.5\\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+	internal static partial Regex SquareRootPattern();
+
+	[GeneratedRegex("^\\((.+)\\^(-)?([0-9\\.]+)\\)$", RegexOptions.IgnoreCase | RegexOptions.Compiled, "en-US")]
+	internal static partial Regex ConstantPowerPattern();
+
+	public static string ConvertToSuperScript(string number)
+	{
+		number.ThrowIfNull().OnlyInDebug();
+		return ArrayPool<char>.Shared.Rent(number!.Length, number, (number, r) =>
+		{
+			var len = number.Length;
+			for (var i = 0; i < len; i++)
+			{
+				var n = char.GetNumericValue(number[i]);
+				r[i] = SuperScriptDigits[(int)n];
+			}
+
+			return new string(r, 0, len);
+		});
+	}
+
 	public static Exponent<TResult> GetExponent<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		IEvaluate<TResult> @base,
@@ -104,23 +218,80 @@ public static partial class ExponentExtensions
 		where TResult : notnull, INumber<TResult>
 		=> Exponent<TResult>.Create(catalog, @base, power);
 
+	public static Exponent<TResult> GetExponent<TResult>(
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEvaluate<TResult> @base,
+		TResult power)
+		where TResult : notnull, INumber<TResult>
+		=> Exponent<TResult>.Create(catalog, @base, catalog.GetConstant(power));
+
 	public static bool IsPowerOf<T>(this Exponent<T> exponent, in T power)
 		where T : notnull, INumber<T>
 	{
-		exponent.ThrowIfNull();
+		exponent.ThrowIfNull().OnlyInDebug();
 		return exponent.Power is Constant<T> p && p.Value == power;
 	}
 
-	public static bool IsSquareRoot(this Exponent<double> exponent)
-		=> exponent.IsPowerOf(0.5);
-
 	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
-		where T : notnull, INumber<T>, IFloatingPoint<T>, IDivisionOperators<T, T, T>
-		=> exponent.IsPowerOf(Value<T>.Half);
+		where T : notnull, INumber<T>, IFloatingPoint<T>
+		=> exponent.IsPowerOf(ValueFloat<T>.Half);
 
-	static class Value<T> where T : notnull, INumber<T>, IFloatingPoint<T>, IDivisionOperators<T, T, T>
+	internal static T Pow<T>(this T baseValue, T exponent)
+		where T : notnull, INumber<T>
 	{
-		public static readonly T Two = T.One + T.One;
-		public static readonly T Half = T.One / Two;
+		if (baseValue == T.Zero || baseValue == T.One)
+			return baseValue;
+
+		if (exponent == T.Zero)
+			return T.MultiplicativeIdentity;
+
+		if (!exponent.IsInteger())
+		{
+			if (exponent < T.Zero)
+				throw new ArgumentException("Cannot calculate a negative decimal power.", nameof(exponent));
+
+			switch (exponent)
+			{
+				case double exp:
+				{
+					return baseValue is double bv
+						? (T)(object)Math.Pow(bv, exp)
+						: throw new UnreachableException("Strange type mismatch.");
+				}
+
+				case float exp:
+				{
+					return baseValue is float bv
+						? (T)(object)(float)Math.Pow(bv, exp)
+						: throw new UnreachableException("Strange type mismatch.");
+				}
+
+				case decimal exp:
+				{
+					return baseValue is decimal bv
+						? (T)(object)(decimal)Math.Pow(Convert.ToDouble(bv), Convert.ToDouble(exp))
+						: throw new UnreachableException("Strange type mismatch.");
+				}
+			}
+
+			throw new ArgumentException("No supported calculation for non-integer exponent.", nameof(exponent));
+		}
+
+		T result = baseValue;
+		if (exponent < T.Zero)
+		{
+			exponent = -exponent;
+			// Division.
+			for (var i = T.One; i < exponent; i++)
+				result /= baseValue;
+		}
+		else
+		{
+			// Multiplication.
+			for (var i = T.One; i < exponent; i++)
+				result *= baseValue;
+		}
+
+		return exponent;
 	}
 }

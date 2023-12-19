@@ -1,16 +1,12 @@
-﻿using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Core;
+﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
-namespace Open.Evaluation.Catalogs;
+namespace Open.Evaluation.Arithmetic;
 
-[SuppressMessage("ReSharper", "SuspiciousTypeConversion.Global")]
-[SuppressMessage("ReSharper", "UnusedMethodReturnValue.Global")]
-public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
+public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	private const string ReturnedNull = "Returned null.";

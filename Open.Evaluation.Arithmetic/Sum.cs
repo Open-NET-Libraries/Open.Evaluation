@@ -9,7 +9,6 @@ using Open.Numeric.Primes;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
-using System.Globalization;
 using System.Numerics;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -58,6 +57,7 @@ public partial class Sum<TResult> :
 				return true;
 			}
 		}
+
 		value = default!;
 		return false;
 	}
@@ -92,11 +92,12 @@ public partial class Sum<TResult> :
 	private static partial Regex HasNegativeMultiplePattern();
 	private static readonly Regex HasNegativeMultiple = HasNegativeMultiplePattern();
 
-	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, object child)
+	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
 		Debug.Assert(result is not null);
-		if (index != 0 && child is string c)
+		if (index != 0)
 		{
+			var c = child.Value;
 			var m = HasNegativeMultiple.Match(c);
 			if (m.Success)
 			{
@@ -106,6 +107,7 @@ public partial class Sum<TResult> :
 					: m.Groups[1].Value == "1"
 						? $"({m.Groups[3].Value})"
 						: $"({m.Groups[1].Value}{m.Groups[2].Value}{m.Groups[3].Value})");
+
 				return;
 			}
 		}
@@ -144,11 +146,14 @@ public partial class Sum<TResult> :
 				return children[0];
 		}
 
-		if (typeof(TResult) == typeof(float) && children.Any(c => c is IConstant<float> d && float.IsNaN(d.Value)))
-			return catalog.GetConstant(Constant<TResult>.FloatNaN.Value);
-
-		if (typeof(TResult) == typeof(double) && children.Any(c => c is IConstant<double> d && double.IsNaN(d.Value)))
-			return catalog.GetConstant(Constant<TResult>.DoubleNaN.Value);
+		// Check for NaN.
+		foreach (var child in children.OfType<IConstant<TResult>>())
+		{
+			var c = child.Value;
+#pragma warning disable CS1718 // Comparison made to same variable
+			if (c != c) return catalog.GetConstant(c);
+#pragma warning restore CS1718 // Comparison made to same variable
+		}
 
 		var one = catalog.GetConstant(TResult.One);
 
@@ -179,10 +184,7 @@ public partial class Sum<TResult> :
 		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		// ReSharper disable once SuspiciousTypeConversion.Global
-		return catalog is ICatalog<IEvaluate<double>> dCat && param is IEnumerable<IEvaluate<double>> p
-			? (Sum<TResult>)(dynamic)Sum.Create(dCat, p)
-			: catalog.Register(new Sum<TResult>(param));
+		return catalog.Register(new Sum<TResult>(param));
 	}
 
 	internal virtual IEvaluate<TResult> NewUsing(
@@ -202,27 +204,27 @@ public partial class Sum<TResult> :
 		[NotNullWhen(true)] out IEvaluate<TResult> sum,
 		[NotNullWhen(true)] out IConstant<TResult> greatestFactor)
 	{
-		catalog.ThrowIfNull();
+		catalog.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		var one = catalog.GetConstant(TResult.One);
 		greatestFactor = one;
 		sum = this;
 		// Phase 5: Try and group by GCF:
-		using var products = ListPool<Product<TResult>>.Rent();
+		using var productsLease = ListPool<Product<TResult>>.Rent();
 		foreach (var c in Children)
 		{
 			// All of them must be products for GCF to work.
 			if (c is Product<TResult> p)
-				products.Item.Add(p);
+				productsLease.Item.Add(p);
 			else
 				return false;
 		}
 
 		// Try and get all the constants, and if a product does not have one, then done.
-		using var constantRH = ListPool<TResult>.Rent();
-		var constants = constantRH.Item;
-		foreach (var p in products.Item)
+		using var constantLease = ListPool<TResult>.Rent();
+		var constants = constantLease.Item;
+		foreach (var p in productsLease.Item)
 		{
 			using var c = p.Children.OfType<IConstant<TResult>>().GetEnumerator();
 			if (c.MoveNext()) // At least 1. OK.
@@ -239,22 +241,23 @@ public partial class Sum<TResult> :
 		}
 
 		// Convert all the constants to factors, and if any are invalid for factoring, then done.
-		using var factors = ListPool<ulong>.Rent();
+		using var factorsLease = ListPool<TResult>.Rent();
 		foreach (var v in constants)
 		{
-			var d = Math.Abs(Convert.ToDecimal(v, CultureInfo.InvariantCulture));
-			if (d <= decimal.One || decimal.Floor(d) != d) return false;
-			factors.Item.Add(Convert.ToUInt64(d));
+			var d = TResult.Abs(v);
+			if (d <= TResult.One || !d.IsInteger()) return false;
+			factorsLease.Item.Add(d);
 		}
-		var gcf = Prime.GreatestFactor(factors.Item);
-		Debug.Assert(factors.Item.All(f => f >= gcf));
-		factors.Dispose();
-		if (gcf <= 1) return false;
+		constantLease.Dispose();
 
-		TResult gcfT = (dynamic)gcf;
+		var gcf = Prime.GreatestFactor(factorsLease.Item);
+		Debug.Assert(factorsLease.Item.All(f => f >= gcf));
+		factorsLease.Dispose();
+		if (gcf <= TResult.One) return false;
 
-		greatestFactor = catalog.GetConstant(gcfT);
-		sum = catalog.SumOf(catalog.MultiplesExtracted(products.Item)
+		greatestFactor = catalog.GetConstant(gcf);
+		sum = catalog
+			.SumOf(catalog.MultiplesExtracted(productsLease.Item)
 			.Select(e =>
 			{
 				var m = e.Multiple ?? one;
@@ -267,9 +270,167 @@ public partial class Sum<TResult> :
 
 		bool tryGetReducedFactor(TResult value, out TResult f)
 		{
-			var r = (dynamic)value / gcf;
+			var r = value / gcf;
 			f = r;
-			return r != 1;
+			return r != TResult.One;
 		}
+	}
+}
+
+public static class Sum
+{
+	internal static Sum<TResult> Create<TResult>(
+		ICatalog<IEvaluate<TResult>> catalog,
+		IEnumerable<IEvaluate<TResult>> param)
+		where TResult : notnull, INumber<TResult>
+		=> Sum<TResult>.Create(catalog, param);
+
+	static IEvaluate<TResult> SumOfCollection<TResult>(
+		ICatalog<IEvaluate<TResult>> catalog,
+		List<IEvaluate<TResult>> childList)
+		where TResult : notnull, INumber<TResult>
+	{
+		catalog.ThrowIfNull().OnlyInDebug();
+		childList.ThrowIfNull().OnlyInDebug();
+
+		var constants = childList.ExtractType<IConstant<TResult>>();
+
+		if (constants.Count == 0)
+			return Create(catalog, childList);
+
+		var c = constants.Count == 1
+			? constants[0]
+			: catalog.SumOfConstants(constants);
+
+		ListPool<IConstant<TResult>>.Shared.Give(constants);
+
+		if (childList.Count == 0)
+			return c;
+
+		childList.Add(c);
+
+		return Create(catalog, childList);
+	}
+
+	public static IEvaluate<TResult> SumOf<TResult>(
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IReadOnlyList<IEvaluate<TResult>> children)
+		where TResult : notnull, INumber<TResult>
+	{
+		catalog.ThrowIfNull().OnlyInDebug();
+		children.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
+		switch (children.Count)
+		{
+			case 0:
+				return catalog.GetConstant(TResult.Zero);
+
+			case 1:
+				return children[0];
+
+			default:
+			{
+				using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
+				var childList = childListRH.Item;
+				childList.AddRange(children);
+				return SumOfCollection(catalog, childList);
+			}
+		}
+	}
+
+	public static IEvaluate<TResult> SumOf<TResult>(
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEnumerable<IEvaluate<TResult>> children)
+		where TResult : notnull, INumber<TResult>
+	{
+		catalog.ThrowIfNull().OnlyInDebug();
+		children.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
+		if (children is IReadOnlyList<IEvaluate<TResult>> ch)
+			return SumOf(catalog, ch);
+
+		using var e = children.GetEnumerator();
+		if (!e.MoveNext()) return catalog.GetConstant(TResult.Zero);
+		var v0 = e.Current;
+		if (!e.MoveNext()) return v0;
+
+		using var childListRH = ListPool<IEvaluate<TResult>>.Rent();
+		var childList = childListRH.Item;
+		childList.Add(v0);
+		do { childList.Add(e.Current); }
+		while (e.MoveNext());
+		return SumOfCollection(catalog, childList);
+	}
+
+	public static IEvaluate<TResult> SumOf<TResult>(
+		this ICatalog<IEvaluate<TResult>> catalog,
+		IEvaluate<TResult> child1,
+		IEvaluate<TResult> child2,
+		params IEvaluate<TResult>[] moreChildren)
+		where TResult : notnull, INumber<TResult>
+		=> SumOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
+
+	public static IEvaluate<TResult> SumOf<TResult>(
+		this ICatalog<IEvaluate<TResult>> catalog,
+		in TResult multiple,
+		IEvaluate<TResult> child,
+		params IEvaluate<TResult>[] moreChildren)
+		where TResult : notnull, INumber<TResult>
+		=> SumOf(catalog, moreChildren.Prepend(child).Prepend(catalog.GetConstant(multiple)));
+
+	public static Constant<TValue> SumOfConstants<TValue>(
+		this ICatalog<IEvaluate<TValue>> catalog,
+		in TValue c1,
+		IEnumerable<IConstant<TValue>> constants)
+		where TValue : notnull, INumber<TValue>
+	{
+		catalog.ThrowIfNull().OnlyInDebug();
+		constants.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
+		if (TValue.IsNaN(c1))
+			return catalog.GetConstant(c1);
+
+		var result = c1;
+		// ReSharper disable once PossibleMultipleEnumeration
+		// ReSharper disable once LoopCanBeConvertedToQuery
+		foreach (var c in constants)
+		{
+			var val = c.Value;
+			if (TValue.IsNaN(val))
+				return catalog.GetConstant(val);
+
+			result += val;
+		}
+		return catalog.GetConstant(result);
+	}
+
+	public static Constant<TValue> SumOfConstants<TValue>(
+		this ICatalog<IEvaluate<TValue>> catalog,
+		IEnumerable<IConstant<TValue>> constants)
+		where TValue : notnull, INumber<TValue>
+		=> SumOfConstants(catalog, TValue.AdditiveIdentity, constants);
+
+	public static Constant<TValue> SumOfConstants<TValue>(
+		this ICatalog<IEvaluate<TValue>> catalog,
+		in TValue c1, in IConstant<TValue> c2,
+		params IConstant<TValue>[] rest)
+		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
+		=> SumOfConstants(catalog, c1, rest.Prepend(c2));
+
+	public static Constant<TValue> SumOfConstants<TValue>(
+		this ICatalog<IEvaluate<TValue>> catalog,
+		in IConstant<TValue> c1,
+		in IConstant<TValue> c2,
+		params IConstant<TValue>[] rest)
+		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
+	{
+		c1.ThrowIfNull().OnlyInDebug();
+		c2.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
+		return SumOfConstants(catalog, c1.Value, rest.Prepend(c2));
 	}
 }

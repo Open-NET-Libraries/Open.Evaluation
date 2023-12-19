@@ -11,7 +11,7 @@ using Throw;
 using IFunction = Open.Evaluation.Core.IFunction<double>;
 using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<double>, double>;
 
-namespace Open.Evaluation.Catalogs;
+namespace Open.Evaluation.Arithmetic;
 
 [SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
 public partial class EvaluationCatalog<T>

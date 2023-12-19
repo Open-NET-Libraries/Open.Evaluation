@@ -4,11 +4,10 @@ using Open.Hierarchy;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
+using System.Numerics;
 using Throw;
 
-using EvalDoubleVariationCatalog = Open.Evaluation.Catalogs.EvaluationCatalog<double>.VariationCatalog;
-
-namespace Open.Evaluation.Catalogs;
+namespace Open.Evaluation.Arithmetic;
 public partial class EvaluationCatalog<T>
 {
 	private VariationCatalog? _variation;
@@ -26,7 +25,7 @@ public partial class EvaluationCatalog<T>
 public static partial class EvaluationCatalogExtensions
 {
 	public static bool IsValidForRemoval<T>(this Node<IEvaluate<T>> gene, bool ifRoot = false)
-		where T : notnull, IComparable<T>, IComparable
+		where T : notnull, INumber<T>
 	{
 		if (gene == gene.Root) return ifRoot;
 		// Validate worthiness.
@@ -53,14 +52,15 @@ public static partial class EvaluationCatalogExtensions
 	/// <param name="node">The node to remove from the tree.</param>
 	/// <param name="newRoot">The resultant root node corrected by .FixHierarchy()</param>
 	/// <returns>true if successful</returns>
-	public static bool TryRemoveValid(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> node,
-		[NotNullWhen(true)] out IEvaluate<double> newRoot)
+	public static bool TryRemoveValid<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> node,
+		[NotNullWhen(true)] out IEvaluate<T> newRoot)
+		where T : notnull, INumber<T>
 	{
 		Debug.Assert(catalog is not null);
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 		if (IsValidForRemoval(node))
 		{
 			newRoot = catalog.Catalog
@@ -80,11 +80,12 @@ public static partial class EvaluationCatalogExtensions
 	/// <param name="descendantIndex">The index of the descendant in the hierarchy (breadth-first).</param>
 	/// <param name="newRoot">The resultant root node corrected by .FixHierarchy()</param>
 	/// <returns>true if successful</returns>
-	public static bool TryRemoveValidAt(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> sourceNode,
+	public static bool TryRemoveValidAt<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> sourceNode,
 		int descendantIndex,
-		out IEvaluate<double> newRoot)
+		out IEvaluate<T> newRoot)
+		where T : notnull, INumber<T>
 	{
 		Debug.Assert(catalog is not null);
 		catalog.ThrowIfNull();
@@ -104,12 +105,13 @@ public static partial class EvaluationCatalogExtensions
 		// Validate worthiness.
 		=> parent?.Children.Count == 1;
 
-	public static IEvaluate<double>? PromoteChildren(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T>? PromoteChildren<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		// Validate worthiness.
@@ -119,9 +121,10 @@ public static partial class EvaluationCatalogExtensions
 	}
 
 	// This should handle the case of demoting a function.
-	public static IEvaluate<double>? PromoteChildrenAt(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> root, int descendantIndex)
+	public static IEvaluate<T>? PromoteChildrenAt<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> root, int descendantIndex)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
 		root.ThrowIfNull();
@@ -132,12 +135,13 @@ public static partial class EvaluationCatalogExtensions
 				.ElementAt(descendantIndex));
 	}
 
-	public static IEvaluate<double> ApplyFunction(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> node, char fn, IEnumerable<IEvaluate<double>> parameters)
+	public static IEvaluate<T> ApplyFunction<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> node, char fn, IEnumerable<IEvaluate<T>> parameters)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		if (!Registry.Arithmetic.Functions.Contains(fn))
@@ -148,12 +152,13 @@ public static partial class EvaluationCatalogExtensions
 			Registry.Arithmetic.GetFunction(c, fn, parameters.ToArray()));
 	}
 
-	public static IEvaluate<double>? ApplyRandomFunction(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T>? ApplyRandomFunction<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var c = catalog.Catalog;
@@ -161,12 +166,13 @@ public static partial class EvaluationCatalogExtensions
 		return n is null ? null : c.ApplyClone(node, _ => n);
 	}
 
-	public static IEvaluate<double> ApplyFunctionAt(
-		this EvalDoubleVariationCatalog catalog,
-		Node<IEvaluate<double>> root, int descendantIndex, char fn, IEnumerable<IEvaluate<double>> parameters)
+	public static IEvaluate<T> ApplyFunctionAt<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		Node<IEvaluate<T>> root, int descendantIndex, char fn, IEnumerable<IEvaluate<T>> parameters)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		if (root is null) throw new ArgumentNullException(nameof(root));
+		root.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return ApplyFunction(catalog,
@@ -174,12 +180,13 @@ public static partial class EvaluationCatalogExtensions
 				.ElementAt(descendantIndex).Parent!, fn, parameters);
 	}
 
-	public static IEvaluate<double> IncreaseParameterExponents(
-		this EvalDoubleVariationCatalog catalog,
-		IEvaluate<double> root)
+	public static IEvaluate<T> IncreaseParameterExponents<T>(
+		this EvaluationCatalog<T>.VariationCatalog catalog,
+		IEvaluate<T> root)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		if (root is null) throw new ArgumentNullException(nameof(root));
+		root.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		if (root is not IParent)
@@ -189,7 +196,7 @@ public static partial class EvaluationCatalogExtensions
 		var tree = cat.Factory.Map(root);
 		foreach (var p in tree
 			.GetDescendantsOfType()
-			.Where(d => d.Value is IParameter<double>)
+			.Where(d => d.Value is IParameter<T>)
 			.ToArray())
 		{
 			if (p.Parent is null)
@@ -198,7 +205,7 @@ public static partial class EvaluationCatalogExtensions
 				continue; // Should never happen.
 			}
 
-			if (p.Parent.Value is Exponent<double> exponent && exponent.Power is IConstant<double> c)
+			if (p.Parent.Value is Exponent<T> exponent && exponent.Power is IConstant<T> c)
 			{
 				var a = Math.Abs(c.Value);
 				var direction = c.Value < 0 ? -1 : +1;
@@ -225,10 +232,10 @@ public static partial class EvaluationCatalogExtensions
 	public static IEvaluate<TResult> FlattenProductofSums<TResult>(
 		this EvaluationCatalog<TResult>.VariationCatalog catalog,
 		IEvaluate<TResult> root)
-		where TResult : notnull, IComparable<TResult>, IComparable
+		where TResult : notnull, INumber<TResult>
 	{
 		catalog.ThrowIfNull();
-		if (root is null) throw new ArgumentNullException(nameof(root));
+		root.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		var cat = catalog.Catalog;
