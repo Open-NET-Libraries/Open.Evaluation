@@ -137,7 +137,7 @@ public static class Registry
 			Glyphs.SquareRoot => throw new NotSupportedException("Can only get square-roots from confirmed floating/decimal point capable types."),
 			Glyphs.Exponent => throw new ArgumentException("Must have 2 child params for an exponent."),
 			_ => throw new ArgumentException("Invalid function.", nameof(op)),
-		}; ;
+		};
 	}
 
 	public static IEvaluate<T> GetFloatFunction<T>(

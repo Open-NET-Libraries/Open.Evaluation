@@ -7,11 +7,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Open.Evaluation", "source\O
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Open.Evaluation.Tests", "tests\Open.Evaluation.Tests.csproj", "{972D50BC-46F8-42F6-BEAD-678F27C4A1A2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open.Evaluation.Boolean", "Open.Evaluation.Boolean\Open.Evaluation.Boolean.csproj", "{082DC797-62BB-4BE9-89CB-44467D60EC88}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Open.Evaluation.Boolean", "Open.Evaluation.Boolean\Open.Evaluation.Boolean.csproj", "{082DC797-62BB-4BE9-89CB-44467D60EC88}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open.Evaluation.Core", "Open.Evaluation.Core\Open.Evaluation.Core.csproj", "{9F2891D0-4325-420D-88C0-90B98AB71AE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Open.Evaluation.Core", "Open.Evaluation.Core\Open.Evaluation.Core.csproj", "{9F2891D0-4325-420D-88C0-90B98AB71AE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Open.Evaluation.Arithmetic", "Open.Evaluation.Arithmetic\Open.Evaluation.Arithmetic.csproj", "{3C5EEDBA-0B91-4103-9A8B-1D1E955284B1}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Open.Evaluation.Arithmetic", "Open.Evaluation.Arithmetic\Open.Evaluation.Arithmetic.csproj", "{3C5EEDBA-0B91-4103-9A8B-1D1E955284B1}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{904C8BE4-8969-43FD-ACEC-5B8124A14696}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

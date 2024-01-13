@@ -10,6 +10,4 @@ namespace Open.Evaluation.Core;
 /// </summary>
 public interface IFunction<TResult>
 	: IEvaluate<TResult>, ISymbolized
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
-{
-}
+	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>;

@@ -150,8 +150,10 @@ public partial class Sum<TResult> :
 		foreach (var child in children.OfType<IConstant<TResult>>())
 		{
 			var c = child.Value;
+#pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable CS1718 // Comparison made to same variable
 			if (c != c) return catalog.GetConstant(c);
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 #pragma warning restore CS1718 // Comparison made to same variable
 		}
 

@@ -15,6 +15,4 @@ public interface IParameter : IEvaluate
 
 /// <inheritdoc cref="IParameter"/>
 public interface IParameter<T> : IEvaluate<T>, IParameter
-	where T : notnull, IEquatable<T>, IComparable<T>
-{
-}
+	where T : notnull, IEquatable<T>, IComparable<T>;

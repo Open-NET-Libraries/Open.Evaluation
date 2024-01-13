@@ -95,8 +95,7 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null)
-			throw new ArgumentNullException(nameof(catalog));
+		ArgumentNullException.ThrowIfNull(catalog);
 		if (node?.Value is null)
 			throw new ArgumentException("No node value.", nameof(node));
 		if (node.Value is not IParameter p)
@@ -121,19 +120,18 @@ public static partial class EvaluationCatalogExtensions
 		this EvaluationCatalog<double>.MutationCatalog catalog,
 		Node<IEvaluate<double>> node)
 	{
-		if (catalog is null)
-			throw new ArgumentNullException(nameof(catalog));
+		ArgumentNullException.ThrowIfNull(catalog);
 		node.ThrowIfNull();
 
 		if (node.Value is not IOperator o)
 			throw new ArgumentException("Does not contain an Operation.", nameof(node));
 
 		var symbol = o.Symbol;
-		var isFn = Registry.Arithmetic.Functions.Contains(symbol);
+		var isFn = Registry.Functions.Contains(symbol);
 		if (isFn)
 		{
 			// Functions with no other options?
-			if (Registry.Arithmetic.Functions.Length < 2)
+			if (Registry.Functions.Length < 2)
 			{
 				if (node.Count < 2)
 					return null;
@@ -144,7 +142,7 @@ public static partial class EvaluationCatalogExtensions
 		if (!isFn)
 		{
 			// Never will happen, but logic states that this is needed.
-			if (Registry.Arithmetic.Operators.Length < 2)
+			if (Registry.Operators.Length < 2)
 				return null;
 		}
 
@@ -160,7 +158,7 @@ public static partial class EvaluationCatalogExtensions
 		where T: notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		ArgumentNullException.ThrowIfNull(node);
 		Contract.EndContractBlock();
 
 		return node.Value switch
@@ -181,7 +179,7 @@ public static partial class EvaluationCatalogExtensions
 		Node<IEvaluate<double>> node)
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		ArgumentNullException.ThrowIfNull(node);
 		Contract.EndContractBlock();
 
 		return catalog.Catalog.ApplyClone(node, (catalog, node), (newNode, param) =>
@@ -209,7 +207,7 @@ public static partial class EvaluationCatalogExtensions
 		Node<IEvaluate<double>> node, double value)
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		ArgumentNullException.ThrowIfNull(node);
 		if (value == 0) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
 		Contract.EndContractBlock();
 
@@ -229,7 +227,7 @@ public static partial class EvaluationCatalogExtensions
 		Node<IEvaluate<double>> node)
 	{
 		catalog.ThrowIfNull();
-		if (node is null) throw new ArgumentNullException(nameof(node));
+		ArgumentNullException.ThrowIfNull(node);
 		Contract.EndContractBlock();
 
 		return node.Value is Exponent<double>
