@@ -19,10 +19,12 @@ public static class CatalogExtensions
 	static readonly Regex registeredOnly = new(@"^(?:{(\w+)})$", RegexOptions.Compiled);
 
 	static Regex GetOperatorRegex(string op) => new(
-			string.Format(CultureInfo.InvariantCulture, @"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)", @"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
+			string.Format(CultureInfo.InvariantCulture,
+				@"\(\s*{0} (?:\s*{1}\s* {0} )+\s*\)",
+				@"([-+]?\s*{\w+}|[-+]?\s*\d+(?:\.\d*)*)", op),
 			RegexOptions.IgnorePatternWhitespace | RegexOptions.Compiled);
 
-	static readonly Regex products = GetOperatorRegex(@"\*");
+	static readonly Regex products = GetOperatorRegex("[*x]");
 	static readonly Regex sums = GetOperatorRegex(@"\+");
 	static readonly Regex exponents = GetOperatorRegex(@"\^");
 	static readonly ImmutableArray<char> plusMinus = ImmutableArray.Create('+', '-');
