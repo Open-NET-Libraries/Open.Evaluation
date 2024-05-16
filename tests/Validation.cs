@@ -1,5 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Tests;
 

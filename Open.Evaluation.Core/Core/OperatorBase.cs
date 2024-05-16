@@ -131,19 +131,12 @@ public abstract class OperatorBase<TChild, TResult>
 	}
 }
 
-public abstract class OperatorBase<TResult>
-	: OperatorBase<IEvaluate<TResult>, TResult>
+public abstract class OperatorBase<TResult>(
+	Symbol symbol, IEnumerable<IEvaluate<TResult>> children,
+	bool reorderChildren = false, int minimumChildren = 1)
+	: OperatorBase<IEvaluate<TResult>, TResult>(symbol, children, reorderChildren, minimumChildren)
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	protected OperatorBase(
-		Symbol symbol,
-		IEnumerable<IEvaluate<TResult>> children,
-		bool reorderChildren = false,
-		int minimumChildren = 1)
-		: base(symbol, children, reorderChildren, minimumChildren)
-	{
-	}
-
 	protected new IEnumerable<EvaluationResult<TResult>> ChildResults(Context context)
 	{
 		foreach (var child in Children)

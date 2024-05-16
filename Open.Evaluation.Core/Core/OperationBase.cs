@@ -8,13 +8,11 @@ using Throw;
 
 namespace Open.Evaluation.Core;
 
-public abstract class OperationBase<TResult>
+public abstract class OperationBase<TResult>(Symbol symbol)
 	: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<IEvaluate<TResult>>
 	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
 {
-	protected OperationBase(Symbol symbol) => Symbol = symbol;
-
-	public Symbol Symbol { get; }
+	public Symbol Symbol { get; } = symbol;
 
 	protected virtual IEvaluate<TResult> Reduction(
 		ICatalog<IEvaluate<TResult>> catalog)

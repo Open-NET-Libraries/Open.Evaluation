@@ -1,8 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Catalogs;
+using Open.Evaluation.Arithmetic;
 using Open.Evaluation.Core;
-using System;
-using System.Linq;
 
 namespace Open.Evaluation.Tests;
 
@@ -18,7 +16,7 @@ public abstract class ParseTestBase
 	protected readonly IEvaluate<double> Evaluation;
 	protected readonly IEvaluate<double> EvaluationReduced;
 
-	protected ParseTestBase(string format, string representation = null, string reduction = null)
+	protected ParseTestBase(string format, string? representation = null, string? reduction = null)
 	{
 		Format = format ?? throw new ArgumentNullException(nameof(format));
 		Representation = representation ?? format;

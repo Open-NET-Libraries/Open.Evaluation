@@ -1,5 +1,4 @@
-﻿using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Core;
+﻿using Open.Evaluation.Core;
 using Open.Hierarchy;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;

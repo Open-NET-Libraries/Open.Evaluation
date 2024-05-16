@@ -160,25 +160,17 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		}
 	}
 
-	public abstract class SubmoduleBase
+	public abstract class SubmoduleBase(ICatalog<T> catalog, Node<T>.Factory factory)
 	{
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
-		public ICatalog<T> Catalog { get; }
-		internal readonly Node<T>.Factory Factory;
-
-		protected SubmoduleBase(ICatalog<T> catalog, Node<T>.Factory factory)
-		{
-			Catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
-			Factory = factory ?? throw new ArgumentNullException(nameof(factory));
-		}
+		public ICatalog<T> Catalog { get; } = catalog ?? throw new ArgumentNullException(nameof(catalog));
+		internal readonly Node<T>.Factory Factory = factory ?? throw new ArgumentNullException(nameof(factory));
 	}
 
-	public abstract class SubmoduleBase<TCatalog> : SubmoduleBase
+	public abstract class SubmoduleBase<TCatalog>(TCatalog catalog)
+		: SubmoduleBase(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory)
 		where TCatalog : Catalog<T>
 	{
-		internal new TCatalog Catalog { get; }
-
-		protected SubmoduleBase(TCatalog catalog)
-			: base(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory) => Catalog = catalog;
+		internal new TCatalog Catalog { get; } = catalog;
 	}
 }

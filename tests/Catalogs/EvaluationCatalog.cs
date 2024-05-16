@@ -1,8 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Catalogs;
-using Open.Evaluation.Core;
-using System.Linq;
 
 namespace Open.Evaluation.Tests.Catalogs;
 

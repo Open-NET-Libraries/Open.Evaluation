@@ -1,7 +1,4 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Catalogs;
-using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Tests;
 
