@@ -48,7 +48,7 @@ public class Constant<TValue>
 		=> catalog.Register(ToStringRepresentation(in param), _ => new Constant<TValue>(param));
 }
 
-public static partial class ConstantExtensions
+public static class ConstantExtensions
 {
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Constant<TValue> GetConstant<TValue>(
