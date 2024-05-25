@@ -10,7 +10,7 @@ public class Constant<TValue>
 	: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
 	where TValue : notnull, IEquatable<TValue>, IComparable<TValue>
 {
-	protected Constant(TValue value)
+	protected Constant(in TValue value)
 	{
 		Value = value.ThrowIfNull();
 		_result = new(Value, Description);
@@ -37,11 +37,16 @@ public class Constant<TValue>
 		=> _result;
 
 	internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
-		=> catalog.Register(ToStringRepresentation(in value), _ => new Constant<TValue>(value));
+	{
+		// TODO: maybe introduce a faster method of acquiring a contant?
+		var constant = catalog.Register(ToStringRepresentation(in value), _ => new Constant<TValue>(value));
+		Debug.Assert(constant.Value.Equals(value));
+		return constant;
+	}
 
 	/// <inheritdoc />
 	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue param)
-		=> catalog.Register(ToStringRepresentation(in param), _ => new Constant<TValue>(param));
+		=> Create(catalog, param);
 
 	public static implicit operator TValue(Constant<TValue> constant)
 		=> constant.Value;
