@@ -144,6 +144,6 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		: SubmoduleBase(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory)
 		where TCatalog : Catalog<T>
 	{
-		internal new TCatalog Catalog { get; } = catalog;
+		public new TCatalog Catalog { get; } = catalog;
 	}
 }

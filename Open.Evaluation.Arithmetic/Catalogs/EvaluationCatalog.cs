@@ -1,11 +1,4 @@
-﻿using Open.Evaluation.Core;
-using Open.Hierarchy;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Numerics;
-using Throw;
-
-namespace Open.Evaluation.Arithmetic;
+﻿namespace Open.Evaluation.Arithmetic;
 
 public partial class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	where T : notnull, INumber<T>

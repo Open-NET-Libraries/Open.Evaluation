@@ -3,18 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using Open.Collections;
-using Open.Disposable;
-using Open.Evaluation.Core;
-using Open.Numeric.Primes;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Numerics;
-using System.Text;
-using System.Text.RegularExpressions;
-using Throw;
-
 namespace Open.Evaluation.Arithmetic;
 
 public partial class Product<TResult> :
@@ -26,7 +14,7 @@ public partial class Product<TResult> :
 		: base(Symbols.Product, children, true, 2) { }
 
 	protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
-		: this(Enumerable.Repeat(first, 1).Concat(rest)) { }
+		: this([first, ..rest]) { }
 
 	protected override int ConstantPriority => -1;
 
@@ -47,13 +35,11 @@ public partial class Product<TResult> :
 			}
 
 			// Check for NaN.
-#pragma warning disable CS1718 // Comparison made to same variable
-			if (r != r)
+			if (r.IsNaN())
 			{
 				result = r;
 				break;
 			}
-#pragma warning restore CS1718 // Comparison made to same variable
 
 			result *= r;
 		}
@@ -73,7 +59,7 @@ public partial class Product<TResult> :
 		// Phase 1: Flatten products of products.
 		var children = lease.Item;
 		children.AddRange(catalog
-			.Flatten<Product<TResult>>(Children)
+			.Flatten(Children, static parent => parent is Product<TResult>)
 			.Where(c => c != one)); // ** children's reduction is done here.
 
 		// Phase 3: Try to extract common multiples...

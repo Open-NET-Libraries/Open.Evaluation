@@ -1,7 +1,4 @@
-﻿using System.Numerics;
-using System.Runtime.CompilerServices;
-
-namespace Open.Evaluation.Arithmetic;
+﻿namespace Open.Evaluation.Arithmetic;
 internal static class Value<T> where T
 	: notnull, INumber<T>
 {
@@ -29,4 +26,13 @@ internal static class ValueUtility
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsInteger<T>(this T value)
 		where T : notnull, INumber<T> => value % T.One == T.Zero;
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	public static bool IsNaN<T>(this INumber<T> number)
+		where T : notnull, INumber<T>
+#pragma warning disable IDE0079 // Remove unnecessary suppression
+#pragma warning disable CS1718 // Comparison made to same variable
+		=> number != number;
+#pragma warning restore IDE0079 // Remove unnecessary suppression
+#pragma warning restore CS1718 // Comparison made to same variable
 }

@@ -1,6 +1,4 @@
-﻿using Open.Evaluation.Core;
-
-namespace Open.Evaluation.Arithmetic;
+﻿namespace Open.Evaluation.Arithmetic;
 public static class Symbols
 {
 	public static readonly Symbol Sum = new(Glyphs.Sum, true);

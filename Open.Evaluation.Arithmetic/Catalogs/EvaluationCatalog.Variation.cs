@@ -1,11 +1,4 @@
 ﻿using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Core;
-using Open.Hierarchy;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Numerics;
-using Throw;
 
 namespace Open.Evaluation.Arithmetic;
 public partial class EvaluationCatalog<T>
@@ -144,12 +137,12 @@ public static partial class CatalogExtensions
 		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		if (!Registry.Arithmetic.Functions.Contains(fn))
+		if (!Registry.Functions.Contains(fn))
 			throw new ArgumentException("Invalid function operator.", nameof(fn));
 
 		var c = catalog.Catalog;
 		return c.ApplyClone(node, _ =>
-			Registry.Arithmetic.GetFunction(c, fn, parameters.ToArray()));
+			Registry.GetFunction(c, fn, parameters.ToArray()));
 	}
 
 	public static IEvaluate<T>? ApplyRandomFunction<T>(
@@ -162,7 +155,7 @@ public static partial class CatalogExtensions
 		Contract.EndContractBlock();
 
 		var c = catalog.Catalog;
-		var n = Registry.Arithmetic.GetRandomFunction(c, node.Value!);
+		var n = Registry.GetRandomFunction(c, node.Value!);
 		return n is null ? null : c.ApplyClone(node, _ => n);
 	}
 

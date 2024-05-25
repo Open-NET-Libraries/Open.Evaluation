@@ -42,6 +42,9 @@ public class Constant<TValue>
 	/// <inheritdoc />
 	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue param)
 		=> catalog.Register(ToStringRepresentation(in param), _ => new Constant<TValue>(param));
+
+	public static implicit operator TValue(Constant<TValue> constant)
+		=> constant.Value;
 }
 
 public static class ConstantExtensions

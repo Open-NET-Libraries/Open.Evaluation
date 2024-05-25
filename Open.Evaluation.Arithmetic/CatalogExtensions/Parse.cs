@@ -1,9 +1,4 @@
-﻿using Open.Disposable;
-using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Core;
-using System.Collections.Immutable;
-using System.Globalization;
-using System.Text.RegularExpressions;
+﻿using System.Globalization;
 
 namespace Open.Evaluation.Arithmetic;
 
@@ -108,7 +103,7 @@ public static partial class CatalogExtensions
 				var key = $"X{++count}";
 				var sm = SubMatches(catalog, registry, m).ToArray();
 				if (sm.Length != 2) throw new FormatException($"Exponent with {sm.Length} elements defined.");
-				registry.Add(key, catalog.GetExponent(sm[0], sm.Last()));
+				registry.Add(key, catalog.GetExponent(sm[0], sm[^1]));
 				return $"{{{key}}}";
 			});
 		}

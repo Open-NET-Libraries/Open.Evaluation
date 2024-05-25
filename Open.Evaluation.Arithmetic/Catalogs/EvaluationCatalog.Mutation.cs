@@ -1,12 +1,4 @@
-﻿using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Core;
-using Open.Hierarchy;
-using Open.RandomizationExtensions;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Numerics;
-using Throw;
+﻿using Open.RandomizationExtensions;
 
 using IFunction = Open.Evaluation.Core.IFunction<double>;
 using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<double>, double>;
@@ -61,7 +53,7 @@ public static partial class CatalogExtensions
 					// Sorry, not gonna mess with unreal (sqrt neg numbers yet).
 					if (!parentIsSquareRoot()) return result;
 
-					n = catalog.Factory.Map(result);
+					n = node.Source.Map(result);
 					if (Randomizer.Random.Next(2) == 0)
 						goto case 1;
 
@@ -148,8 +140,8 @@ public static partial class CatalogExtensions
 
 		var c = catalog.Catalog;
 		return c.ApplyClone(node, _ => isFn
-			? Registry.Arithmetic.GetRandomFunction(c, o.Children.ToArray(), symbol)!
-			: Registry.Arithmetic.GetRandomOperator(c, o.Children, symbol)!);
+			? Registry.GetRandomFunction(c, o.Children.ToArray(), symbol)!
+			: Registry.GetRandomOperator(c, o.Children, symbol)!);
 	}
 
 	public static IEvaluate<T>? AddParameter<T>(
@@ -198,7 +190,7 @@ public static partial class CatalogExtensions
 					: new IEvaluate<double>[] { nv, parameter }
 				: (new[] { parameter, nv });
 
-			return Registry.Arithmetic.GetRandomOperator(catalog, children)!; // Will throw in ApplyClone if null.
+			return Registry.GetRandomOperator(catalog, children)!; // Will throw in ApplyClone if null.
 		});
 	}
 
@@ -216,7 +208,7 @@ public static partial class CatalogExtensions
 			{
 				var power = newNode.Children[1];
 				newNode.Replace(power,
-					catalog.Factory.Map(catalog.Catalog.SumOf(in value, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
+					node.Source.Map(catalog.Catalog.SumOf(in value, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
 			})
 			: catalog.Catalog.ApplyClone(node, newNode =>
 					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), 1 + value));
@@ -235,7 +227,7 @@ public static partial class CatalogExtensions
 			{
 				var power = newNode.Children[1];
 				newNode.Replace(power,
-					catalog.Factory.Map(catalog.Catalog.ProductOf(2, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
+					node.Source.Map(catalog.Catalog.ProductOf(2, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
 			})
 			: catalog.Catalog.ApplyClone(node, newNode =>
 					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), 2));

@@ -1,11 +1,4 @@
-﻿using Open.Evaluation.Core;
-using Open.Hierarchy;
-using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using System.Numerics;
-using Throw;
-
-namespace Open.Evaluation.Arithmetic;
+﻿namespace Open.Evaluation.Arithmetic;
 
 [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
 public static partial class CatalogExtensions
@@ -77,7 +70,9 @@ public static partial class CatalogExtensions
 		this ICatalog<IEvaluate<T>> catalog,
 		IEvaluate<T>? node)
 		where T : notnull, INumber<T>
-		=> node is IParent<IEvaluate<T>> n ? catalog.GetMultiple(n) : catalog.GetConstant(T.MultiplicativeIdentity);
+		=> node is IParent<IEvaluate<T>> n
+		? catalog.GetMultiple(n)
+		: catalog.GetConstant(T.MultiplicativeIdentity);
 
 	/// <summary>
 	/// Applies a multiple to any node.
