@@ -1,5 +1,4 @@
-﻿using Open.Hierarchy;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
@@ -32,7 +31,4 @@ public interface ICatalog<T> : IDisposable
 
 	// ReSharper disable once UnusedMemberInSuper.Global
 	bool TryGetReduced(T source, [NotNull] out T reduction);
-
-	IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)
-		where TFlat : IParent<T>;
 }

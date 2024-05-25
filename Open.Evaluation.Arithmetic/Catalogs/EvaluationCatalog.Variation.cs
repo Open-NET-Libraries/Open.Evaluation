@@ -22,7 +22,7 @@ public partial class EvaluationCatalog<T>
 	}
 }
 
-public static partial class EvaluationCatalogExtensions
+public static partial class CatalogExtensions
 {
 	public static bool IsValidForRemoval<T>(this Node<IEvaluate<T>> gene, bool ifRoot = false)
 		where T : notnull, INumber<T>

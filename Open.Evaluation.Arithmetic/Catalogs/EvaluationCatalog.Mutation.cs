@@ -28,7 +28,7 @@ public partial class EvaluationCatalog<T>
 	}
 }
 
-public static partial class EvaluationCatalogExtensions
+public static partial class CatalogExtensions
 {
 	const string CannotOperatePowerNullValue = "Cannot operate when the power.Value is null.";
 

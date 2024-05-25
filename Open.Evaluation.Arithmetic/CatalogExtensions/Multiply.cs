@@ -8,7 +8,7 @@ using Throw;
 namespace Open.Evaluation.Arithmetic;
 
 [SuppressMessage("ReSharper", "CompareOfFloatsByEqualityOperator")]
-public static partial class EvaluationCatalogExtensions
+public static partial class CatalogExtensions
 {
 	const string CannotOperateNewNodeNullValue = "Cannot operate when the newNode.Value is null.";
 
@@ -21,7 +21,7 @@ public static partial class EvaluationCatalogExtensions
 	/// <returns>The resultant root evaluation.</returns>
 	[SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Preferred verbosity")]
 	public static IEvaluate<T> MultiplyNode<T>(
-		this EvaluationCatalog<T> catalog,
+		this ICatalog<IEvaluate<T>> catalog,
 		Node<IEvaluate<T>> sourceNode, T multiple)
 		where T : notnull, INumber<T>
 	{
@@ -61,20 +61,20 @@ public static partial class EvaluationCatalogExtensions
 	}
 
 	public static IEvaluate<T> MultiplyNodeDescendant<T>(
-		this EvaluationCatalog<T> catalog,
+		this ICatalog<IEvaluate<T>> catalog,
 		Node<IEvaluate<T>> sourceNode, int descendantIndex, T multiple)
 		where T : notnull, INumber<T>
 		=> catalog.MultiplyNode(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), multiple);
 
 	public static Constant<T> GetMultiple<T, TParent>(
-		this EvaluationCatalog<T> catalog,
+		this ICatalog<IEvaluate<T>> catalog,
 		[DisallowNull] TParent n)
 		where T : notnull, INumber<T>
 		where TParent : IParent<IEvaluate<T>>
 		=> catalog.ProductOfConstants(n.Children.OfType<IConstant<T>>());
 
 	public static Constant<T> GetMultiple<T>(
-		this EvaluationCatalog<T> catalog,
+		this ICatalog<IEvaluate<T>> catalog,
 		IEvaluate<T>? node)
 		where T : notnull, INumber<T>
 		=> node is IParent<IEvaluate<T>> n ? catalog.GetMultiple(n) : catalog.GetConstant(T.MultiplicativeIdentity);
@@ -87,7 +87,7 @@ public static partial class EvaluationCatalogExtensions
 	/// <param name="delta">The value to multiply by.</param>
 	/// <returns>The resultant root evaluation.</returns>
 	public static IEvaluate<T> AdjustNodeMultiple<T>(
-		this EvaluationCatalog<T> catalog,
+		this ICatalog<IEvaluate<T>> catalog,
 		Node<IEvaluate<T>> sourceNode, T delta)
 		where T : notnull, INumber<T>
 	{
@@ -117,7 +117,7 @@ public static partial class EvaluationCatalogExtensions
 	}
 
 	public static IEvaluate<T> AdjustNodeMultipleOfDescendant<T>(
-		this EvaluationCatalog<T> catalog,
+		this ICatalog<IEvaluate<T>> catalog,
 		Node<IEvaluate<T>> sourceNode, int descendantIndex, T delta)
 		where T : notnull, INumber<T>
 		=> catalog.AdjustNodeMultiple(sourceNode.GetDescendantsOfType().ElementAt(descendantIndex), delta);

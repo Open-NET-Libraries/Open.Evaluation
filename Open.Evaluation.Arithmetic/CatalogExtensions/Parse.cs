@@ -5,7 +5,7 @@ using System.Collections.Immutable;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Open.Evaluation;
+namespace Open.Evaluation.Arithmetic;
 
 public static partial class CatalogExtensions
 {

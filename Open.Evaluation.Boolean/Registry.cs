@@ -2,7 +2,6 @@
 using Open.Evaluation.Core;
 using Open.RandomizationExtensions;
 using System.Collections.Immutable;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using Throw;
 
@@ -20,7 +19,7 @@ public static class Registry
 	{
 		catalog.ThrowIfNull();
 		children.ThrowIfNull();
-		Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
+		op.Throw("May have created a 'default' value for an operator upstream.").IfEquals('\0').OnlyInDebug();
 		Contract.EndContractBlock();
 
 		return op switch

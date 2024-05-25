@@ -12,11 +12,15 @@ namespace Open.Evaluation.Core;
 public class Catalog<T> : DisposableBase, ICatalog<T>
 	where T : class, IEvaluate
 {
-	//private static Catalog<T>? _instance;
-	//internal static Catalog<T> Instance
-	//	=> LazyInitializer.EnsureInitialized(ref _instance);
+	private static Catalog<T>? _instance;
+	public static Catalog<T> Shared
+		=> LazyInitializer.EnsureInitialized(ref _instance);
 
-	protected override void OnDispose() => Registry.Clear(); //Reductions.Clear();
+	protected override void OnDispose()
+	{
+		Registry.Clear();
+		Reductions.Clear();
+	}
 
 	readonly ConcurrentDictionary<string, T> Registry = new();
 
@@ -133,31 +137,6 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	{
 		reduction = GetReduced(source);
 		return !reduction.Equals(source);
-	}
-
-	public IEnumerable<T> Flatten<TFlat>(IEnumerable<T> source)
-		where TFlat : IParent<T>
-	{
-		return source is null
-			? throw new ArgumentNullException(nameof(source))
-			: FlattenCore(this, source);
-
-		static IEnumerable<T> FlattenCore(Catalog<T> catalog, IEnumerable<T> source)
-		{
-			foreach (var child in source)
-			{
-				var c = catalog.GetReduced(child);
-				if (c is TFlat flat)
-				{
-					foreach (var sc in flat.Children)
-						yield return sc;
-				}
-				else
-				{
-					yield return c;
-				}
-			}
-		}
 	}
 
 	public abstract class SubmoduleBase(ICatalog<T> catalog, Node<T>.Factory factory)
