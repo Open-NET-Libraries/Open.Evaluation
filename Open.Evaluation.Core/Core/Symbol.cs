@@ -1,6 +1,4 @@
-﻿using Throw;
-
-namespace Open.Evaluation.Core;
+﻿namespace Open.Evaluation.Core;
 public readonly record struct Symbol
 {
 	public Symbol(char character, bool pad = false)

@@ -4,7 +4,6 @@
  */
 
 using System.Diagnostics.CodeAnalysis;
-using Throw;
 
 namespace Open.Evaluation.Core;
 

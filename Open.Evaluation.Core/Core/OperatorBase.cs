@@ -3,15 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using Open.Disposable;
-using Open.Hierarchy;
-using System.Collections.Immutable;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Throw;
-
 namespace Open.Evaluation.Core;
 
 public abstract class OperatorBase<TChild, TResult>
@@ -23,7 +14,7 @@ public abstract class OperatorBase<TChild, TResult>
 	protected OperatorBase(Symbol symbol, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1)
 		: base(symbol)
 	{
-		children.ThrowIfNull().OnlyInDebug();
+		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		if (reorderChildren) children = children.OrderBy(c => c, this);

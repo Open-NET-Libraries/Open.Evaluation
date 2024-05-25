@@ -3,8 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using Open.Hierarchy;
-
 namespace Open.Evaluation.Core;
 
 /// <summary>

@@ -1,29 +1,27 @@
-﻿using Open.Hierarchy;
-using System.Diagnostics;
-using System.Diagnostics.Contracts;
-using Throw;
-
-namespace Open.Evaluation.Core;
+﻿namespace Open.Evaluation.Core;
 
 public static class CatalogExtensions
 {
 	public static IEnumerable<T> Flatten<T>(
 		this ICatalog<T> catalog,
-		IEnumerable<T> source)
+		IEnumerable<T> source,
+		Func<IParent<T>, bool>? predicate = null)
 		where T : class, IEvaluate
 	{
-		return source is null
-			? throw new ArgumentNullException(nameof(source))
-			: FlattenCore(catalog, source);
+		catalog.ThrowIfNull();
+		source.ThrowIfNull();
+		Contract.EndContractBlock();
 
-		static IEnumerable<T> FlattenCore(ICatalog<T> catalog, IEnumerable<T> source)
+		return FlattenCore(catalog, source, predicate ?? (static _ => true));
+
+		static IEnumerable<T> FlattenCore(ICatalog<T> catalog, IEnumerable<T> source, Func<IParent<T>, bool> predicate)
 		{
 			foreach (var child in source)
 			{
 				var c = catalog.GetReduced(child);
-				if (c is IParent<T> flat)
+				if (c is IParent<T> parent && predicate(parent))
 				{
-					foreach (var sc in flat.Children)
+					foreach (var sc in parent.Children)
 						yield return sc;
 				}
 				else
@@ -49,8 +47,8 @@ public static class CatalogExtensions
 		bool operateDirectly = false)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
-		target.ThrowIfNull();
-		Contract.Ensures(Contract.Result<Node<IEvaluate<T>>>() is not null);
+		catalog.ThrowIfNull();
+		target.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		if (!operateDirectly)
@@ -132,6 +130,11 @@ public static class CatalogExtensions
 		Action<Node<IEvaluate<T>>> clonedNodeHandler)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull().OnlyInDebug();
+		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
 		var node = sourceNode.CloneTree(); // * new 1
 		var root = node.Root;
 		try
@@ -157,8 +160,9 @@ public static class CatalogExtensions
 		Func<Node<IEvaluate<T>>, IEvaluate<T>> clonedNodeHandler)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
-		sourceNode.ThrowIfNull();
-		clonedNodeHandler.ThrowIfNull();
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull().OnlyInDebug();
+		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		var node = sourceNode.CloneTree(); // * new 1
@@ -201,8 +205,9 @@ public static class CatalogExtensions
 		Func<Node<IEvaluate<T>>, TParam, IEvaluate<T>> clonedNodeHandler)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
-		sourceNode.ThrowIfNull();
-		clonedNodeHandler.ThrowIfNull();
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull().OnlyInDebug();
+		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		var node = sourceNode.CloneTree(); // * new 1
@@ -246,6 +251,11 @@ public static class CatalogExtensions
 		Func<Node<IEvaluate<T>>, Node<IEvaluate<T>>> clonedNodeHandler)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
+		catalog.ThrowIfNull();
+		sourceNode.ThrowIfNull().OnlyInDebug();
+		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
 		var node = sourceNode.CloneTree(); // * new 1
 		var root = node.Root;
 		var parent = node.Parent;
@@ -289,6 +299,7 @@ public static class CatalogExtensions
 		Node<IEvaluate<T>> node)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
+		catalog.ThrowIfNull();
 		node.ThrowIfNull();
 		var parent = node.Parent
 			?? throw new ArgumentException("node cannot be removed without a parent.", nameof(node));
