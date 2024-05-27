@@ -147,9 +147,10 @@ public class Context : DisposableBase
 
 		for (var i = 0; i < value.Length; i++)
 		{
+			ref readonly T v = ref value[i];
 			pairs[i] = Collections.KeyValuePair.Create(
 				(IEvaluate)Parameter<T>.Create(catalog, i),
-				new Lazy<IEvaluationResult>(EvaluationResult.Create(value[i])));
+				new Lazy<IEvaluationResult>(EvaluationResult.Create(v)));
 		}
 
 		return AddRange(pairs);

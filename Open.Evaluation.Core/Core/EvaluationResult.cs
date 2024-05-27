@@ -11,7 +11,7 @@ public interface IEvaluationResult : IDescribe
 public readonly record struct EvaluationResult<T> : IEvaluationResult
 {
 	public EvaluationResult(
-		[DisallowNull] T result,
+		[DisallowNull] in T result,
 		Lazy<string> description)
 	{
 		Result = result ?? throw new ArgumentNullException(nameof(result));
@@ -66,9 +66,9 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 public static class EvaluationResult
 {
 	public static EvaluationResult<T> Create<T>(
-		[DisallowNull] T result,
+		[DisallowNull] in T result,
 		Lazy<string> description)
-		=> new(result, description);
+		=> new(in result, description);
 
 	public static EvaluationResult<T> Create<T>(
 		[DisallowNull] T result,

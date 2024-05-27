@@ -79,13 +79,13 @@ public static class Product
 			var a = (Sum<double>)catalog.Parse("({0} + {1})");
 			var b = (Sum<double>)catalog.Parse("({2} + {3})");
 
-			Validate(catalog.ProductOfSums(a, b));
-			Validate(catalog.ProductOfSums(new Sum<double>[] { a, b }));
+			Validate(catalog, catalog.ProductOfSums(a, b));
+			Validate(catalog, catalog.ProductOfSums(new Sum<double>[] { a, b }));
 
 			{
 				var sample = catalog.Parse("(({0} + {1}) * ({2} + {3}))");
 				var reduced = catalog.Variation.FlattenProductofSums(sample);
-				Validate(reduced);
+				Validate(catalog, reduced);
 			}
 
 			{
@@ -95,6 +95,8 @@ public static class Product
 					ReadOnlySpan<double> p = [1, 2, 3, 4];
 					context.Init(catalog, p);
 					var v = sample.Evaluate(context);
+					var vResult = v.Result;
+					var vDesc = v.Description.Value;
 					var reduced = catalog.Variation.FlattenProductofSums(sample);
 					reduced.Description.Value
 						.Should().Be("((({0}²) * {2}) + (({0}²) * {3}) + (({1}²) * {2}) + (({1}²) * {3}) + (2 * {0} * {1} * {2}) + (2 * {0} * {1} * {3}) + ({0} * {2}) + ({1} * {2}))");
@@ -102,9 +104,12 @@ public static class Product
 					Context.Use(c2 =>
 					{
 						ReadOnlySpan<double> p = [1, 2, 3, 4];
-						context.Init(catalog, p);
-						reduced.Evaluate(c2).Result
-							.Should().Be(v.Result);
+						c2.Init(catalog, p);
+						var e = reduced.Evaluate(c2);
+						var eResult = e.Result;
+						var eDesc = e.Description.Value;
+						eResult
+							.Should().Be(vResult, eDesc);
 					});
 				});
 			}
@@ -115,16 +120,15 @@ public static class Product
 		{
 		}
 
-		static void Validate(IEvaluate<double> e)
+		static void Validate(ICatalog<IEvaluate<double>> catalog, IEvaluate<double> e)
 		=> Context.Use(context =>
 		{
-			using var catalog = new EvaluationCatalog<double>();
 			ReadOnlySpan<double> p = [1, 2, 3, 4];
 			context.Init(catalog, p);
 
 			var v = e.Evaluate(context);
 
-			v.Description.Value
+			e.Description.Value
 				.Should().Be("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))");
 
 			v.Result

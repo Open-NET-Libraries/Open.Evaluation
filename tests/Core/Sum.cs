@@ -75,7 +75,7 @@ public static class Sum
 			sum.Description.Value
 				.Should().Be("((9 * ({0}²)) + {1} - (({0}²)))");
 			catalog.GetReduced(sum).Description.Value
-				.Should().Be("((8 * ({0}²)) + {1}");
+				.Should().Be("((8 * ({0}²)) + {1})");
 		}
 	}
 }

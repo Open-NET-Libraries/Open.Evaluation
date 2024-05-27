@@ -5,7 +5,7 @@
 
 namespace Open.Evaluation.Core;
 
-[DebuggerDisplay(@"\{{ID}\}")]
+[DebuggerDisplay(@"\{{Id}\}")]
 public class Parameter<T>
 	: EvaluationBase<T>,
 		IParameter<T>,
@@ -14,18 +14,18 @@ public class Parameter<T>
 	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	protected Parameter(ushort id)
-		=> ID = id;
+		=> Id = id;
 
-	public ushort ID { get; }
+	public ushort Id { get; }
 
 	protected static string ToStringRepresentation(ushort id) => $"{{{id}}}";
 
 	protected override string Describe()
-		=> ToStringRepresentation(ID);
+		=> ToStringRepresentation(Id);
 
 	protected override EvaluationResult<T> EvaluateInternal(Context context)
 		=> context.TryGetResult(this, out EvaluationResult<T> result) ? result
-			: throw new InvalidOperationException($"Parameter {ID} result not found in the context.");
+			: throw new InvalidOperationException($"Parameter {Id} result not found in the context.");
 
 	internal static Parameter<T> Create(ICatalog<IEvaluate<T>> catalog, ushort id)
 		=> catalog.Register(ToStringRepresentation(id), id, (_, id) => new Parameter<T>(id));

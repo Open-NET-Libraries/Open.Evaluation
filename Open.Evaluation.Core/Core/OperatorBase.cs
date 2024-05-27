@@ -100,7 +100,7 @@ public abstract class OperatorBase<TChild, TResult>
 		switch (x)
 		{
 			case IParameter<TResult> aP when y is IParameter<TResult> bP:
-				return aP.ID.CompareTo(bP.ID);
+				return aP.Id.CompareTo(bP.Id);
 
 			case IParameter<TResult> _:
 				return +1;

@@ -10,7 +10,7 @@ namespace Open.Evaluation.Core;
 /// </summary>
 public interface IParameter : IEvaluate
 {
-	ushort ID { get; }
+	ushort Id { get; }
 }
 
 /// <inheritdoc cref="IParameter"/>

@@ -3,6 +3,8 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using static Open.Evaluation.Arithmetic.Exponent;
+
 namespace Open.Evaluation.Arithmetic;
 
 // ReSharper disable once PossibleInfiniteInheritance
@@ -10,9 +12,13 @@ public class Exponent<T> : OperatorBase<T>,
 	IReproducable<(IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>
 	where T : notnull, INumber<T>
 {
+	// Since zero to the power of zero can be undefined or zero, we can leave the formula intact instead of reducing it.
+	private readonly PowerOfZeroReduction _powerOfZeroReduction;
+
 	protected Exponent(
 		IEvaluate<T> @base,
-		IEvaluate<T> power)
+		IEvaluate<T> power,
+		PowerOfZeroReduction powerOfZeroReduction = PowerOfZeroReduction.One)
 		: base(Symbols.Exponent,
 			  // Need to provide to children so a node tree can be built.
 			  new[] { @base, power })
@@ -21,6 +27,7 @@ public class Exponent<T> : OperatorBase<T>,
 		power.ThrowIfNull().OnlyInDebug();
 		Base = @base;
 		Power = power;
+		_powerOfZeroReduction = powerOfZeroReduction;
 	}
 
 	public IEvaluate<T> Base { get; }
@@ -32,7 +39,7 @@ public class Exponent<T> : OperatorBase<T>,
 		var bas = Base.Evaluate(context);
 		var pow = Power.Evaluate(context);
 
-		return new (bas.Result.Pow(pow), Describe([bas.Description, pow.Description]));
+		return new (bas.Result.Pow(pow.Result), Describe([bas.Description, pow.Description]));
 	}
 
 	protected Lazy<string> Describe(Lazy<string> bas, Lazy<string> pow)
@@ -50,7 +57,7 @@ public class Exponent<T> : OperatorBase<T>,
 			m = Exponent.ConstantPowerPattern().Match(p);
 			if (!m.Success) return $"({b}^{p})"!;
 
-			var ps = p.Contains('.')
+			var ps = p.Contains('.') || p.StartsWith('-')
 				? '^' + p
 				: Exponent.ConvertToSuperScript(p);
 
@@ -140,20 +147,32 @@ public class Exponent<T> : OperatorBase<T>,
 				if (b == T.One)
 					return bas;
 
+				// Base is zero? No way out. :)
 				if (b == T.Zero)
 				{
 					if (p == T.Zero)
-						throw new InvalidOperationException("0 to the power of 0 is undefined.");
-					if (T.IsNegative(p))
+					{
+						switch (_powerOfZeroReduction)
+						{
+							case PowerOfZeroReduction.One:
+								return one;
+
+							case PowerOfZeroReduction.Throw:
+								throw new InvalidOperationException("0 to the power of 0 is undefined.");
+						}
+					}
+					else if (T.IsNegative(p))
+					{
 						throw new InvalidOperationException("0 to a negative power is undefined. (Cannot divide by zero.)");
+					}
+
+					return catalog.GetConstant(T.Zero);
 				}
 
 				if (p == T.Zero)
 				{
 					// If the power is zero, the result is always 1 unless the base is zero.
-					return b == T.Zero
-						? catalog.GetConstant(T.Zero)
-						: one;
+					return catalog.GetConstant(T.Zero);
 				}
 
 				T newExp = cBas.Value.Pow(pow.Value);
@@ -214,6 +233,13 @@ public class Exponent<T> : OperatorBase<T>,
 
 public static partial class Exponent
 {
+	public enum PowerOfZeroReduction
+	{
+		One, // Any power of zero results in 1.
+		Zero, // If the base is zero, the result is zero.
+		Throw // Throw to indicate undefined.
+	}
+
 	public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
 	[GeneratedRegex(@"^0?\.50*$|^\(0?\.50*\)$",
@@ -325,6 +351,6 @@ public static partial class Exponent
 				result *= baseValue;
 		}
 
-		return exponent;
+		return result;
 	}
 }

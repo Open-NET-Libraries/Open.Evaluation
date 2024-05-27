@@ -59,12 +59,12 @@ public abstract class ParseTestBase
 		using var lease = Context.Rent();
 		var context = lease.Item.Init(Catalog, PV);
 
-		Evaluation.Evaluate(context).Description
+		Evaluation.Evaluate(context).Description.Value
 			.Should().Be(RepresentationResolved);
 
 		if (Reduction != Representation)
 		{
-			Evaluation.Evaluate(context).Description
+			EvaluationReduced.Evaluate(context).Description.Value
 				.Should().Be(ReductionResolved);
 		}
 	}
@@ -77,7 +77,7 @@ public abstract class ParseTestBase
 
 		if (Reduction != Representation)
 		{
-			Evaluation.Description.Value
+			EvaluationReduced.Description.Value
 				.Should().Be(Reduction);
 		}
 	}

@@ -29,5 +29,5 @@ public static class Extensions
 			.Count();
 
 	public static int CountDistinctParameters<T>(this Node<T> node)
-		=> node.CountDistinctDescendantValuesOfType<T, IParameter, ushort>(p => p.ID);
+		=> node.CountDistinctDescendantValuesOfType<T, IParameter, ushort>(p => p.Id);
 }

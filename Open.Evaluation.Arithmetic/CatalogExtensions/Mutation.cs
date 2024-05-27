@@ -84,10 +84,10 @@ public static partial class CatalogExtensions
 			var rv = node.Root.Value;
 			var nextParameter = Randomizer.Random.NextExcluding(
 				p == rv
-					? p.ID
+					? p.Id
 					: ((IParent)rv!).GetDescendants().OfType<IParameter>().Distinct().Count()
-						+ (p.ID == 0 ? 1 : Randomizer.Random.Next(2)) /* Increase the possibility of parameter ID decrease vs increase */,
-				p.ID);
+						+ (p.Id == 0 ? 1 : Randomizer.Random.Next(2)) /* Increase the possibility of parameter ID decrease vs increase */,
+				p.Id);
 
 			return catalog.Catalog.GetParameter(nextParameter);
 		});

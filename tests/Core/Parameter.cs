@@ -9,6 +9,6 @@ public class Parameter
 	public void Instantiation()
 	{
 		using var catalog = new EvaluationCatalog<double>();
-		Assert.AreEqual((ushort)5, catalog.GetParameter(5).ID);
+		catalog.GetParameter(5).Id.Should().Be(5);
 	}
 }
