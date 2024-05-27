@@ -1,5 +1,6 @@
 ﻿using Open.Collections;
 using Open.Evaluation.Core;
+using System.Buffers;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation;
@@ -112,18 +113,47 @@ public class Context : DisposableBase
 		return this;
 	}
 
+	public Context AddRange(ReadOnlySpan<KeyValuePair<IEvaluate, Lazy<IEvaluationResult>>> values)
+	{
+		AssertIsAlive();
+
+		lock (_registry)
+		{
+			foreach (var (key, value) in values)
+				_registry.Add(key, value);
+		}
+
+		return this;
+	}
+
 	public Context AddParam<T>(ICatalog<IEvaluate<T>> catalog, ushort id, T value)
 		where T : notnull, IEquatable<T>, IComparable<T>
 		=> Add(
 			Parameter<T>.Create(catalog, id),
-			new Lazy<IEvaluationResult>(EvaluationResult.Create(value)));
+			EvaluationResult.Create(value));
 
-	public Context Init<T>(ICatalog<IEvaluate<T>> catalog, IEnumerable<T> value)
+	public Context InitRange<T>(ICatalog<IEvaluate<T>> catalog, IEnumerable<T> value)
 		where T : notnull, IEquatable<T>, IComparable<T>
 		=> AddRange(
 			value.Select((v, i) => Collections.KeyValuePair.Create(
 				(IEvaluate)Parameter<T>.Create(catalog, i),
-				new Lazy<IEvaluationResult>(() => EvaluationResult.Create(v)))));
+				new Lazy<IEvaluationResult>(EvaluationResult.Create(v)))));
+
+	public Context Init<T>(ICatalog<IEvaluate<T>> catalog, ReadOnlySpan<T> value)
+	where T : notnull, IEquatable<T>, IComparable<T>
+	{
+		using var lease = MemoryPool<KeyValuePair<IEvaluate, Lazy<IEvaluationResult>>>.Shared.Rent(value.Length);
+		var pairs = lease.Memory.Span.Slice(0, value.Length);
+
+		for (var i = 0; i < value.Length; i++)
+		{
+			pairs[i] = Collections.KeyValuePair.Create(
+				(IEvaluate)Parameter<T>.Create(catalog, i),
+				new Lazy<IEvaluationResult>(EvaluationResult.Create(value[i])));
+		}
+
+		return AddRange(pairs);
+	}
 
 	// Allows for re-use.
 	public void Clear()
@@ -142,4 +172,13 @@ public class Context : DisposableBase
 
 	public static SharedPool<Context> Shared { get; }
 		= new(() => new(), c => c.Clear(), c => c.Dispose(), 100);
+
+	public static Context Get()
+		=> Shared.Take();
+
+	public static RecycleHelper<Context> Rent()
+		=> Shared.Rent();
+
+	public static void Use(Action<Context> handler)
+		=> Shared.Rent(handler);
 }

@@ -1,17 +1,4 @@
 ﻿namespace Open.Evaluation.Arithmetic;
-public partial class EvaluationCatalog<T>
-{
-	private VariationCatalog? _variation;
-	public VariationCatalog Variation =>
-		LazyInitializer.EnsureInitialized(ref _variation, () => new VariationCatalog(this))!;
-
-	public class VariationCatalog : SubmoduleBase<EvaluationCatalog<T>>
-	{
-		internal VariationCatalog(EvaluationCatalog<T> source) : base(source)
-		{
-		}
-	}
-}
 
 public static partial class CatalogExtensions
 {

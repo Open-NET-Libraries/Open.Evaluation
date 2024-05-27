@@ -52,6 +52,12 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 			: throw new InvalidCastException($"Cannot coerce from {r.GetType()} to {typeof(T)}.");
 	}
 
+	public static implicit operator Lazy<EvaluationResult<T>>(EvaluationResult<T> result)
+		=> new(result);
+
+	public static implicit operator Lazy<IEvaluationResult>(EvaluationResult<T> result)
+		=> Lazy.New<IEvaluationResult>(result);
+
 	public static EvaluationResult<T> Coerce(IEvaluationResult result)
 		=> result is EvaluationResult<T> r ? r
 			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(T)}.");

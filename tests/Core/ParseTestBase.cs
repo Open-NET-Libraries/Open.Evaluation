@@ -9,7 +9,9 @@ public abstract class ParseTestBase
 	// ReSharper disable once NotAccessedField.Global
 	protected readonly string Format;
 	protected readonly string Representation;
+	protected readonly string RepresentationResolved;
 	protected readonly string Reduction;
+	protected readonly string ReductionResolved;
 
 	protected readonly IEvaluate<double> Evaluation;
 	protected readonly IEvaluate<double> EvaluationReduced;
@@ -18,7 +20,9 @@ public abstract class ParseTestBase
 	{
 		Format = format ?? throw new ArgumentNullException(nameof(format));
 		Representation = representation ?? format;
+		RepresentationResolved = string.Format(Representation, PV.Cast<object>().ToArray());
 		Reduction = reduction ?? Representation;
+		ReductionResolved = reduction is null ? RepresentationResolved : string.Format(reduction, PV.Cast<object>().ToArray());
 		Catalog = new EvaluationCatalog<double>();
 		Evaluation = Catalog.Parse(format);
 		EvaluationReduced = Catalog.GetReduced(Evaluation);
@@ -29,65 +33,52 @@ public abstract class ParseTestBase
 	[TestMethod, Description("Compares the parsed evalution to the expected value.")]
 	public void Evaluate()
 	{
-		Assert.AreEqual(
-			Expected,
-			Evaluation.Evaluate(PV),
-			GetType() + ".Evaluate() failed.");
+		using var lease = Context.Rent();
+		var context = lease.Item.Init(Catalog, PV);
+		Evaluation.Evaluate(context).Result
+			.Should().Be(Expected);
 
 		if (Reduction == Representation)
 		{
-			Assert.AreEqual(
-				Evaluation,
-				EvaluationReduced,
-				"The same format string has produced a reduction.");
+			EvaluationReduced.Description.Value
+				.Should().Be(Evaluation.Description.Value);
 		}
 		else
 		{
-			Assert.AreNotEqual(
-				Evaluation,
-				EvaluationReduced,
-				"No reduction occurred but there was one expected.");
+			EvaluationReduced.Description.Value
+				.Should().NotBe(Evaluation.Description.Value);
 
-			Assert.AreEqual(
-				Expected,
-				EvaluationReduced.Evaluate(PV),
-				GetType()
-				+ ".Evaluate() reduced failed.\nDetails: "
-				+ Evaluation.ToString(PV));
+			EvaluationReduced.Evaluate(context).Result
+				.Should().Be(Expected);
 		}
 	}
 
 	[TestMethod, Description("Compares the parsed evalution .ToString(context) to the actual formatted string.")]
 	public void ToStringValues()
 	{
-		Assert.AreEqual(
-			string.Format(Representation, PV.Cast<object>().ToArray()),
-			Evaluation.ToString(PV),
-			GetType() + ".ToStringValues() failed.");
+		using var lease = Context.Rent();
+		var context = lease.Item.Init(Catalog, PV);
+
+		Evaluation.Evaluate(context).Description
+			.Should().Be(RepresentationResolved);
 
 		if (Reduction != Representation)
 		{
-			Assert.AreEqual(
-				string.Format(Reduction, PV.Cast<object>().ToArray()),
-				EvaluationReduced.ToString(PV),
-				GetType() + ".ToStringValues() reduced failed.");
+			Evaluation.Evaluate(context).Description
+				.Should().Be(ReductionResolved);
 		}
 	}
 
 	[TestMethod, Description("Compares the parsed evalution .ToStringRepresentation() to the provided format string.")]
 	public void ToStringRepresentation()
 	{
-		Assert.AreEqual(
-			Representation,
-			Evaluation.ToStringRepresentation(),
-			GetType() + ".ToStringRepresentation() failed.");
+		Evaluation.Description.Value
+			.Should().Be(Representation);
 
 		if (Reduction != Representation)
 		{
-			Assert.AreEqual(
-				Reduction,
-				EvaluationReduced.ToStringRepresentation(),
-				GetType() + ".ToStringRepresentation() reduced failed.");
+			Evaluation.Description.Value
+				.Should().Be(Reduction);
 		}
 	}
 }

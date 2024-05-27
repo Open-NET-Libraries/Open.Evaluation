@@ -72,9 +72,10 @@ public static class Sum
 			var b = catalog.GetParameter(1);
 			var g2 = catalog.ProductOf(-1, a2);
 			var sum = catalog.SumOf(g1, b, g2);
-			var sumString = sum.ToStringRepresentation();
-			Assert.AreEqual("((9 * ({0}²)) + {1} - (({0}²)))", sumString);
-			Assert.AreEqual("((8 * ({0}²)) + {1})", catalog.GetReduced(sum).ToStringRepresentation());
+			sum.Description.Value
+				.Should().Be("((9 * ({0}²)) + {1} - (({0}²)))");
+			catalog.GetReduced(sum).Description.Value
+				.Should().Be("((8 * ({0}²)) + {1}");
 		}
 	}
 }

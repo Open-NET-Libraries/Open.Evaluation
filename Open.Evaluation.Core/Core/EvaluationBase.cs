@@ -27,6 +27,9 @@ public abstract class EvaluationBase<TResult>
 	[NotNull]
 	public Lazy<string> Description { get; }
 
+	public override string ToString() => Description.Value;
+		//=> $"{GetType()} {Description.Value}";
+
 	protected abstract EvaluationResult<TResult> EvaluateInternal(Context context); // **
 
 	/// <inheritdoc />

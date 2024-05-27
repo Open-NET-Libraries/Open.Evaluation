@@ -1,4 +1,6 @@
-﻿namespace Open.Evaluation.Tests.Catalogs;
+﻿using Open.Evaluation.Arithmetic;
+
+namespace Open.Evaluation.Tests.Catalogs;
 
 [TestClass]
 public class EvaluationCatalog
@@ -35,6 +37,6 @@ public class EvaluationCatalog
 
 		Assert.AreEqual(
 			"(((({0} * {1}) + ({1} * {2}) + ({2} * {3})) * (({1} * {2}) + ({2} * {3}))) + ({1} * {2}) + {0})",
-			result.Value.ToStringRepresentation());
+			result.Value.Description.Value);
 	}
 }

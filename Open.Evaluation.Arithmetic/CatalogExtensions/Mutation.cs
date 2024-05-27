@@ -5,21 +5,6 @@ using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<
 
 namespace Open.Evaluation.Arithmetic;
 
-[SuppressMessage("Design", "CA1034:Nested types should not be visible", Justification = "For type inference.")]
-public partial class EvaluationCatalog<T>
-{
-	private MutationCatalog? _mutation;
-	public MutationCatalog Mutation =>
-		LazyInitializer.EnsureInitialized(ref _mutation, () => new MutationCatalog(this))!;
-
-	public class MutationCatalog : SubmoduleBase<EvaluationCatalog<T>>
-	{
-		internal MutationCatalog(EvaluationCatalog<T> source) : base(source)
-		{
-		}
-	}
-}
-
 public static partial class CatalogExtensions
 {
 	const string CannotOperatePowerNullValue = "Cannot operate when the power.Value is null.";

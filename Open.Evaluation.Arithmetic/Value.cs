@@ -30,9 +30,7 @@ internal static class ValueUtility
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsNaN<T>(this INumber<T> number)
 		where T : notnull, INumber<T>
-#pragma warning disable IDE0079 // Remove unnecessary suppression
 #pragma warning disable CS1718 // Comparison made to same variable
 		=> number != number;
-#pragma warning restore IDE0079 // Remove unnecessary suppression
 #pragma warning restore CS1718 // Comparison made to same variable
 }

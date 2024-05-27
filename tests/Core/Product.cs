@@ -1,4 +1,5 @@
 ﻿using Open.Evaluation.Arithmetic;
+using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Tests;
 
@@ -89,12 +90,23 @@ public static class Product
 
 			{
 				var sample = catalog.Parse("(({0} + {1}) * ({2} + (({0} + {1}) * ({2} + {3}))))");
-				var p = new double[] { 1, 2, 3, 4 };
-				var v = sample.Evaluate(p);
-				var reduced = catalog.Variation.FlattenProductofSums(sample);
-				var s = reduced.ToStringRepresentation();
-				Assert.AreEqual("((({0}²) * {2}) + (({0}²) * {3}) + (({1}²) * {2}) + (({1}²) * {3}) + (2 * {0} * {1} * {2}) + (2 * {0} * {1} * {3}) + ({0} * {2}) + ({1} * {2}))", s);
-				Assert.AreEqual(v, reduced.Evaluate(p));
+				Context.Use(context =>
+				{
+					ReadOnlySpan<double> p = [1, 2, 3, 4];
+					context.Init(catalog, p);
+					var v = sample.Evaluate(context);
+					var reduced = catalog.Variation.FlattenProductofSums(sample);
+					reduced.Description.Value
+						.Should().Be("((({0}²) * {2}) + (({0}²) * {3}) + (({1}²) * {2}) + (({1}²) * {3}) + (2 * {0} * {1} * {2}) + (2 * {0} * {1} * {3}) + ({0} * {2}) + ({1} * {2}))");
+
+					Context.Use(c2 =>
+					{
+						ReadOnlySpan<double> p = [1, 2, 3, 4];
+						context.Init(catalog, p);
+						reduced.Evaluate(c2).Result
+							.Should().Be(v.Result);
+					});
+				});
 			}
 		}
 
@@ -103,12 +115,20 @@ public static class Product
 		{
 		}
 
-		static void Validate(IEvaluate<double> p)
+		static void Validate(IEvaluate<double> e)
+		=> Context.Use(context =>
 		{
-			var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
-			var s = v.Description;
-			Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
-			Assert.AreEqual(21, v);
-		}
+			using var catalog = new EvaluationCatalog<double>();
+			ReadOnlySpan<double> p = [1, 2, 3, 4];
+			context.Init(catalog, p);
+
+			var v = e.Evaluate(context);
+
+			v.Description.Value
+				.Should().Be("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))");
+
+			v.Result
+				.Should().Be(21);
+		});
 	}
 }
