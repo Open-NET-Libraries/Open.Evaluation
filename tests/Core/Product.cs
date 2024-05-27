@@ -1,4 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+﻿using Open.Evaluation.Arithmetic;
 
 namespace Open.Evaluation.Tests;
 
@@ -106,7 +106,7 @@ public static class Product
 		static void Validate(IEvaluate<double> p)
 		{
 			var v = p.Evaluate(new double[] { 1, 2, 3, 4 });
-			var s = p.ToStringRepresentation();
+			var s = v.Description;
 			Assert.AreEqual("(({0} * {2}) + ({0} * {3}) + ({1} * {2}) + ({1} * {3}))", s);
 			Assert.AreEqual(21, v);
 		}

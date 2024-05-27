@@ -6,7 +6,10 @@ namespace Open.Evaluation;
 
 public static class Lazy
 {
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Lazy<T> New<T>(Func<T> factory) => new(factory);
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static Lazy<T> New<T>(T value) => new(value);
 }
 

@@ -5,32 +5,32 @@
 
 namespace Open.Evaluation.Arithmetic;
 
-public partial class Product<TResult> :
-	OperatorBase<TResult>,
-	IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
-	where TResult : notnull, INumber<TResult>
+public partial class Product<T> :
+	OperatorBase<T>,
+	IReproducable<IEnumerable<IEvaluate<T>>, IEvaluate<T>>
+	where T : notnull, INumber<T>
 {
-	protected Product(IEnumerable<IEvaluate<TResult>> children)
+	protected Product(IEnumerable<IEvaluate<T>> children)
 		: base(Symbols.Product, children, true, 2) { }
 
-	protected Product(IEvaluate<TResult> first, params IEvaluate<TResult>[] rest)
+	protected Product(IEvaluate<T> first, params IEvaluate<T>[] rest)
 		: this([first, ..rest]) { }
 
 	protected override int ConstantPriority => -1;
 
-	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
+	protected override EvaluationResult<T> EvaluateInternal(Context context)
 	{
 		Children.Length.Throw("Cannot resolve boolean of empty set.").IfEquals(0);
 
 		var results = ChildResults(context).Memoize();
 
-		var result = TResult.MultiplicativeIdentity;
+		var result = T.MultiplicativeIdentity;
 		foreach (var e in results)
 		{
 			var r = e.Result;
-			if (TResult.IsZero(r))
+			if (T.IsZero(r))
 			{
-				result = TResult.Zero;
+				result = T.Zero;
 				break;
 			}
 
@@ -49,17 +49,17 @@ public partial class Product<TResult> :
 			Describe(results.Select(r => r.Description)));
 	}
 
-	protected override IEvaluate<TResult> Reduction(
-		ICatalog<IEvaluate<TResult>> catalog)
+	protected override IEvaluate<T> Reduction(
+		ICatalog<IEvaluate<T>> catalog)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
-		var one = catalog.GetConstant(TResult.MultiplicativeIdentity);
+		var one = catalog.GetConstant(T.MultiplicativeIdentity);
 
-		using var lease = ListPool<IEvaluate<TResult>>.Shared.Rent();
+		using var lease = ListPool<IEvaluate<T>>.Shared.Rent();
 		// Phase 1: Flatten products of products.
 		var children = lease.Item;
 		children.AddRange(catalog
-			.Flatten(Children, static parent => parent is Product<TResult>)
+			.Flatten(Children, static parent => parent is Product<T>)
 			.Where(c => c != one)); // ** children's reduction is done here.
 
 		// Phase 3: Try to extract common multiples...
@@ -67,7 +67,7 @@ public partial class Product<TResult> :
 		for (var i = 0; i < len; i++)
 		{
 			var child = children[i];
-			if (child is not Sum<TResult> sum ||
+			if (child is not Sum<T> sum ||
 				!sum.TryExtractGreatestFactor(catalog, out var newSum, out var gcf))
 			{
 				continue;
@@ -90,12 +90,12 @@ public partial class Product<TResult> :
 		}
 
 		// Phase 4: Deal with special case constants.
-		IConstant<TResult>? zero = null;
-		foreach (var c in children.OfType<IConstant<TResult>>())
+		IConstant<T>? zero = null;
+		foreach (var c in children.OfType<IConstant<T>>())
 		{
 			var cValue = c.Value;
-			if (TResult.IsNaN(cValue)) return c;
-			if (TResult.IsZero(cValue)) zero = c;
+			if (T.IsNaN(cValue)) return c;
+			if (T.IsZero(cValue)) zero = c;
 		}
 
 		if (zero is not null)
@@ -103,17 +103,17 @@ public partial class Product<TResult> :
 
 		var cat = catalog;
 		// Phase 5: Convert to exponents.
-		using var lease2 = ListPool<(IEvaluate<TResult> Base, IEvaluate<TResult> Power)>.Shared.Rent();
+		using var lease2 = ListPool<(IEvaluate<T> Base, IEvaluate<T> Power)>.Shared.Rent();
 		var exponents = lease2.Item;
 		exponents.AddRange(children.Select(c =>
-			c is Exponent<TResult> e
+			c is Exponent<T> e
 			? (Base: cat.GetReduced(e.Base), e.Power)
 			: (Base: c, Power: one)));
 
 		zero = exponents
 			.Select(e => e.Base)
-			.OfType<IConstant<TResult>>()
-			.FirstOrDefault(c => TResult.IsZero(c.Value));
+			.OfType<IConstant<T>>()
+			.FirstOrDefault(c => T.IsZero(c.Value));
 
 		if (zero is not null)
 			return zero;
@@ -134,17 +134,17 @@ public partial class Product<TResult> :
 		lease2.Dispose(); // release early.
 
 		var multiple = children
-			.OfType<IConstant<TResult>>()
+			.OfType<IConstant<T>>()
 			.FirstOrDefault();
 
 		if (multiple is not null)
 		{
 			var multipleValue = multiple.Value;
 			// ReSharper disable once InvertIf
-			if (multipleValue != TResult.MultiplicativeIdentity
-				&& multipleValue % TResult.One == TResult.Zero)
+			if (multipleValue != T.MultiplicativeIdentity
+				&& multipleValue % T.One == T.Zero)
 			{
-				var oneNeg = catalog.GetConstant(-TResult.MultiplicativeIdentity);
+				var oneNeg = catalog.GetConstant(-T.MultiplicativeIdentity);
 				var muValue = multipleValue;
 				var originalMultiple = muValue;
 				var multipleIndex = children.IndexOf(multiple);
@@ -152,9 +152,9 @@ public partial class Product<TResult> :
 				for (var i = 0; i < count; i++)
 				{
 					// Let's start with simple division of constants.
-					if (children[i] is not Exponent<TResult> ex
+					if (children[i] is not Exponent<T> ex
 						|| ex.Power != oneNeg
-						|| ex.Base is not IConstant<TResult> expC)
+						|| ex.Base is not IConstant<T> expC)
 					{
 						continue;
 					}
@@ -163,36 +163,36 @@ public partial class Product<TResult> :
 					// ReSharper disable once CompareOfFloatsByEqualityOperator
 
 					// We won't mess with factional divisors yet.
-					if (divisor % TResult.One != TResult.Zero)
+					if (divisor % T.One != T.Zero)
 						continue;
 
-					if (muValue % divisor == TResult.Zero)
+					if (muValue % divisor == T.Zero)
 					{
 						muValue /= divisor;
 						children[i] = one;
 					}
 					else
 					{
-						var f = TResult.One;
+						var f = T.One;
 						// We might have a potential divisor...
 						foreach (var factor in Prime.Factors(divisor, true))
 						{
 							if (factor > muValue) break;
-							if (muValue % factor != TResult.Zero) continue;
-							Debug.Assert(factor != TResult.Zero);
+							if (muValue % factor != T.Zero) continue;
+							Debug.Assert(factor != T.Zero);
 							muValue /= factor;
 							f *= factor;
 						}
 
-						if (f != TResult.One)
+						if (f != T.One)
 						{
 							children[i] = catalog.GetExponent(
 								catalog.GetConstant(divisor / f),
-								catalog.GetConstant(-TResult.MultiplicativeIdentity));
+								catalog.GetConstant(-T.MultiplicativeIdentity));
 						}
 					}
 
-					if (muValue == TResult.One)
+					if (muValue == T.One)
 						break;
 				}
 
@@ -226,40 +226,40 @@ public partial class Product<TResult> :
 		base.ToStringInternal_OnAppendNextChild(result, index, child);
 	}
 
-	protected virtual Exponent<TResult> GetExponent(ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> baseValue,
-		IEvaluate<TResult> power)
-		=> Exponent<TResult>.Create(catalog, baseValue, power);
+	protected virtual Exponent<T> GetExponent(ICatalog<IEvaluate<T>> catalog,
+		IEvaluate<T> baseValue,
+		IEvaluate<T> power)
+		=> Exponent<T>.Create(catalog, baseValue, power);
 
-	public IEvaluate<TResult> ExtractMultiple(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
+	public IEvaluate<T> ExtractMultiple(ICatalog<IEvaluate<T>> catalog, out IConstant<T>? multiple)
 	{
 		multiple = null;
 
-		if (!Children.OfType<IConstant<TResult>>().Any()) return this;
+		if (!Children.OfType<IConstant<T>>().Any()) return this;
 
 		var children = Children.ToList(); // Make a copy to be worked on...
-		var constants = children.ExtractType<IConstant<TResult>>();
+		var constants = children.ExtractType<IConstant<T>>();
 		if (constants.Count == 0) return this;
 
 		multiple = catalog.ProductOfConstants(constants);
 		return NewUsing(catalog, children);
 	}
 
-	public IEvaluate<TResult> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<TResult>> catalog, out IConstant<TResult>? multiple)
+	public IEvaluate<T> ReductionWithMutlipleExtracted(ICatalog<IEvaluate<T>> catalog, out IConstant<T>? multiple)
 	{
 		multiple = null;
 		Debug.Assert(catalog is not null);
 		var reduced = catalog!.GetReduced(this);
-		return reduced is Product<TResult> product
+		return reduced is Product<T> product
 			? product.ExtractMultiple(catalog, out multiple)
 			: reduced;
 	}
 
 	static bool IsExponentWithConstantPower(
-		IEvaluate<TResult> a,
-		[NotNullWhen(true)] out IConstant<TResult> value)
+		IEvaluate<T> a,
+		[NotNullWhen(true)] out IConstant<T> value)
 	{
-		if (a is Exponent<TResult> aP && aP.Power is IConstant<TResult> c)
+		if (a is Exponent<T> aP && aP.Power is IConstant<T> c)
 		{
 			value = c;
 			return true;
@@ -269,13 +269,13 @@ public partial class Product<TResult> :
 		return false;
 	}
 
-	public override int Compare(IEvaluate<TResult>? x, IEvaluate<TResult>? y)
+	public override int Compare(IEvaluate<T>? x, IEvaluate<T>? y)
 	{
 		if (x is null) return y is null ? 0 : -1;
 		if (y is null) return +1;
 
 		// Constants always get priority in products and are moved to the front.  They should collapse in reduction to a 'multiple'.
-		if (x is IConstant<TResult> || y is IConstant<TResult>)
+		if (x is IConstant<T> || y is IConstant<T>)
 			return base.Compare(x, y);
 
 		var aFound = IsExponentWithConstantPower(x, out var aConstant);
@@ -287,45 +287,45 @@ public partial class Product<TResult> :
 		}
 		else if (aFound)
 		{
-			if (TResult.MultiplicativeIdentity > aConstant.Value)
+			if (T.MultiplicativeIdentity > aConstant.Value)
 				return +1;
-			if (TResult.MultiplicativeIdentity < aConstant.Value)
+			if (T.MultiplicativeIdentity < aConstant.Value)
 				return -1;
 		}
 		else if (bFound)
 		{
-			if (TResult.MultiplicativeIdentity > bConstant.Value)
+			if (T.MultiplicativeIdentity > bConstant.Value)
 				return -1;
-			if (TResult.MultiplicativeIdentity < bConstant.Value)
+			if (T.MultiplicativeIdentity < bConstant.Value)
 				return +1;
 		}
 
 		return base.Compare(x, y);
 	}
 
-	internal static Product<TResult> Create(
-		ICatalog<IEvaluate<TResult>> catalog,
-		IEnumerable<IEvaluate<TResult>> param)
+	internal static Product<T> Create(
+		ICatalog<IEvaluate<T>> catalog,
+		IEnumerable<IEvaluate<T>> param)
 	{
 		catalog.ThrowIfNull();
 		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new Product<TResult>(param));
+		return catalog.Register(new Product<T>(param));
 	}
 
-	public virtual IEvaluate<TResult> NewUsing(
-		ICatalog<IEvaluate<TResult>> catalog,
-		IReadOnlyList<IEvaluate<TResult>> param)
+	public virtual IEvaluate<T> NewUsing(
+		ICatalog<IEvaluate<T>> catalog,
+		IReadOnlyList<IEvaluate<T>> param)
 	{
 		param.ThrowIfNull();
 		return param.Count == 1 ? param[0] : Create(catalog, param);
 	}
 
-	public virtual IEvaluate<TResult> NewUsing(
-		ICatalog<IEvaluate<TResult>> catalog,
-		IEnumerable<IEvaluate<TResult>> param)
-		=> param is IReadOnlyList<IEvaluate<TResult>> p
+	public virtual IEvaluate<T> NewUsing(
+		ICatalog<IEvaluate<T>> catalog,
+		IEnumerable<IEvaluate<T>> param)
+		=> param is IReadOnlyList<IEvaluate<T>> p
 		? NewUsing(catalog, p)
 		: ConditionalTransform(param, p => Create(catalog, p));
 }

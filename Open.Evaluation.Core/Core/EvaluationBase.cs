@@ -36,6 +36,6 @@ public abstract class EvaluationBase<TResult>
 		Contract.EndContractBlock();
 
 		// Cache results...
-		return context.GetOrAdd(this, () => EvaluateInternal(context))!;
+		return context. GetOrAdd(this, () => EvaluateInternal(context))!;
 	}
 }

@@ -1,5 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using Open.Evaluation.Arithmetic;
+﻿using Open.Evaluation.Arithmetic;
 namespace Open.Evaluation.Tests;
 
 public static class Sum

@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Open.Evaluation.Tests;
+﻿namespace Open.Evaluation.Tests;
 
 public static class Validation
 {

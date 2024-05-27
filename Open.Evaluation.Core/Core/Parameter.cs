@@ -13,23 +13,8 @@ public class Parameter<T>
 		IEvaluate<T>>
 	where T : notnull, IEquatable<T>, IComparable<T>
 {
-	protected Parameter(ushort id, Func<object, ushort, T>? evaluator = null)
-	{
-		_evaluator = evaluator ?? GetParamValueFrom;
-		ID = id;
-	}
-
-	readonly Func<object, ushort, T> _evaluator;
-
-	static readonly Func<object, ushort, T> GetParamValueFrom
-		= (object source, ushort id) => source switch
-		{
-			IReadOnlyList<T> list => list[id],
-			IDictionary<ushort, T> d => d[id],
-			T v => v,
-
-			_ => throw new ArgumentException("Unknown type.", nameof(source)),
-		};
+	protected Parameter(ushort id)
+		=> ID = id;
 
 	public ushort ID { get; }
 
@@ -39,20 +24,17 @@ public class Parameter<T>
 		=> ToStringRepresentation(ID);
 
 	protected override EvaluationResult<T> EvaluateInternal(Context context)
-	{
-		var value = _evaluator(context, ID);
-		Debug.Assert(value is not null);
-
-		return new(value, v =>
-		{
-			var text = v.ToString();
-			Debug.Assert(text is not null);
-			return text;
-		});
-	}
+		=> context.TryGetResult(this, out EvaluationResult<T> result) ? result
+			: throw new InvalidOperationException($"Parameter {ID} result not found in the context.");
 
 	internal static Parameter<T> Create(ICatalog<IEvaluate<T>> catalog, ushort id)
 		=> catalog.Register(ToStringRepresentation(id), id, (_, id) => new Parameter<T>(id));
+
+	internal static Parameter<T> Create(ICatalog<IEvaluate<T>> catalog, int id)
+		=> Create(catalog,
+			(ushort)id
+				.Throw("The value of 'id' must be within the ushort range.")
+				.IfOutOfRange(ushort.MinValue, ushort.MaxValue));
 
 	public virtual IEvaluate<T> NewUsing(ICatalog<IEvaluate<T>> catalog, ushort param)
 		=> catalog.Register(ToStringRepresentation(param), param, (_, id) => new Parameter<T>(id));

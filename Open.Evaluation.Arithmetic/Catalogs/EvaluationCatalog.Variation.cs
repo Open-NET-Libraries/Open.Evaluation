@@ -1,6 +1,4 @@
-﻿using Open.Evaluation.Arithmetic;
-
-namespace Open.Evaluation.Arithmetic;
+﻿namespace Open.Evaluation.Arithmetic;
 public partial class EvaluationCatalog<T>
 {
 	private VariationCatalog? _variation;
@@ -200,10 +198,10 @@ public static partial class CatalogExtensions
 
 			if (p.Parent.Value is Exponent<T> exponent && exponent.Power is IConstant<T> c)
 			{
-				var a = Math.Abs(c.Value);
-				var direction = c.Value < 0 ? -1 : +1;
-				var newValue = (a is > 0 and < 1)
-					? (c.Value > 0 ? 1 : -1)
+				var a = T.Abs(c.Value);
+				var direction = T.IsNegative(c.Value) ? -T.One : +T.One;
+				var newValue = (a < T.One && a > T.Zero)
+					? (T.IsPositive(c.Value) ? +T.One : -T.One)
 					: (c.Value + direction);
 
 				p.Parent[0]
@@ -212,7 +210,7 @@ public static partial class CatalogExtensions
 			else
 			{
 				p.Parent.Replace(p,
-					cat.Factory.Map(cat.GetExponent(p.Value!, 2)));
+					cat.Factory.Map(cat.GetExponent(p.Value, Value<T>.Two)));
 			}
 		}
 

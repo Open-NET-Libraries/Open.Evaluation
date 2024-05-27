@@ -40,7 +40,7 @@ public static partial class CatalogExtensions
 		bool parentIsSquareRoot() => !isRoot && n.Parent?.Value is Exponent<double> ex && ex.IsSquareRoot();
 
 		// ReSharper disable once AccessToModifiedClosure
-		var modifier = new Lazy<double>(() => catalog.Catalog.GetMultiple(n.Value));
+		var modifier = Lazy.New(() => catalog.Catalog.GetMultiple(n.Value));
 
 		try
 		{

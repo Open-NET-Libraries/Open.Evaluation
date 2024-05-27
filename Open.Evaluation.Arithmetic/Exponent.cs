@@ -6,13 +6,13 @@
 namespace Open.Evaluation.Arithmetic;
 
 // ReSharper disable once PossibleInfiniteInheritance
-public class Exponent<TResult> : OperatorBase<TResult>,
-	IReproducable<(IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
-	where TResult : notnull, INumber<TResult>
+public class Exponent<T> : OperatorBase<T>,
+	IReproducable<(IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>
+	where T : notnull, INumber<T>
 {
 	protected Exponent(
-		IEvaluate<TResult> @base,
-		IEvaluate<TResult> power)
+		IEvaluate<T> @base,
+		IEvaluate<T> power)
 		: base(Symbols.Exponent,
 			  // Need to provide to children so a node tree can be built.
 			  new[] { @base, power })
@@ -23,11 +23,11 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 		Power = power;
 	}
 
-	public IEvaluate<TResult> Base { get; }
+	public IEvaluate<T> Base { get; }
 
-	public IEvaluate<TResult> Power { get; }
+	public IEvaluate<T> Power { get; }
 
-	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
+	protected override EvaluationResult<T> EvaluateInternal(Context context)
 	{
 		var bas = Base.Evaluate(context);
 		var pow = Power.Evaluate(context);
@@ -87,29 +87,29 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 			: Describe(bas!, pow!);
 	}
 
-	protected override IEvaluate<TResult> Reduction(
-		ICatalog<IEvaluate<TResult>> catalog)
+	protected override IEvaluate<T> Reduction(
+		ICatalog<IEvaluate<T>> catalog)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
-		IEvaluate<TResult> bas = catalog.GetReduced(Base);
-		IEvaluate<TResult> pow = catalog.GetReduced(Power);
+		IEvaluate<T> bas = catalog.GetReduced(Base);
+		IEvaluate<T> pow = catalog.GetReduced(Power);
 
-		var one = catalog.GetConstant(TResult.One);
-		Debug.Assert(one.Value == TResult.One);
+		var one = catalog.GetConstant(T.One);
+		Debug.Assert(one.Value == T.One);
 		// No need to reduce if the power is already 1.
 		if (pow == one)
 			return bas;
 
 		// The above check should suffice and if the power is still one, then it's a bug.
-		Debug.Assert(pow is not IConstant<TResult> pc || pc.Value != TResult.One,
+		Debug.Assert(pow is not IConstant<T> pc || pc.Value != T.One,
 			"A stray 'one' constant was introduced instead of from the same catalog.");
 
-		IEvaluate<TResult> VerifyDifferences(IEvaluate<TResult> b, IEvaluate<TResult> p)
+		IEvaluate<T> VerifyDifferences(IEvaluate<T> b, IEvaluate<T> p)
 			=> b == Base && p == Power ? this : catalog.GetExponent(b, p);
 
-		IEvaluate<TResult> FinalStep(IEvaluate<TResult> bas, IEvaluate<TResult> pow)
+		IEvaluate<T> FinalStep(IEvaluate<T> bas, IEvaluate<T> pow)
 		{
-			while (bas is Product<TResult> pProd)
+			while (bas is Product<T> pProd)
 			{
 				if (pProd.Children.Length == 1)
 				{
@@ -128,40 +128,40 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 			return VerifyDifferences(bas, pow);
 		}
 
-		IEvaluate<TResult> ReduceWherePowIsConstant(IEvaluate<TResult> bas, IConstant<TResult> pow)
+		IEvaluate<T> ReduceWherePowIsConstant(IEvaluate<T> bas, IConstant<T> pow)
 		{
 			var p = pow.Value;
-			Debug.Assert(p != TResult.One, "The case where the power is one have already been done.");
+			Debug.Assert(p != T.One, "The case where the power is one have already been done.");
 
-			if (bas is IConstant<TResult> cBas)
+			if (bas is IConstant<T> cBas)
 			{
 				// Whenver the bas is one, the result is one (the base)
 				var b = cBas.Value;
-				if (b == TResult.One)
+				if (b == T.One)
 					return bas;
 
-				if (b == TResult.Zero)
+				if (b == T.Zero)
 				{
-					if (p == TResult.Zero)
+					if (p == T.Zero)
 						throw new InvalidOperationException("0 to the power of 0 is undefined.");
-					if (TResult.IsNegative(p))
+					if (T.IsNegative(p))
 						throw new InvalidOperationException("0 to a negative power is undefined. (Cannot divide by zero.)");
 				}
 
-				if (p == TResult.Zero)
+				if (p == T.Zero)
 				{
 					// If the power is zero, the result is always 1 unless the base is zero.
-					return b == TResult.Zero
-						? catalog.GetConstant(TResult.Zero)
+					return b == T.Zero
+						? catalog.GetConstant(T.Zero)
 						: one;
 				}
 
-				TResult newExp = cBas.Value.Pow(pow.Value);
+				T newExp = cBas.Value.Pow(pow.Value);
 				return catalog.GetConstant(newExp);
 			}
 
-			if (bas is Exponent<TResult> bEx
-				&& bEx.Power is IConstant<TResult> cP)
+			if (bas is Exponent<T> bEx
+				&& bEx.Power is IConstant<T> cP)
 			{
 				bas = bEx.Base;
 				pow = catalog.GetConstant(pow.Value * cP.Value);
@@ -170,45 +170,45 @@ public class Exponent<TResult> : OperatorBase<TResult>,
 			return FinalStep(bas, pow);
 		}
 
-		IEvaluate<TResult> ReduceWhereBaseIsConstant(IConstant<TResult> bas, IEvaluate<TResult> pow)
+		IEvaluate<T> ReduceWhereBaseIsConstant(IConstant<T> bas, IEvaluate<T> pow)
 		{
 			var b = bas.Value;
-			Debug.Assert(pow is not IConstant<TResult> cPow, "The case where the power is constant should be handled first.");
+			Debug.Assert(pow is not IConstant<T> cPow, "The case where the power is constant should be handled first.");
 
 			// Whenver the bas is one, the result is one (the base)
-			if (b == TResult.One)
+			if (b == T.One)
 				return bas;
 
 			// Not constants? Then just check if a reduction occurred.
 			return VerifyDifferences(bas, pow);
 		}
 
-		if (pow is IConstant<TResult> cPow)
+		if (pow is IConstant<T> cPow)
 			return ReduceWherePowIsConstant(bas, cPow);
 
-		if (bas is IConstant<TResult> cBase)
+		if (bas is IConstant<T> cBase)
 			return ReduceWhereBaseIsConstant(cBase, pow);
 
 		// No constants? Then do the main flow.
 		return FinalStep(bas, pow);
 	}
 
-	internal static Exponent<TResult> Create(
-		ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> @base,
-		IEvaluate<TResult> power)
+	internal static Exponent<T> Create(
+		ICatalog<IEvaluate<T>> catalog,
+		IEvaluate<T> @base,
+		IEvaluate<T> power)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 		@base.ThrowIfNull().OnlyInDebug();
 		power.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new Exponent<TResult>(@base, power));
+		return catalog.Register(new Exponent<T>(@base, power));
 	}
 
-	public virtual IEvaluate<TResult> NewUsing(
-		ICatalog<IEvaluate<TResult>> catalog,
-		(IEvaluate<TResult>, IEvaluate<TResult>) param)
+	public virtual IEvaluate<T> NewUsing(
+		ICatalog<IEvaluate<T>> catalog,
+		(IEvaluate<T>, IEvaluate<T>) param)
 		=> Create(catalog, param.Item1, param.Item2);
 }
 

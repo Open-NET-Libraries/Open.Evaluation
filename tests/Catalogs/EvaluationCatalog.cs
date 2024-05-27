@@ -1,6 +1,4 @@
-﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-
-namespace Open.Evaluation.Tests.Catalogs;
+﻿namespace Open.Evaluation.Tests.Catalogs;
 
 [TestClass]
 public class EvaluationCatalog

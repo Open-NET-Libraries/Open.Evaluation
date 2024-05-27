@@ -51,4 +51,30 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 			? new(v, result.Description)
 			: throw new InvalidCastException($"Cannot coerce from {r.GetType()} to {typeof(T)}.");
 	}
+
+	public static EvaluationResult<T> Coerce(IEvaluationResult result)
+		=> result is EvaluationResult<T> r ? r
+			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(T)}.");
+}
+
+public static class EvaluationResult
+{
+	public static EvaluationResult<T> Create<T>(
+		[DisallowNull] T result,
+		Lazy<string> description)
+		=> new(result, description);
+
+	public static EvaluationResult<T> Create<T>(
+		[DisallowNull] T result,
+		Func<T, string> descriptionFactory)
+		=> new(result, descriptionFactory);
+
+	public static EvaluationResult<T> Create<T>(
+		[DisallowNull] T result,
+		string description)
+		=> new(result, description);
+
+	public static EvaluationResult<T> Create<T>(
+		[DisallowNull] T result)
+		=> new(result);
 }

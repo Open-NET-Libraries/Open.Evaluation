@@ -5,16 +5,16 @@
 
 namespace Open.Evaluation.Arithmetic;
 
-public abstract class ArithmeticOperatorBase<TResult>(
+public abstract class ArithmeticOperatorBase<T>(
 	Symbol symbol,
-	IEnumerable<IEvaluate<TResult>> children,
+	IEnumerable<IEvaluate<T>> children,
 	bool reorderChildren = false,
 	int minimumChildren = 1)
-	: OperatorBase<TResult>(symbol, children, reorderChildren, minimumChildren),
-	  IReproducable<IEnumerable<IEvaluate<TResult>>, IEvaluate<TResult>>
-	where TResult : notnull, INumber<TResult>
+	: OperatorBase<T>(symbol, children, reorderChildren, minimumChildren),
+	  IReproducable<IEnumerable<IEvaluate<T>>, IEvaluate<T>>
+	where T : notnull, INumber<T>
 {
-	public abstract IEvaluate<TResult> NewUsing(
-		ICatalog<IEvaluate<TResult>> catalog,
-		IEnumerable<IEvaluate<TResult>> param);
+	public abstract IEvaluate<T> NewUsing(
+		ICatalog<IEvaluate<T>> catalog,
+		IEnumerable<IEvaluate<T>> param);
 }
