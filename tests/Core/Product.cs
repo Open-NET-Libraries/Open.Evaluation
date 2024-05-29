@@ -1,5 +1,4 @@
 ﻿using Open.Evaluation.Arithmetic;
-using Open.Evaluation.Core;
 
 namespace Open.Evaluation.Tests;
 

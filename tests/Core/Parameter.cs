@@ -1,6 +1,4 @@
-﻿using Open.Evaluation.Arithmetic;
-
-namespace Open.Evaluation.Tests;
+﻿namespace Open.Evaluation.Tests;
 
 [TestClass]
 public class Parameter

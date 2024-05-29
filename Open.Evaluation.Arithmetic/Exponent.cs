@@ -39,7 +39,7 @@ public class Exponent<T> : OperatorBase<T>,
 		var bas = Base.Evaluate(context);
 		var pow = Power.Evaluate(context);
 
-		return new (bas.Result.Pow(pow.Result), Describe([bas.Description, pow.Description]));
+		return new(bas.Result.Pow(pow.Result), Describe([bas.Description, pow.Description]));
 	}
 
 	protected Lazy<string> Describe(Lazy<string> bas, Lazy<string> pow)
@@ -50,16 +50,19 @@ public class Exponent<T> : OperatorBase<T>,
 			Debug.Assert(!string.IsNullOrWhiteSpace(b));
 			Debug.Assert(!string.IsNullOrWhiteSpace(p));
 
-			var m = Exponent.SquareRootPattern().Match(p);
+			if(p == "-1")
+				return $"(1/{b})";
+
+			var m = SquareRootPattern().Match(p);
 			if (m.Success)
 				return '√' + b;
 
-			m = Exponent.ConstantPowerPattern().Match(p);
+			m = ConstantPowerPattern().Match(p);
 			if (!m.Success) return $"({b}^{p})"!;
 
 			var ps = p.Contains('.') || p.StartsWith('-')
 				? '^' + p
-				: Exponent.ConvertToSuperScript(p);
+				: ConvertToSuperScript(p);
 
 			if (ps == "¹") return b;
 
@@ -101,7 +104,7 @@ public class Exponent<T> : OperatorBase<T>,
 		IEvaluate<T> bas = catalog.GetReduced(Base);
 		IEvaluate<T> pow = catalog.GetReduced(Power);
 
-		var one = catalog.GetConstant(T.One);
+		var one = catalog.GetConstant(T.MultiplicativeIdentity);
 		Debug.Assert(one.Value == T.One);
 		// No need to reduce if the power is already 1.
 		if (pow == one)
@@ -140,6 +143,10 @@ public class Exponent<T> : OperatorBase<T>,
 			var p = pow.Value;
 			Debug.Assert(p != T.One, "The case where the power is one have already been done.");
 
+			bool pZero = p == T.Zero;
+			if (pZero && _powerOfZeroReduction == PowerOfZeroReduction.One)
+				return one;
+
 			if (bas is IConstant<T> cBas)
 			{
 				// Whenver the bas is one, the result is one (the base)
@@ -150,12 +157,12 @@ public class Exponent<T> : OperatorBase<T>,
 				// Base is zero? No way out. :)
 				if (b == T.Zero)
 				{
-					if (p == T.Zero)
+					if (pZero)
 					{
 						switch (_powerOfZeroReduction)
 						{
-							case PowerOfZeroReduction.One:
-								return one;
+							case PowerOfZeroReduction.Retain:
+								return VerifyDifferences(bas, pow);
 
 							case PowerOfZeroReduction.Throw:
 								throw new InvalidOperationException("0 to the power of 0 is undefined.");
@@ -169,7 +176,7 @@ public class Exponent<T> : OperatorBase<T>,
 					return catalog.GetConstant(T.Zero);
 				}
 
-				if (p == T.Zero)
+				if (pZero)
 				{
 					// If the power is zero, the result is always 1 unless the base is zero.
 					return catalog.GetConstant(T.Zero);
@@ -236,8 +243,9 @@ public static partial class Exponent
 	public enum PowerOfZeroReduction
 	{
 		One, // Any power of zero results in 1.
-		Zero, // If the base is zero, the result is zero.
-		Throw // Throw to indicate undefined.
+		Zero, // Evaluate 0^0 as 0.
+		Retain, // Don't reduce.
+		Throw // Throw if the base is zero.
 	}
 
 	public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
@@ -250,20 +258,17 @@ public static partial class Exponent
 		RegexOptions.IgnoreCase | RegexOptions.Compiled)]
 	internal static partial Regex ConstantPowerPattern();
 
-	public static string ConvertToSuperScript(string number)
+	public static string ConvertToSuperScript(ReadOnlySpan<char> number)
 	{
-		number.ThrowIfNull().OnlyInDebug();
-		return ArrayPool<char>.Shared.Rent(number!.Length, number, (number, r) =>
+		var len = number.Length;
+		Span<char> span = stackalloc char[len];
+		for (var i = 0; i < len; i++)
 		{
-			var len = number.Length;
-			for (var i = 0; i < len; i++)
-			{
-				var n = char.GetNumericValue(number[i]);
-				r[i] = SuperScriptDigits[(int)n];
-			}
+			var n = char.GetNumericValue(number[i]);
+			span[i] = SuperScriptDigits[(int)n];
+		}
 
-			return new string(r, 0, len);
-		});
+		return new string(span);
 	}
 
 	public static Exponent<TResult> GetExponent<TResult>(
@@ -307,50 +312,56 @@ public static partial class Exponent
 		if (exponent == T.Zero)
 			return T.MultiplicativeIdentity;
 
-		if (!exponent.IsInteger())
+		Debug.Assert(baseValue != T.Zero || exponent > T.Zero, "Cannot divide by zero.");
+
+		if (exponent.IsInteger())
 		{
-			switch (exponent)
+			T result;
+			if (exponent < T.Zero)
 			{
-				case double exp:
-				{
-					return baseValue is double bv
-						? (T)(object)Math.Pow(bv, exp)
-						: throw new UnreachableException("Strange type mismatch.");
-				}
+				result = T.One;
+				exponent = -exponent;
+				// Division.
+				for (var i = T.One; i <= exponent; i++)
+					result /= baseValue;
 
-				case float exp:
-				{
-					return baseValue is float bv
-						? (T)(object)(float)Math.Pow(bv, exp)
-						: throw new UnreachableException("Strange type mismatch.");
-				}
-
-				case decimal exp:
-				{
-					return baseValue is decimal bv
-						? (T)(object)(decimal)Math.Pow(Convert.ToDouble(bv), Convert.ToDouble(exp))
-						: throw new UnreachableException("Strange type mismatch.");
-				}
+				Debug.Assert(result != T.One, "Type must be capable of division.");
+			}
+			else
+			{
+				result = baseValue;
+				// Multiplication.
+				for (var i = T.One; i < exponent; i++)
+					result *= baseValue;
 			}
 
-			throw new ArgumentException("No supported calculation for non-integer exponent.", nameof(exponent));
+			return result;
 		}
 
-		T result = baseValue;
-		if (exponent < T.Zero)
+		switch (exponent)
 		{
-			exponent = -exponent;
-			// Division.
-			for (var i = T.One; i < exponent; i++)
-				result /= baseValue;
-		}
-		else
-		{
-			// Multiplication.
-			for (var i = T.One; i < exponent; i++)
-				result *= baseValue;
+			case double exp:
+			{
+				return baseValue is double bv
+					? (T)(object)Math.Pow(bv, exp)
+					: throw new UnreachableException("Strange type mismatch.");
+			}
+
+			case float exp:
+			{
+				return baseValue is float bv
+					? (T)(object)(float)Math.Pow(bv, exp)
+					: throw new UnreachableException("Strange type mismatch.");
+			}
+
+			case decimal exp:
+			{
+				return baseValue is decimal bv
+					? (T)(object)(decimal)Math.Pow(Convert.ToDouble(bv), Convert.ToDouble(exp))
+					: throw new UnreachableException("Strange type mismatch.");
+			}
 		}
 
-		return result;
+		throw new ArgumentException($"No supported calculation for exponent [{exponent.GetType()}]({exponent}).", nameof(exponent));
 	}
 }

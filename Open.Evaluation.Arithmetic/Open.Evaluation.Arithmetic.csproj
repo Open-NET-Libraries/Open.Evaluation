@@ -12,6 +12,7 @@
 		<Copyright>© electricessence (Oren F.) All rights reserved.</Copyright>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<EnableNETAnalyzers>true</EnableNETAnalyzers>
+		<NoWarn>CS1718</NoWarn>
 		<PackageProjectUrl>https://github.com/Open-NET-Libraries/Open.Evaluation/</PackageProjectUrl>
 		<RepositoryUrl>https://github.com/Open-NET-Libraries/Open.Evaluation/</RepositoryUrl>
 		<IncludeSymbols>true</IncludeSymbols>
@@ -45,7 +46,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
-		<PackageReference Include="Open.Numeric.Primes" Version="4.0.1" />
+		<PackageReference Include="Open.Numeric.Primes" Version="4.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
