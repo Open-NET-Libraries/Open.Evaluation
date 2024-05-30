@@ -27,14 +27,14 @@ public interface IEvaluate : IDescribe
 }
 
 /// <inheritdoc cref="IEvaluate"/>
-public interface IEvaluate<TResult> : IEvaluate
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+public interface IEvaluate<T> : IEvaluate
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	/// <inheritdoc cref="IEvaluate.Evaluate(object)"/>
-	new EvaluationResult<TResult> Evaluate(Context context);
+	new EvaluationResult<T> Evaluate(Context context);
 
 	EvaluationResult<object> IEvaluate.Evaluate(Context context) => Evaluate(context);
 
 	/// <inheritdoc cref="IEvaluate.Catalog"/>
-	new ICatalog<IEvaluate<TResult>> Catalog { get; }
+	new ICatalog<IEvaluate<T>> Catalog { get; }
 }

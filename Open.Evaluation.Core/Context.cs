@@ -181,5 +181,15 @@ public class Context : DisposableBase
 		=> Shared.Rent();
 
 	public static void Use(Action<Context> handler)
-		=> Shared.Rent(handler);
+	=> Shared.Rent(handler);
+
+	public static EvaluationResult<T> Evaluate<T>(IEvaluate<T> e, ReadOnlySpan<T> values)
+		where T : notnull, IEquatable<T>, IComparable<T>
+	{
+		var context = Get();
+		context.Init(e.Catalog, values);
+		var result = e.Evaluate(context);
+		Shared.Give(context);
+		return result;
+	}
 }

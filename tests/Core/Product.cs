@@ -100,16 +100,10 @@ public static class Product
 					reduced.Description.Value
 						.Should().Be("((({0}²) * {2}) + (({0}²) * {3}) + (({1}²) * {2}) + (({1}²) * {3}) + (2 * {0} * {1} * {2}) + (2 * {0} * {1} * {3}) + ({0} * {2}) + ({1} * {2}))");
 
-					Context.Use(c2 =>
-					{
-						ReadOnlySpan<double> p = [1, 2, 3, 4];
-						c2.Init(catalog, p);
-						var e = reduced.Evaluate(c2);
-						var eResult = e.Result;
-						var eDesc = e.Description.Value;
-						eResult
-							.Should().Be(vResult, eDesc);
-					});
+					var e = Context.Evaluate(reduced, [1, 2, 3, 4]);
+					var eResult = e.Result;
+					var eDesc = e.Description.Value;
+					eResult.Should().Be(vResult, eDesc);
 				});
 
 				// Verify that the context is not needed after evaluation.
@@ -123,7 +117,6 @@ public static class Product
 
 				evaluated.Result.Should().Be(72);
 				evaluated.Description.Value.Should().Be("((((1 + 2) * (3 + 4)) + 3) * (1 + 2))");
-
 			}
 		}
 
