@@ -9,8 +9,8 @@ public partial class Sum<T>
 	: ArithmeticOperatorBase<T>
 	where T : notnull, INumber<T>
 {
-	protected Sum(IEnumerable<IEvaluate<T>> children)
-		: base(Symbols.Sum, children, true) { }
+	protected Sum(ICatalog<IEvaluate<T>> catalog, IEnumerable<IEvaluate<T>> children)
+		: base(catalog, Symbols.Sum, children, true) { }
 
 	protected override EvaluationResult<T> EvaluateInternal(Context context)
 	{
@@ -175,7 +175,7 @@ public partial class Sum<T>
 		param.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new Sum<T>(param));
+		return catalog.Register(new Sum<T>(catalog, param));
 	}
 
 	internal virtual IEvaluate<T> NewUsing(

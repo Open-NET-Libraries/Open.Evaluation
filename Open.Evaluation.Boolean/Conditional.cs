@@ -1,26 +1,21 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-using Open.Evaluation.Core;
+﻿using Open.Evaluation.Core;
 using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-// ReSharper disable once PossibleInfiniteInheritance
-public sealed class Conditional<TResult>
-	: OperationBase<TResult>,
-		IReproducable<(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>), IEvaluate<TResult>>
-		where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+public sealed class Conditional<T>
+	: OperationBase<T>,
+		IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>
+		where T : notnull, IEquatable<T>, IComparable<T>
 {
 	private Conditional(
+		ICatalog<IEvaluate<T>> catalog,
 		IEvaluate<bool> condition,
-		IEvaluate<TResult> ifTrue,
-		IEvaluate<TResult> ifFalse)
-		: base(Symbols.Conditional)
+		IEvaluate<T> ifTrue,
+		IEvaluate<T> ifFalse)
+		: base(catalog, Symbols.Conditional)
 	{
 		Condition = condition ?? throw new ArgumentNullException(nameof(condition));
 		IfTrue = ifTrue ?? throw new ArgumentNullException(nameof(ifTrue));
@@ -31,43 +26,53 @@ public sealed class Conditional<TResult>
 	public IEvaluate<bool> Condition { get; }
 
 	[NotNull]
-	public IEvaluate<TResult> IfTrue { get; }
+	public IEvaluate<T> IfTrue { get; }
 
 	[NotNull]
-	public IEvaluate<TResult> IfFalse { get; }
+	public IEvaluate<T> IfFalse { get; }
 
 	private static string Format(object condition, object ifTrue, object ifFalse)
 		=> $"{condition} ? {ifTrue} : {ifFalse}";
 
 	protected override string Describe()
-		=> Conditional<TResult>.Format(
+		=> Conditional<T>.Format(
 			Condition.Description,
 			IfTrue.Description,
 			IfFalse.Description);
 
-	protected override EvaluationResult<TResult> EvaluateInternal(Context context)
+	protected override EvaluationResult<T> EvaluateInternal(Context context)
 		=> Condition.Evaluate(context)
 			? IfTrue.Evaluate(context)
 			: IfFalse.Evaluate(context);
 
-	internal static Conditional<TResult> Create(
-		ICatalog<IEvaluate<TResult>> catalog,
-		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
+	internal static Conditional<T> Create(
+		ICatalog<IEvaluate<T>> catalog,
+		(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
 	{
 		catalog.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		return catalog.Register(
-			new Conditional<TResult>(
+			new Conditional<T>(
+				catalog,
 				param.Item1,
 				param.Item2,
 				param.Item3));
 	}
 
-	public IEvaluate<TResult> NewUsing(
-		ICatalog<IEvaluate<TResult>> catalog,
-		(IEvaluate<bool>, IEvaluate<TResult>, IEvaluate<TResult>) param)
+	public Conditional<T> NewUsing(
+		ICatalog<IEvaluate<T>> catalog,
+		(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
 		=> Create(catalog, param);
+
+	public Conditional<T> NewUsing((IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
+		=> NewUsing(Catalog, param);
+
+	IEvaluate<T> IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>.NewUsing(ICatalog<IEvaluate<T>> catalog, (IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
+		=> NewUsing(Catalog, param);
+
+	IEvaluate<T> IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>.NewUsing((IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
+		=> NewUsing(param);
 }
 
 public static class ConditionalExtensions

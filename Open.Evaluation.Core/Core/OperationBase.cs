@@ -1,26 +1,21 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
-public abstract class OperationBase<TResult>(Symbol symbol)
-	: EvaluationBase<TResult>, IFunction<TResult>, IReducibleEvaluation<IEvaluate<TResult>>
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+public abstract class OperationBase<T>(ICatalog<IEvaluate<T>> catalog, Symbol symbol)
+	: EvaluationBase<T>(catalog), IFunction<T>, IReducibleEvaluation<IEvaluate<T>>
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	public Symbol Symbol { get; } = symbol;
 
-	protected virtual IEvaluate<TResult> Reduction(
-		ICatalog<IEvaluate<TResult>> catalog)
+	protected virtual IEvaluate<T> Reduction(
+		ICatalog<IEvaluate<T>> catalog)
 		=> this;
 
 	// Override this if reduction is possible.  Return null if you can't reduce.
 	public bool TryGetReduced(
-		ICatalog<IEvaluate<TResult>> catalog,
-		[NotNull] out IEvaluate<TResult> reduction)
+		ICatalog<IEvaluate<T>> catalog,
+		[NotNull] out IEvaluate<T> reduction)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 		reduction = Reduction(catalog);

@@ -1,29 +1,15 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-using Open.Evaluation.Core;
+﻿using Open.Evaluation.Core;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Boolean.Counting
 {
 	public class Exactly : CountingBase,
 		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
-		internal Exactly(int count, IEnumerable<IEvaluate<bool>> children)
-			: base(nameof(Exactly), count, children)
+		internal Exactly(ICatalog<IEvaluate<bool>> catalog, int count, IEnumerable<IEvaluate<bool>> children)
+			: base(catalog, nameof(Exactly), count, children)
 		{
 		}
-
-		internal static IEvaluate<bool> Create(
-			ICatalog<IEvaluate<bool>> catalog,
-			(int count, IEnumerable<IEvaluate<bool>> children) param)
-			=> catalog.Register(new Exactly(param.count, param.children));
-
-		public IEvaluate<bool> NewUsing(
-			ICatalog<IEvaluate<bool>> catalog,
-			(int, IEnumerable<IEvaluate<bool>>) param)
-			=> Create(catalog, param);
 
 		protected override EvaluationResult<bool> EvaluateInternal(Context context)
 		{
@@ -38,6 +24,27 @@ namespace Open.Evaluation.Boolean.Counting
 
 			return new(count == Count, desc);
 		}
+
+		internal static Exactly Create(
+			ICatalog<IEvaluate<bool>> catalog,
+			(int count, IEnumerable<IEvaluate<bool>> children) param)
+			=> catalog.Register(new Exactly(catalog, param.count, param.children));
+
+		[SuppressMessage("Performance", "CA1822:Mark members as static")]
+		public Exactly NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
+			(int, IEnumerable<IEvaluate<bool>>) param)
+			=> Create(catalog, param);
+
+		public Exactly NewUsing(
+			(int, IEnumerable<IEvaluate<bool>>) param)
+			=> Create(Catalog, param);
+
+		IEvaluate<bool> IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>.NewUsing(ICatalog<IEvaluate<bool>> catalog, (int, IEnumerable<IEvaluate<bool>>) param)
+			=> NewUsing(catalog, param);
+
+		IEvaluate<bool> IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>.NewUsing((int, IEnumerable<IEvaluate<bool>>) param)
+			=> NewUsing(param);
 	}
 }
 

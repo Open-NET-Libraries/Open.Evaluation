@@ -1,10 +1,6 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-using Open.Collections;
+﻿using Open.Collections;
 using Open.Evaluation.Core;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using Throw;
 
@@ -13,8 +9,8 @@ namespace Open.Evaluation.Boolean;
 public sealed class Or : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
-	private Or(IEnumerable<IEvaluate<bool>> children)
-		: base(Symbols.Or, children, true) { }
+	private Or(ICatalog<IEvaluate<bool>> catalog, IEnumerable<IEvaluate<bool>> children)
+		: base(catalog, Symbols.Or, children, true) { }
 
 	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
@@ -34,18 +30,29 @@ public sealed class Or : OperatorBase<bool>,
 		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new Or(param));
+		return catalog.Register(new Or(catalog, param));
 	}
 
-	public IEvaluate<bool> NewUsing(
+	[SuppressMessage("Performance", "CA1822:Mark members as static")]
+	public Or NewUsing(
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)
 		=> Create(catalog, param);
+
+	public Or NewUsing(
+		IEnumerable<IEvaluate<bool>> param)
+		=> Create(Catalog, param);
+
+	IEvaluate<bool> IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>.NewUsing(ICatalog<IEvaluate<bool>> catalog, IEnumerable<IEvaluate<bool>> param)
+		=> NewUsing(catalog, param);
+
+	IEvaluate<bool> IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>.NewUsing(IEnumerable<IEvaluate<bool>> param)
+		=> NewUsing(param);
 }
 
 public static class OrExtensions
 {
-	public static IEvaluate<bool> Or(
+	public static Or Or(
 		this ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> children)
 		=> Boolean.Or.Create(catalog, children);

@@ -19,10 +19,9 @@
 		<PublishRepositoryUrl>true</PublishRepositoryUrl>
 		<AnalysisLevel>latest</AnalysisLevel>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Description>
-			A framework for evaluating complex formulas.
+		<Description>A framework for evaluating complex formulas.
 
-			Part of the "Open" set of libraries.
+Part of the "Open" set of libraries.
 		</Description>
 		<PackageIcon>logo.png</PackageIcon>
 	</PropertyGroup>
@@ -34,6 +33,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="..\logo.png">
+		  <Pack>True</Pack>
+		  <PackagePath>\</PackagePath>
+		</None>
 		<None Include="..\README.md">
 		  <Pack>True</Pack>
 		  <PackagePath>\</PackagePath>

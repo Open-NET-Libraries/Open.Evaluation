@@ -1,30 +1,26 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-namespace Open.Evaluation.Core;
+﻿namespace Open.Evaluation.Core;
 
 [DebuggerDisplay("Value = {Value}")]
-public class Constant<TValue>
-	: EvaluationBase<TValue>, IConstant<TValue>, IReproducable<TValue, IEvaluate<TValue>>
-	where TValue : notnull, IEquatable<TValue>, IComparable<TValue>
+public class Constant<T>
+	: EvaluationBase<T>, IConstant<T>, IReproducable<T, IEvaluate<T>>
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
-	protected Constant(in TValue value)
+	protected Constant(ICatalog<IEvaluate<T>> catalog,  in T value)
+		: base(catalog)
 	{
 		Value = value.ThrowIfNull();
 		_result = new(Value, Description);
 	}
 
 	/// <inheritdoc />
-	public TValue Value
+	public T Value
 	{
 		get;
 	}
 
-	private readonly EvaluationResult<TValue> _result;
+	private readonly EvaluationResult<T> _result;
 
-	protected static string ToStringRepresentation(in TValue value)
+	protected static string ToStringRepresentation(in T value)
 	{
 		Debug.Assert(value is not null);
 		return value.ToString()!;
@@ -33,22 +29,30 @@ public class Constant<TValue>
 	protected override string Describe()
 		=> ToStringRepresentation(Value);
 
-	protected override EvaluationResult<TValue> EvaluateInternal(Context context)
+	protected override EvaluationResult<T> EvaluateInternal(Context context)
 		=> _result;
 
-	internal static Constant<TValue> Create(ICatalog<IEvaluate<TValue>> catalog, TValue value)
+	internal static Constant<T> Create(ICatalog<IEvaluate<T>> catalog, T value)
 	{
 		// TODO: maybe introduce a faster method of acquiring a contant?
-		var constant = catalog.Register(ToStringRepresentation(in value), _ => new Constant<TValue>(value));
+		var constant = catalog.Register(ToStringRepresentation(in value), value, (_, c, v) => new Constant<T>(c, v));
 		Debug.Assert(constant.Value.Equals(value));
 		return constant;
 	}
 
-	/// <inheritdoc />
-	public virtual IEvaluate<TValue> NewUsing(ICatalog<IEvaluate<TValue>> catalog, TValue param)
+	/// <inheritdoc cref="IReproducable{TParam, TEval}.NewUsing(ICatalog{TEval}, TParam)" />
+	public virtual Constant<T> NewUsing(ICatalog<IEvaluate<T>> catalog, T param)
 		=> Create(catalog, param);
 
-	public static implicit operator TValue(Constant<TValue> constant)
+	/// <inheritdoc cref="IReproducable{TParam, TEval}.NewUsing(TParam)" />
+	public Constant<T> NewUsing(T param)
+		=> NewUsing(Catalog, param);
+	IEvaluate<T> IReproducable<T, IEvaluate<T>>.NewUsing(ICatalog<IEvaluate<T>> catalog, T param)
+		=> NewUsing(Catalog, param);
+	IEvaluate<T> IReproducable<T, IEvaluate<T>>.NewUsing(T param)
+		=> NewUsing(param);
+
+	public static implicit operator T(Constant<T> constant)
 		=> constant.Value;
 }
 

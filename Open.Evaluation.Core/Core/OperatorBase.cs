@@ -1,18 +1,13 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
+﻿namespace Open.Evaluation.Core;
 
-namespace Open.Evaluation.Core;
-
-public abstract class OperatorBase<TChild, TResult>
-	: OperationBase<TResult>, IOperator<TChild, TResult>, IComparer<TChild>
+public abstract class OperatorBase<TChild, T>
+	: OperationBase<T>, IOperator<TChild, T>, IComparer<TChild>
 
 	where TChild : class, IEvaluate
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
-	protected OperatorBase(Symbol symbol, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1)
-		: base(symbol)
+	protected OperatorBase(ICatalog<IEvaluate<T>> catalog, Symbol symbol, IEnumerable<TChild> children, bool reorderChildren = false, int minimumChildren = 1)
+		: base(catalog, symbol)
 	{
 		children.ThrowIfNull();
 		Contract.EndContractBlock();
@@ -87,30 +82,30 @@ public abstract class OperatorBase<TChild, TResult>
 
 		switch (x)
 		{
-			case IConstant<TResult> aC when y is IConstant<TResult> bC:
+			case IConstant<T> aC when y is IConstant<T> bC:
 				return bC.Value.CompareTo(aC.Value); // Descending...
 
-			case IConstant<TResult> _:
+			case IConstant<T> _:
 				return +1 * ConstantPriority;
 		}
 
-		if (y is IConstant<TResult>)
+		if (y is IConstant<T>)
 			return -1 * ConstantPriority;
 
 		switch (x)
 		{
-			case IParameter<TResult> aP when y is IParameter<TResult> bP:
+			case IParameter<T> aP when y is IParameter<T> bP:
 				return aP.Id.CompareTo(bP.Id);
 
-			case IParameter<TResult> _:
+			case IParameter<T> _:
 				return +1;
 		}
 
-		if (y is IParameter<TResult>)
+		if (y is IParameter<T>)
 			return -1;
 
-		var aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant<TResult>) ?? 0) + 1;
-		var bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant<TResult>) ?? 0) + 1;
+		var aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant<T>) ?? 0) + 1;
+		var bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant<T>) ?? 0) + 1;
 
 		if (aChildCount > bChildCount) return -1;
 		if (aChildCount < bChildCount) return +1;
@@ -122,21 +117,21 @@ public abstract class OperatorBase<TChild, TResult>
 	}
 }
 
-public abstract class OperatorBase<TResult>(
-	Symbol symbol, IEnumerable<IEvaluate<TResult>> children,
+public abstract class OperatorBase<T>(
+	ICatalog<IEvaluate<T>> catalog, Symbol symbol, IEnumerable<IEvaluate<T>> children,
 	bool reorderChildren = false, int minimumChildren = 1)
-	: OperatorBase<IEvaluate<TResult>, TResult>(symbol, children, reorderChildren, minimumChildren)
-	where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+	: OperatorBase<IEvaluate<T>, T>(catalog, symbol, children, reorderChildren, minimumChildren)
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
-	protected new IEnumerable<EvaluationResult<TResult>> ChildResults(Context context)
+	protected new IEnumerable<EvaluationResult<T>> ChildResults(Context context)
 	{
 		foreach (var child in Children)
 			yield return child.Evaluate(context);
 	}
 
-	internal protected static IEvaluate<TResult> ConditionalTransform(
-		IEnumerable<IEvaluate<TResult>> param,
-		Func<ImmutableArray<IEvaluate<TResult>>, IEvaluate<TResult>> transform)
+	internal protected static IEvaluate<T> ConditionalTransform(
+		IEnumerable<IEvaluate<T>> param,
+		Func<ImmutableArray<IEvaluate<T>>, IEvaluate<T>> transform)
 	{
 		param.ThrowIfNull().OnlyInDebug();
 		transform.ThrowIfNull().OnlyInDebug();
@@ -146,7 +141,7 @@ public abstract class OperatorBase<TResult>(
 		if (!e.MoveNext()) return transform([]);
 		var v0 = e.Current;
 		if (!e.MoveNext()) return v0;
-		var builder = ImmutableArray.CreateBuilder<IEvaluate<TResult>>();
+		var builder = ImmutableArray.CreateBuilder<IEvaluate<T>>();
 		builder.Add(v0);
 		do { builder.Add(e.Current); }
 		while (e.MoveNext());

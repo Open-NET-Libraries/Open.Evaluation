@@ -41,11 +41,12 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		var result = Registry.GetOrAdd(key, OnBeforeRegistration(item));
 		Debug.Assert(result is not null);
 		Debug.Assert(result is TItem);
+		Debug.Assert(result.Catalog == this);
 		return (TItem)result;
 	}
 
 	[return: NotNull]
-	public TItem Register<TItem>(string id, Func<string, TItem> factory)
+	public TItem Register<TItem>(string id, Func<string, ICatalog<T>, TItem> factory)
 		where TItem : T
 	{
 		id.ThrowIfNull();
@@ -54,8 +55,9 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
-			var e = factory(k);
+			var e = factory(k, this);
 			Debug.Assert(e is not null);
+			Debug.Assert(e.Catalog == this);
 			var hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k ? throw new ArgumentException($"Does not match instance.ToString().\nkey: {k}\nhash: {hash}", nameof(id))
@@ -64,18 +66,18 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	}
 
 	[return: NotNull]
-	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
+	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, ICatalog<T>, TParam, TItem> factory)
 		where TItem : T
 	{
 		id.ThrowIfNull();
 		factory.ThrowIfNull();
-		Contract.Ensures(Contract.Result<TItem>() is not null);
 		Contract.EndContractBlock();
 
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
-			var e = factory(k, param);
+			var e = factory(k, this, param);
 			Debug.Assert(e is not null);
+			Debug.Assert(e.Catalog == this);
 			var hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
@@ -91,6 +93,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		var result = Registry.TryGetValue(id, out var e);
 		Debug.Assert(e is not null);
+		Debug.Assert(e.Catalog == this);
 		item = (TItem)e;
 		return result;
 	}

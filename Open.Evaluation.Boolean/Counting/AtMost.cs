@@ -1,29 +1,16 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
+﻿using Open.Evaluation.Boolean.Counting;
 using Open.Evaluation.Core;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Boolean.Counting
 {
 	public class AtMost : CountingBase,
-			IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
+		IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>
 	{
-		internal AtMost(int count, IEnumerable<IEvaluate<bool>> children)
-			: base(nameof(AtMost), count, children)
+		internal AtMost(ICatalog<IEvaluate<bool>> catalog, int count, IEnumerable<IEvaluate<bool>> children)
+			: base(catalog, nameof(AtMost), count, children)
 		{
 		}
-
-		internal static IEvaluate<bool> Create(
-			ICatalog<IEvaluate<bool>> catalog,
-			(int count, IEnumerable<IEvaluate<bool>> children) param)
-			=> catalog.Register(new AtMost(param.count, param.children));
-
-		public IEvaluate<bool> NewUsing(
-			ICatalog<IEvaluate<bool>> catalog,
-			(int, IEnumerable<IEvaluate<bool>>) param)
-			=> Create(catalog, param);
 
 		protected override EvaluationResult<bool> EvaluateInternal(Context context)
 		{
@@ -38,6 +25,27 @@ namespace Open.Evaluation.Boolean.Counting
 
 			return new(true, desc);
 		}
+
+		internal static AtMost Create(
+			ICatalog<IEvaluate<bool>> catalog,
+			(int count, IEnumerable<IEvaluate<bool>> children) param)
+			=> catalog.Register(new AtMost(catalog, param.count, param.children));
+
+		[SuppressMessage("Performance", "CA1822:Mark members as static")]
+		public AtMost NewUsing(
+			ICatalog<IEvaluate<bool>> catalog,
+			(int, IEnumerable<IEvaluate<bool>>) param)
+			=> Create(catalog, param);
+
+		public AtMost NewUsing(
+			(int, IEnumerable<IEvaluate<bool>>) param)
+			=> Create(Catalog, param);
+
+		IEvaluate<bool> IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>.NewUsing(ICatalog<IEvaluate<bool>> catalog, (int, IEnumerable<IEvaluate<bool>>) param)
+			=> NewUsing(catalog, param);
+
+		IEvaluate<bool> IReproducable<(int, IEnumerable<IEvaluate<bool>>), IEvaluate<bool>>.NewUsing((int, IEnumerable<IEvaluate<bool>>) param)
+			=> NewUsing(param);
 	}
 }
 
@@ -45,9 +53,9 @@ namespace Open.Evaluation.Boolean
 {
 	public static partial class BooleanExtensions
 	{
-		public static IEvaluate<bool> CountAtMost(
+		public static AtMost CountAtMost(
 			this ICatalog<IEvaluate<bool>> catalog,
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
-			=> Counting.AtMost.Create(catalog, param);
+			=> AtMost.Create(catalog, param);
 	}
 }

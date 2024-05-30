@@ -3,6 +3,7 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
+using Open.Evaluation.Core;
 using static Open.Evaluation.Arithmetic.Exponent;
 
 namespace Open.Evaluation.Arithmetic;
@@ -16,10 +17,11 @@ public class Exponent<T> : OperatorBase<T>,
 	private readonly PowerOfZeroReduction _powerOfZeroReduction;
 
 	protected Exponent(
+		ICatalog<IEvaluate<T>> catalog,
 		IEvaluate<T> @base,
 		IEvaluate<T> power,
 		PowerOfZeroReduction powerOfZeroReduction = PowerOfZeroReduction.One)
-		: base(Symbols.Exponent,
+		: base(catalog, Symbols.Exponent,
 			  // Need to provide to children so a node tree can be built.
 			  new[] { @base, power })
 	{
@@ -229,13 +231,17 @@ public class Exponent<T> : OperatorBase<T>,
 		power.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new Exponent<T>(@base, power));
+		return catalog.Register(new Exponent<T>(catalog, @base, power));
 	}
 
 	public virtual IEvaluate<T> NewUsing(
 		ICatalog<IEvaluate<T>> catalog,
 		(IEvaluate<T>, IEvaluate<T>) param)
 		=> Create(catalog, param.Item1, param.Item2);
+
+	public IEvaluate<T> NewUsing(
+		(IEvaluate<T>, IEvaluate<T>) param)
+		=> NewUsing(Catalog, param);
 }
 
 public static partial class Exponent

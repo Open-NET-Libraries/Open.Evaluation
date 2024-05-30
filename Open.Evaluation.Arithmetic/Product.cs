@@ -6,15 +6,14 @@
 namespace Open.Evaluation.Arithmetic;
 
 public partial class Product<T> :
-	OperatorBase<T>,
-	IReproducable<IEnumerable<IEvaluate<T>>, IEvaluate<T>>
+	ArithmeticOperatorBase<T>
 	where T : notnull, INumber<T>
 {
-	protected Product(IEnumerable<IEvaluate<T>> children)
-		: base(Symbols.Product, children, true, 2) { }
+	protected Product(ICatalog<IEvaluate<T>> catalog, IEnumerable<IEvaluate<T>> children)
+		: base(catalog, Symbols.Product, children, true, 2) { }
 
-	protected Product(IEvaluate<T> first, params IEvaluate<T>[] rest)
-		: this([first, ..rest]) { }
+	protected Product(ICatalog<IEvaluate<T>> catalog, IEvaluate<T> first, params IEvaluate<T>[] rest)
+		: this(catalog, [first, ..rest]) { }
 
 	protected override int ConstantPriority => -1;
 
@@ -311,7 +310,7 @@ public partial class Product<T> :
 		param.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		return catalog.Register(new Product<T>(param));
+		return catalog.Register(new Product<T>(catalog, param));
 	}
 
 	public virtual IEvaluate<T> NewUsing(
@@ -322,12 +321,16 @@ public partial class Product<T> :
 		return param.Count == 1 ? param[0] : Create(catalog, param);
 	}
 
-	public virtual IEvaluate<T> NewUsing(
+	public override IEvaluate<T> NewUsing(
 		ICatalog<IEvaluate<T>> catalog,
 		IEnumerable<IEvaluate<T>> param)
 		=> param is IReadOnlyList<IEvaluate<T>> p
 		? NewUsing(catalog, p)
 		: ConditionalTransform(param, p => Create(catalog, p));
+
+	public virtual IEvaluate<T> NewUsing(
+		IReadOnlyList<IEvaluate<T>> param)
+		=> NewUsing(Catalog, param);
 }
 
 public static class Product

@@ -16,11 +16,11 @@ public interface ICatalog<T> : IDisposable
 		where TItem : T;
 
 	[return: NotNull]
-	TItem Register<TItem>(string id, Func<string, TItem> factory)
+	TItem Register<TItem>(string id, Func<string, ICatalog<T>, TItem> factory)
 		where TItem : T;
 
 	[return: NotNull]
-	TItem Register<TItem, TParam>(string id, TParam param, Func<string, TParam, TItem> factory)
+	TItem Register<TItem, TParam>(string id, TParam param, Func<string, ICatalog<T>, TParam, TItem> factory)
 		where TItem : T;
 
 	bool TryGetItem<TItem>(string id, [MaybeNullWhen(false)] out TItem item)

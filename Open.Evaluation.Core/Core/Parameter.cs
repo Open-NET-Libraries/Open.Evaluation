@@ -1,19 +1,14 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-namespace Open.Evaluation.Core;
+﻿namespace Open.Evaluation.Core;
 
 [DebuggerDisplay(@"\{{Id}\}")]
 public class Parameter<T>
 	: EvaluationBase<T>,
 		IParameter<T>,
-		IReproducable<ushort,
-		IEvaluate<T>>
+		IReproducable<ushort, IEvaluate<T>>
 	where T : notnull, IEquatable<T>, IComparable<T>
 {
-	protected Parameter(ushort id)
+	protected Parameter(ICatalog<IEvaluate<T>> catalog, ushort id)
+		: base(catalog)
 		=> Id = id;
 
 	public ushort Id { get; }
@@ -28,7 +23,7 @@ public class Parameter<T>
 			: throw new InvalidOperationException($"Parameter {Id} result not found in the context.");
 
 	internal static Parameter<T> Create(ICatalog<IEvaluate<T>> catalog, ushort id)
-		=> catalog.Register(ToStringRepresentation(id), id, (_, id) => new Parameter<T>(id));
+		=> catalog.Register(ToStringRepresentation(id), id, (_, c, id) => new Parameter<T>(c, id));
 
 	internal static Parameter<T> Create(ICatalog<IEvaluate<T>> catalog, int id)
 		=> Create(catalog,
@@ -36,8 +31,17 @@ public class Parameter<T>
 				.Throw("The value of 'id' must be within the ushort range.")
 				.IfOutOfRange(ushort.MinValue, ushort.MaxValue));
 
-	public virtual IEvaluate<T> NewUsing(ICatalog<IEvaluate<T>> catalog, ushort param)
-		=> catalog.Register(ToStringRepresentation(param), param, (_, id) => new Parameter<T>(id));
+	public virtual Parameter<T> NewUsing(ICatalog<IEvaluate<T>> catalog, ushort param)
+		=> Create(catalog, param);
+
+	public Parameter<T> NewUsing(ushort param)
+		=> NewUsing(Catalog, param);
+
+	IEvaluate<T> IReproducable<ushort, IEvaluate<T>>.NewUsing(ICatalog<IEvaluate<T>> catalog, ushort param)
+		=> NewUsing(Catalog, param);
+
+	IEvaluate<T> IReproducable<ushort, IEvaluate<T>>.NewUsing(ushort param)
+		=> NewUsing(param);
 }
 
 public static class ParameterExtensions

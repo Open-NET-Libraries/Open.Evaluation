@@ -6,6 +6,8 @@ This set of interfaces and classes can be used to create serializable (human rea
 
 For example: Given a specific mathmatical formula (or function), it is possible to not only resolve/evaluate the result given a set of parameters, it is also possible to inspect the formula's structure and see how the values are being used.
 
+See LICENSE.txt (GPL v3) for licensing information.
+
 ## Evaluation Classes
 
 (See Core/EvaluationBase.cs)

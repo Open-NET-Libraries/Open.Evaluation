@@ -1,9 +1,4 @@
-﻿/*!
- * @author electricessence / https://github.com/electricessence/
- * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
- */
-
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
 
@@ -12,12 +7,21 @@ namespace Open.Evaluation.Core;
  * A clone can only be created by 'recreating' or 'reconstructing'.
  */
 
-public abstract class EvaluationBase<TResult>
-	: IEvaluate<TResult>
-		where TResult : notnull, IEquatable<TResult>, IComparable<TResult>
+public abstract class EvaluationBase<T>
+	: IEvaluate<T>
+		where T : notnull, IEquatable<T>, IComparable<T>
 {
-	protected EvaluationBase()
-		=> Description = new(Describe);
+	protected EvaluationBase(ICatalog<IEvaluate<T>> catalog)
+	{
+		Description = new(Describe);
+		Catalog = catalog;
+	}
+
+	/// <summary>
+	/// The catalog this evaluation is associated with.
+	/// </summary>
+	public ICatalog<IEvaluate<T>> Catalog { get; }
+	object IEvaluate.Catalog => Catalog;
 
 	protected abstract string Describe();
 
@@ -30,10 +34,10 @@ public abstract class EvaluationBase<TResult>
 	public override string ToString() => Description.Value;
 		//=> $"{GetType()} {Description.Value}";
 
-	protected abstract EvaluationResult<TResult> EvaluateInternal(Context context); // **
+	protected abstract EvaluationResult<T> EvaluateInternal(Context context); // **
 
 	/// <inheritdoc />
-	public EvaluationResult<TResult> Evaluate(Context context)
+	public EvaluationResult<T> Evaluate(Context context)
 	{
 		context.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
