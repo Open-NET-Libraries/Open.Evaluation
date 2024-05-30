@@ -1,5 +1,4 @@
-﻿using OneOf.Types;
-using Open.Evaluation.Arithmetic;
+﻿using Open.Evaluation.Arithmetic;
 
 namespace Open.Evaluation.Tests;
 

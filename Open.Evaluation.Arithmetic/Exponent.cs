@@ -3,7 +3,6 @@
  * Licensing: MIT https://github.com/Open-NET-Libraries/Open.Evaluation/blob/master/LICENSE.txt
  */
 
-using Open.Evaluation.Core;
 using static Open.Evaluation.Arithmetic.Exponent;
 
 namespace Open.Evaluation.Arithmetic;
