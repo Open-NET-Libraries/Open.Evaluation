@@ -100,7 +100,7 @@ public static class Product
 					reduced.Description.Value
 						.Should().Be("((({0}²) * {2}) + (({0}²) * {3}) + (({1}²) * {2}) + (({1}²) * {3}) + (2 * {0} * {1} * {2}) + (2 * {0} * {1} * {3}) + ({0} * {2}) + ({1} * {2}))");
 
-					var e = Context.Evaluate(reduced, [1, 2, 3, 4]);
+					var e = Context.Evaluate(reduced, p);
 					var eResult = e.Result;
 					var eDesc = e.Description.Value;
 					eResult.Should().Be(vResult, eDesc);
