@@ -1,4 +1,5 @@
-﻿using Open.Evaluation.Arithmetic;
+﻿using OneOf.Types;
+using Open.Evaluation.Arithmetic;
 
 namespace Open.Evaluation.Tests;
 
@@ -111,6 +112,19 @@ public static class Product
 							.Should().Be(vResult, eDesc);
 					});
 				});
+
+				// Verify that the context is not needed after evaluation.
+				EvaluationResult<double> evaluated = default;
+				using(var context = new Context())
+				{
+					ReadOnlySpan<double> p = [1, 2, 3, 4];
+					context.Init(catalog, p);
+					evaluated = sample.Evaluate(context);
+				}
+
+				evaluated.Result.Should().Be(72);
+				evaluated.Description.Value.Should().Be("((((1 + 2) * (3 + 4)) + 3) * (1 + 2))");
+
 			}
 		}
 
