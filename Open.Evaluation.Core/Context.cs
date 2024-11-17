@@ -10,6 +10,7 @@ public class Context : DisposableBase
 	private readonly Dictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = [];
 
 	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, Func<IEvaluate, EvaluationResult<T>> factory)
+		where T : notnull
 	{
 		AssertIsAlive();
 
@@ -42,6 +43,7 @@ public class Context : DisposableBase
 	}
 
 	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, Func<EvaluationResult<T>> factory)
+		where T : notnull
 	{
 		AssertIsAlive();
 
@@ -73,6 +75,7 @@ public class Context : DisposableBase
 	}
 
 	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, [DisallowNull] T value)
+		where T : notnull
 	{
 		AssertIsAlive();
 
@@ -80,6 +83,7 @@ public class Context : DisposableBase
 	}
 
 	public bool TryGetResult<T>(IEvaluate key, out EvaluationResult<T> result)
+		where T : notnull
 	{
 		AssertIsAlive();
 

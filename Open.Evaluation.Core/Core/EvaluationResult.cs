@@ -9,9 +9,10 @@ public interface IEvaluationResult : IDescribe
 }
 
 public readonly record struct EvaluationResult<T> : IEvaluationResult
+	where T : notnull
 {
 	public EvaluationResult(
-		[DisallowNull] in T result,
+		in T result,
 		Lazy<string> description)
 	{
 		Result = result ?? throw new ArgumentNullException(nameof(result));
@@ -19,17 +20,17 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 	}
 
 	public EvaluationResult(
-		[DisallowNull] T result,
+		T result,
 		Func<T, string> descriptionFactory)
 		: this(result, Lazy.New(() => descriptionFactory(result))) { }
 
 	public EvaluationResult(
-		[DisallowNull] T result,
+		T result,
 		string description)
 		: this(result, Lazy.New(description ?? throw new ArgumentNullException(nameof(description)))) { }
 
 	public EvaluationResult(
-		[DisallowNull] T result)
+		T result)
 		: this(result, Lazy.New(() => result.ToString() ?? throw new Exception("result.ToString() returned null"))) { }
 
 	[NotNull]
@@ -66,21 +67,25 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 public static class EvaluationResult
 {
 	public static EvaluationResult<T> Create<T>(
-		[DisallowNull] in T result,
+		in T result,
 		Lazy<string> description)
+		where T : notnull
 		=> new(in result, description);
 
 	public static EvaluationResult<T> Create<T>(
-		[DisallowNull] T result,
+		T result,
 		Func<T, string> descriptionFactory)
+		where T : notnull
 		=> new(result, descriptionFactory);
 
 	public static EvaluationResult<T> Create<T>(
-		[DisallowNull] T result,
+		T result,
 		string description)
+		where T : notnull
 		=> new(result, description);
 
 	public static EvaluationResult<T> Create<T>(
-		[DisallowNull] T result)
+		T result)
+		where T : notnull
 		=> new(result);
 }

@@ -7,6 +7,9 @@ namespace Open.Evaluation.Core;
  * A clone can only be created by 'recreating' or 'reconstructing'.
  */
 
+/// <summary>
+/// Base class for evaluations.
+/// </summary>
 public abstract class EvaluationBase<T>
 	: IEvaluate<T>
 		where T : notnull, IEquatable<T>, IComparable<T>
@@ -23,6 +26,10 @@ public abstract class EvaluationBase<T>
 	public ICatalog<IEvaluate<T>> Catalog { get; }
 	object IEvaluate.Catalog => Catalog;
 
+	/// <summary>
+	/// Provides the non-paramerterized description of this evaluation.
+	/// </summary>
+	/// <returns></returns>
 	protected abstract string Describe();
 
 	/// <summary>

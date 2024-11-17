@@ -1,6 +1,7 @@
 ﻿namespace Open.Evaluation.Core;
 
-public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
+public class EvaluationCatalog<T>
+	: Catalog<IEvaluate<T>>
 	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	private static EvaluationCatalog<T>? _instance;
