@@ -18,8 +18,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 	readonly ConcurrentDictionary<string, T> Registry = new();
 
-	public void Register<TItem>([NotNull] ref TItem item)
-		where TItem : T
+	public void Register<TItem>(ref TItem item)
+		where TItem : notnull, T
 	{
 		item.ThrowIfNull();
 		Contract.EndContractBlock();
@@ -30,9 +30,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	protected virtual TItem OnBeforeRegistration<TItem>(TItem item)
 		=> item;
 
-	[return: NotNull]
 	public TItem Register<TItem>(TItem item)
-		where TItem : T
+		where TItem : notnull, T
 	{
 		item.ThrowIfNull();
 		Contract.EndContractBlock();
@@ -45,9 +44,9 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		return (TItem)result;
 	}
 
-	[return: NotNull]
-	public TItem Register<TItem>(string id, Func<string, ICatalog<T>, TItem> factory)
-		where TItem : T
+	public TItem Register<TItem>(
+		string id, Func<string, ICatalog<T>, TItem> factory)
+		where TItem : notnull, T
 	{
 		id.ThrowIfNull();
 		factory.ThrowIfNull();
@@ -60,14 +59,15 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 			Debug.Assert(e.Catalog == this);
             string? hash = e.ToString();
 			Debug.Assert(hash == k);
-			return hash != k ? throw new ArgumentException($"Does not match instance.ToString().\nkey: {k}\nhash: {hash}", nameof(id))
+			return hash != k
+				? throw new ArgumentException($"Does not match instance.ToString().\nkey: {k}\nhash: {hash}", nameof(id))
 				: (T)OnBeforeRegistration(e);
 		});
 	}
 
 	[return: NotNull]
 	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, ICatalog<T>, TParam, TItem> factory)
-		where TItem : T
+		where TItem : notnull, T
 	{
 		id.ThrowIfNull();
 		factory.ThrowIfNull();
@@ -80,13 +80,14 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 			Debug.Assert(e.Catalog == this);
             string? hash = e.ToString();
 			Debug.Assert(hash == k);
-			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
+			return hash != k
+				? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
 				: (T)OnBeforeRegistration(e);
 		});
 	}
 
 	public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
-		where TItem : T
+		where TItem : notnull, T
 	{
 		id.ThrowIfNull();
 		Contract.EndContractBlock();
@@ -103,7 +104,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	readonly ConditionalWeakTable<IReducibleEvaluation<T>, T> Reductions = [];
 
 	[return: NotNull]
-	public T GetReduced(T source)
+	public T GetReduced([DisallowNull] T source)
 	{
 		T src = Register(source);
 		return src is IReducibleEvaluation<T> s
@@ -130,20 +131,22 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	}
 
 	public bool TryGetReduced(
-		T source, [NotNull] out T reduction)
+		[DisallowNull] T source, [NotNull] out T reduction)
 	{
 		reduction = GetReduced(source);
 		return !reduction.Equals(source);
 	}
 
-	public abstract class SubmoduleBase(ICatalog<T> catalog, Node<T>.Factory factory)
+	public abstract class SubmoduleBase(
+		ICatalog<T> catalog, Node<T>.Factory factory)
 	{
 		// ReSharper disable once UnusedAutoPropertyAccessor.Global
 		public ICatalog<T> Catalog { get; } = catalog ?? throw new ArgumentNullException(nameof(catalog));
 		internal readonly Node<T>.Factory Factory = factory ?? throw new ArgumentNullException(nameof(factory));
 	}
 
-	public abstract class SubmoduleBase<TCatalog>(TCatalog catalog)
+	public abstract class SubmoduleBase<TCatalog>(
+		[DisallowNull] TCatalog catalog)
 		: SubmoduleBase(catalog ?? throw new ArgumentNullException(nameof(catalog)), catalog.Factory)
 		where TCatalog : Catalog<T>
 	{
