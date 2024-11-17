@@ -1,31 +1,29 @@
 ﻿using Open.RandomizationExtensions;
 
-using IFunction = Open.Evaluation.Core.IFunction<double>;
-using IOperator = Open.Evaluation.Core.IOperator<Open.Evaluation.Core.IEvaluate<double>, double>;
-
 namespace Open.Evaluation.Arithmetic;
 
 public static partial class CatalogExtensions
 {
 	const string CannotOperatePowerNullValue = "Cannot operate when the power.Value is null.";
 
-	public static IEvaluate<double> MutateSign(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node, byte options = 3)
+	public static IEvaluate<T> MutateSign<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node, byte options = 3)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
 		node.ThrowIfNull();
 		if (options > 3) throw new ArgumentOutOfRangeException(nameof(options));
 		Contract.EndContractBlock();
 
-        Node<IEvaluate<double>> n = node;
+        Node<IEvaluate<T>> n = node;
         bool isRoot = n == n.Root;
 		Debug.Assert(!isRoot || n.Parent is null);
 		// ReSharper disable once ImplicitlyCapturedClosure
-		bool parentIsSquareRoot() => !isRoot && n.Parent?.Value is Exponent<double> ex && ex.IsSquareRoot();
+		bool parentIsSquareRoot() => !isRoot && n.Parent?.Value is Exponent<T> ex && ex.IsSquareRoot();
 
 		// ReSharper disable once AccessToModifiedClosure
-		Lazy<Constant<double>> modifier = new(() => catalog.Catalog.GetMultiple(n.Value));
+		Lazy<Constant<T>> modifier = new(() => catalog.Catalog.GetMultiple(n.Value));
 
 		try
 		{
@@ -33,7 +31,7 @@ public static partial class CatalogExtensions
 			{
 				case 0:
                     // Alter Sign
-                    IEvaluate<double> result = catalog.Catalog.MultiplyNode(n, -1);
+                    IEvaluate<T> result = catalog.Catalog.MultiplyNode(n, -T.One);
 
 					// Sorry, not gonna mess with unreal (sqrt neg numbers yet).
 					if (!parentIsSquareRoot()) return result;
@@ -46,18 +44,18 @@ public static partial class CatalogExtensions
 
 				case 1:
 					// Don't zero the root or make the internal multiple negative.
-					if (isRoot && modifier.Value == +1 || parentIsSquareRoot() && modifier.Value <= 0)
+					if (isRoot && modifier.Value == T.One || parentIsSquareRoot() && modifier.Value <= T.Zero)
 						goto case 2;
 
 					// Decrease multiple.
-					return catalog.Catalog.AdjustNodeMultiple(n, -1);
+					return catalog.Catalog.AdjustNodeMultiple(n, -T.One);
 
 				case 2:
 					// Don't zero the root. (makes no sense)
-					if (isRoot && modifier.Value == -1)
+					if (isRoot && modifier.Value == T.One)
 						goto case 1;
 					// Increase multiple.
-					return catalog.Catalog.AdjustNodeMultiple(n, +1);
+					return catalog.Catalog.AdjustNodeMultiple(n, +T.One);
 			}
 		}
 		finally
@@ -68,9 +66,10 @@ public static partial class CatalogExtensions
 		throw new ArgumentOutOfRangeException(nameof(options));
 	}
 
-	public static IEvaluate<double> MutateParameter(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T> MutateParameter<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T : notnull, INumber<T>
 	{
 		ArgumentNullException.ThrowIfNull(catalog);
 		if (node?.Value is null)
@@ -81,7 +80,7 @@ public static partial class CatalogExtensions
 
 		return catalog.Catalog.ApplyClone(node, _ =>
 		{
-            IEvaluate<double> rv = node.Root.Value;
+            IEvaluate<T> rv = node.Root.Value;
             int nextParameter = Randomizer.Random.NextExcluding(
 				p == rv
 					? p.Id
@@ -93,14 +92,15 @@ public static partial class CatalogExtensions
 		});
 	}
 
-	public static IEvaluate<double>? ChangeOperation(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T>? ChangeOperation<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T : notnull, INumber<T>
 	{
 		ArgumentNullException.ThrowIfNull(catalog);
 		node.ThrowIfNull();
 
-		if (node.Value is not IOperator o)
+		if (node.Value is not IOperator<T> o)
 			throw new ArgumentException("Does not contain an Operation.", nameof(node));
 
         Symbol symbol = o.Symbol;
@@ -123,7 +123,7 @@ public static partial class CatalogExtensions
 				return null;
 		}
 
-        EvaluationCatalog<double> c = catalog.Catalog;
+        EvaluationCatalog<T> c = catalog.Catalog;
 		return c.ApplyClone(node, _ => isFn
 			? Registry.GetRandomFunction(c, o.Children.ToArray(), symbol)!
 			: Registry.GetRandomOperator(c, o.Children, symbol)!);
@@ -151,9 +151,10 @@ public static partial class CatalogExtensions
 		};
 	}
 
-	public static IEvaluate<double> BranchOperation(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T> BranchOperation<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
 		ArgumentNullException.ThrowIfNull(node);
@@ -161,17 +162,17 @@ public static partial class CatalogExtensions
 
 		return catalog.Catalog.ApplyClone(node, (catalog, node), (newNode, param) =>
 		{
-			(EvaluationCatalog<double>.MutationCatalog catalog, Node<IEvaluate<double>> node) = param;
-            IEvaluate<double> rv = node.Root.Value;
+			(EvaluationCatalog<T>.MutationCatalog catalog, Node<IEvaluate<T>> node) = param;
+            IEvaluate<T> rv = node.Root.Value;
             int inputParamCount = rv is IParent p
                 ? p.GetDescendants().OfType<IParameter>().Distinct().Count()
                 : rv is IParameter ? 1 : 0;
-            IParameter<double> parameter = catalog.Catalog.GetParameter(Randomizer.Random.Next(inputParamCount));
-			IEvaluate<double>[] children;
+            IParameter<T> parameter = catalog.Catalog.GetParameter(Randomizer.Random.Next(inputParamCount));
+			IEvaluate<T>[] children;
 
-            IEvaluate<double> nv = newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
+            IEvaluate<T> nv = newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue);
 			children
-				= newNode.Value is IFunction || Randomizer.Random.Next(4) == 0
+				= newNode.Value is IFunction<T> || Randomizer.Random.Next(4) == 0
 				? Randomizer.Random.Next(2) == 1
 					? [parameter, nv]
 					: [nv, parameter]
@@ -181,42 +182,44 @@ public static partial class CatalogExtensions
 		});
 	}
 
-	public static IEvaluate<double> AdjustExponent(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node, double value)
+	public static IEvaluate<T> AdjustExponent<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node, T value)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
 		ArgumentNullException.ThrowIfNull(node);
-		if (value == 0) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
+		if (value == T.Zero) throw new ArgumentException("A value of zero will have no effect.", nameof(value));
 		Contract.EndContractBlock();
 
-		return node.Value is Exponent<double>
+		return node.Value is Exponent<T>
 			? catalog.Catalog.ApplyClone(node, newNode =>
 			{
-                Node<IEvaluate<double>> power = newNode.Children[1];
+                Node<IEvaluate<T>> power = newNode.Children[1];
 				newNode.Replace(power,
 					node.Source.Map(catalog.Catalog.SumOf(in value, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
 			})
 			: catalog.Catalog.ApplyClone(node, newNode =>
-					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), 1 + value));
+					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), T.One + value));
 	}
 
-	public static IEvaluate<double> Square(
-		this EvaluationCatalog<double>.MutationCatalog catalog,
-		Node<IEvaluate<double>> node)
+	public static IEvaluate<T> Square<T>(
+		this EvaluationCatalog<T>.MutationCatalog catalog,
+		Node<IEvaluate<T>> node)
+		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
 		ArgumentNullException.ThrowIfNull(node);
 		Contract.EndContractBlock();
 
-		return node.Value is Exponent<double>
+		return node.Value is Exponent<T>
 			? catalog.Catalog.ApplyClone(node, newNode =>
 			{
-                Node<IEvaluate<double>> power = newNode.Children[1];
+                Node<IEvaluate<T>> power = newNode.Children[1];
 				newNode.Replace(power,
-					node.Source.Map(catalog.Catalog.ProductOf(2, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
+					node.Source.Map(catalog.Catalog.ProductOf(Value<T>.Two, power.Value ?? throw new NotSupportedException(CannotOperatePowerNullValue))));
 			})
 			: catalog.Catalog.ApplyClone(node, newNode =>
-					catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), 2));
+				catalog.Catalog.GetExponent(newNode.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue), Value<T>.Two));
 	}
 }

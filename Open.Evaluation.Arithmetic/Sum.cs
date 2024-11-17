@@ -105,14 +105,12 @@ public partial class Sum<T>
 		base.ToStringInternal_OnAppendNextChild(result, index, child);
 	}
 
-	protected override IEvaluate<T> Reduction(
-		ICatalog<IEvaluate<T>> catalog)
+	public override IEvaluate<T> GetReduction()
 	{
-		catalog.ThrowIfNull().OnlyInDebug();
-        Constant<T> zero = catalog.GetConstant(T.Zero);
+        Constant<T> zero = Catalog.GetConstant(T.Zero);
 
 		// Phase 1: Flatten sums of sums.
-		var children = catalog
+		var children = Catalog
 			.Flatten(Children
 				.Select(a =>
 				{
@@ -126,7 +124,7 @@ public partial class Sum<T>
 					if (aC.Length != 1) return a;
 
                     IConstant<T> aCv = aC[0];
-					return catalog.SumOf(aS[0].Children.Select(c => catalog.ProductOf(aCv, c)));
+					return Catalog.SumOf(aS[0].Children.Select(c => Catalog.ProductOf(aCv, c)));
 				}), parent => parent is Sum<T>)
 				.Where(c => c != zero)
 				.ToList(); // ** children's reduction is done here.
@@ -135,7 +133,7 @@ public partial class Sum<T>
 		switch (children.Count)
 		{
 			case 0:
-				return catalog.GetConstant(T.Zero);
+				return Catalog.GetConstant(T.Zero);
 			case 1:
 				return children[0];
 		}
@@ -144,27 +142,27 @@ public partial class Sum<T>
 		foreach (IConstant<T> child in children.OfType<IConstant<T>>())
 		{
 			T c = child.Value;
-			if (c.IsNaN()) return catalog.GetConstant(c);
+			if (c.IsNaN()) return Catalog.GetConstant(c);
 		}
 
-        Constant<T> one = catalog.GetConstant(T.One);
+        Constant<T> one = Catalog.GetConstant(T.One);
 
         // Phase 3: Look for groupings by "multiples".
-        (string Hash, IConstant<T>? Multiple, IEvaluate<T> Entry)[] withMultiples = catalog.MultiplesExtracted(children, true).ToArray();
+        (string Hash, IConstant<T>? Multiple, IEvaluate<T> Entry)[] withMultiples = Catalog.MultiplesExtracted(children, true).ToArray();
 
 		// Phase 4: Replace multipliable products with single merged version.
-		return catalog.SumOf(
+		return Catalog.SumOf(
 			withMultiples
 				.GroupBy(g => g.Hash)
 				.OrderBy(g => g.Key) // Ensure consistency.
 				.Select(g => (
-					multiple: catalog.SumOfConstants(g.Select(t => t.Multiple ?? one)),
+					multiple: Catalog.SumOfConstants(g.Select(t => t.Multiple ?? one)),
 					first: g.First().Entry
 				))
 				.Where(i => i.multiple != zero)
 				.Select(i => i.multiple == one
 					? i.first
-					: catalog.GetReduced(catalog.ProductOf(i.multiple, i.first))
+					: Catalog.GetReduced(Catalog.ProductOf(i.multiple, i.first))
 				));
 	}
 

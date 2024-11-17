@@ -14,8 +14,13 @@ public interface IReducibleEvaluation<T> : IEvaluate
 	where T : IEvaluate
 {
 	/// <summary>
+	/// Gets the potential reduction of this instance.
+	/// </summary>
+	T GetReduction();
+
+	/// <summary>
 	/// Attempts a recduction on this instance.
 	/// </summary>
-	/// <returns><see langword="true"/> if <paramref name="reduction"/> is different than this isntance; otherwise <see langword="false"/>.</returns>
-	bool TryGetReduced(ICatalog<T> catalog, [MaybeNullWhen(false)] out T reduction);
+	/// <returns><see langword="true"/> if <paramref name="reduction"/> is different than this instance; otherwise <see langword="false"/>.</returns>
+	bool TryGetReduced([MaybeNullWhen(false)] out T reduction);
 }

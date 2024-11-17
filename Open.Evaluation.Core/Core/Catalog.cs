@@ -113,7 +113,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
                 int count = 0;
 				T result = src;
 				while (result is IReducibleEvaluation<T> red
-					   && red.TryGetReduced(this, out T? r) && r != result)
+					   && red.TryGetReduced(out T? r))
 				{
 					result = r;
 					count++;

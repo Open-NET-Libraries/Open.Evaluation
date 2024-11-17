@@ -98,14 +98,12 @@ public class Exponent<T> : OperatorBase<T>,
 			: Describe(bas!, pow!);
 	}
 
-	protected override IEvaluate<T> Reduction(
-		ICatalog<IEvaluate<T>> catalog)
+	public override IEvaluate<T> GetReduction()
 	{
-		catalog.ThrowIfNull().OnlyInDebug();
-		IEvaluate<T> bas = catalog.GetReduced(Base);
-		IEvaluate<T> pow = catalog.GetReduced(Power);
+		IEvaluate<T> bas = Catalog.GetReduced(Base);
+		IEvaluate<T> pow = Catalog.GetReduced(Power);
 
-        Constant<T> one = catalog.GetConstant(T.MultiplicativeIdentity);
+        Constant<T> one = Catalog.GetConstant(T.MultiplicativeIdentity);
 		Debug.Assert(one.Value == T.One);
 		// No need to reduce if the power is already 1.
 		if (pow == one)
@@ -116,7 +114,7 @@ public class Exponent<T> : OperatorBase<T>,
 			"A stray 'one' constant was introduced instead of from the same catalog.");
 
 		IEvaluate<T> VerifyDifferences(IEvaluate<T> b, IEvaluate<T> p)
-			=> b == Base && p == Power ? this : catalog.GetExponent(b, p);
+			=> b == Base && p == Power ? this : Catalog.GetExponent(b, p);
 
 		IEvaluate<T> FinalStep(IEvaluate<T> bas, IEvaluate<T> pow)
 		{
@@ -130,9 +128,9 @@ public class Exponent<T> : OperatorBase<T>,
 				{
 					// Exponents of products can be converted into products of exponents.
 					// By doing this, any other ungrouped products can be reduced including constants with exponents.
-					return catalog.Register(
-						catalog.ProductOf(
-							pProd.Children.Select(c => catalog.GetReduced(catalog.GetExponent(c, pow)))));
+					return Catalog.Register(
+						Catalog.ProductOf(
+							pProd.Children.Select(c => Catalog.GetReduced(Catalog.GetExponent(c, pow)))));
 				}
 			}
 
@@ -174,24 +172,28 @@ public class Exponent<T> : OperatorBase<T>,
 						throw new InvalidOperationException("0 to a negative power is undefined. (Cannot divide by zero.)");
 					}
 
-					return catalog.GetConstant(T.Zero);
+					return Catalog.GetConstant(T.Zero);
 				}
 
 				if (pZero)
 				{
 					// If the power is zero, the result is always 1 unless the base is zero.
-					return catalog.GetConstant(T.Zero);
+					return Catalog.GetConstant(T.Zero);
 				}
 
+				// Division by a type that can't divide accurately?
+				if (T.IsNegative(p) && !Value<T>.IsFloatingPoint)
+					return this;
+
 				T newExp = cBas.Value.Pow(pow.Value);
-				return catalog.GetConstant(newExp);
+				return Catalog.GetConstant(newExp);
 			}
 
 			if (bas is Exponent<T> bEx
 				&& bEx.Power is IConstant<T> cP)
 			{
 				bas = bEx.Base;
-				pow = catalog.GetConstant(pow.Value * cP.Value);
+				pow = Catalog.GetConstant(pow.Value * cP.Value);
 			}
 
 			return FinalStep(bas, pow);
@@ -305,8 +307,22 @@ public static partial class Exponent
 	}
 
 	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
-		where T : notnull, INumber<T>, IFloatingPoint<T>
-		=> exponent.IsPowerOf(ValueFloat<T>.Half);
+		where T : notnull, INumber<T>
+	{
+		var pow = exponent.Power;
+		if (exponent.Catalog.TryGetItem<IEvaluate<T>>("0.5", out var point5) && pow == point5)
+			return true;
+
+		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
+		{
+			var b = c.GetConstant(Value<T>.Two);
+			var p = c.GetConstant(-T.One);
+			var h = c.GetExponent(b, p);
+			return h.GetReduction();
+		});
+
+		return exponent.Power == half;
+	}
 
 	internal static T Pow<T>(this T baseValue, T exponent)
 		where T : notnull, INumber<T>

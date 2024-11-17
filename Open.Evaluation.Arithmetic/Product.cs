@@ -48,16 +48,14 @@ public partial class Product<T> :
 			Describe(results.Select(r => r.Description)));
 	}
 
-	protected override IEvaluate<T> Reduction(
-		ICatalog<IEvaluate<T>> catalog)
+	public override IEvaluate<T> GetReduction()
 	{
-		catalog.ThrowIfNull().OnlyInDebug();
-		var one = catalog.GetConstant(T.MultiplicativeIdentity);
+		var one = Catalog.GetConstant(T.MultiplicativeIdentity);
 
 		using var lease = ListPool<IEvaluate<T>>.Shared.Rent();
 		// Phase 1: Flatten products of products.
 		var children = lease.Item;
-		children.AddRange(catalog
+		children.AddRange(Catalog
 			.Flatten(Children, static parent => parent is Product<T>)
 			.Where(c => c != one)); // ** children's reduction is done here.
 
@@ -67,7 +65,7 @@ public partial class Product<T> :
 		{
 			var child = children[i];
 			if (child is not Sum<T> sum ||
-				!sum.TryExtractGreatestFactor(catalog, out var newSum, out var gcf))
+				!sum.TryExtractGreatestFactor(Catalog, out var newSum, out var gcf))
 			{
 				continue;
 			}
@@ -100,13 +98,12 @@ public partial class Product<T> :
 		if (zero is not null)
 			return zero;
 
-		var cat = catalog;
 		// Phase 5: Convert to exponents.
 		using var lease2 = ListPool<(IEvaluate<T> Base, IEvaluate<T> Power)>.Shared.Rent();
 		var exponents = lease2.Item;
 		exponents.AddRange(children.Select(c =>
 			c is Exponent<T> e
-			? (Base: cat.GetReduced(e.Base), e.Power)
+			? (Base: Catalog.GetReduced(e.Base), e.Power)
 			: (Base: c, Power: one)));
 
 		zero = exponents
@@ -124,11 +121,11 @@ public partial class Product<T> :
 			.Select(g =>
 			{
 				var @base = g.First().Base;
-				var sumPower = cat.SumOf(g.Select(t => t.Power));
-				var power = cat.GetReduced(sumPower);
+				var sumPower = Catalog.SumOf(g.Select(t => t.Power));
+				var power = Catalog.GetReduced(sumPower);
 				return power == zero ? one
 					: power == one ? @base
-					: GetExponent(catalog, @base, power);
+					: GetExponent(Catalog, @base, power);
 			}));
 		lease2.Dispose(); // release early.
 
@@ -143,7 +140,7 @@ public partial class Product<T> :
 			if (multipleValue != T.MultiplicativeIdentity
 				&& multipleValue % T.One == T.Zero)
 			{
-				var oneNeg = catalog.GetConstant(-T.MultiplicativeIdentity);
+				var oneNeg = Catalog.GetConstant(-T.MultiplicativeIdentity);
 				var muValue = multipleValue;
 				var originalMultiple = muValue;
 				var multipleIndex = children.IndexOf(multiple);
@@ -185,9 +182,9 @@ public partial class Product<T> :
 
 						if (f != T.One)
 						{
-							children[i] = catalog.GetExponent(
-								catalog.GetConstant(divisor / f),
-								catalog.GetConstant(-T.MultiplicativeIdentity));
+							children[i] = Catalog.GetExponent(
+								Catalog.GetConstant(divisor / f),
+								Catalog.GetConstant(-T.MultiplicativeIdentity));
 						}
 					}
 
@@ -196,13 +193,13 @@ public partial class Product<T> :
 				}
 
 				if (muValue != originalMultiple)
-					children[multipleIndex] = catalog.GetConstant(muValue);
+					children[multipleIndex] = Catalog.GetConstant(muValue);
 			}
 		}
 
 		return children.Count == 1
 				? children[0]
-				: catalog.ProductOf(children);
+				: Catalog.ProductOf(children);
 	}
 
 	[GeneratedRegex("^\\(1/(.+)\\)$", RegexOptions.Compiled)]

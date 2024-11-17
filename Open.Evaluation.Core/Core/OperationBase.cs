@@ -8,17 +8,13 @@ public abstract class OperationBase<T>(ICatalog<IEvaluate<T>> catalog, Symbol sy
 {
 	public Symbol Symbol { get; } = symbol;
 
-	protected virtual IEvaluate<T> Reduction(
-		ICatalog<IEvaluate<T>> catalog)
+	public virtual IEvaluate<T> GetReduction()
 		=> this;
 
 	// Override this if reduction is possible.  Return null if you can't reduce.
-	public bool TryGetReduced(
-		ICatalog<IEvaluate<T>> catalog,
-		[NotNull] out IEvaluate<T> reduction)
+	public bool TryGetReduced([NotNull] out IEvaluate<T> reduction)
 	{
-		catalog.ThrowIfNull().OnlyInDebug();
-		reduction = Reduction(catalog);
+		reduction = GetReduction();
 		return reduction != this;
 	}
 }

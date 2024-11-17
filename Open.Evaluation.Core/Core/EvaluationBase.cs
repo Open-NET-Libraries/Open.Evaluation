@@ -12,7 +12,7 @@ namespace Open.Evaluation.Core;
 /// </summary>
 public abstract class EvaluationBase<T>
 	: IEvaluate<T>
-		where T : notnull, IEquatable<T>, IComparable<T>
+	where T : notnull, IEquatable<T>, IComparable<T>
 {
 	protected EvaluationBase(ICatalog<IEvaluate<T>> catalog)
 	{

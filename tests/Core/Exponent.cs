@@ -48,6 +48,15 @@ public static class Exponent
 	}
 
 	[TestClass]
+	public class DivisionOfConstantsDecimalResult : ParseTestBase
+	{
+		const string FORMAT = "(2^-1)";
+		public DivisionOfConstantsDecimalResult() : base(FORMAT, "(1/2)", "0.5") { }
+
+		protected override double Expected => 0.5;
+	}
+
+	[TestClass]
 	public class DivisionOfMultiples : ParseTestBase
 	{
 		const string FORMAT = "(-9 * {0} * (-3^-1))";
