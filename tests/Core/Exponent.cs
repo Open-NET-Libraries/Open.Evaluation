@@ -1,4 +1,4 @@
-﻿namespace Open.Evaluation.Tests;
+﻿namespace Open.Evaluation.Tests.Core;
 
 public static class Exponent
 {

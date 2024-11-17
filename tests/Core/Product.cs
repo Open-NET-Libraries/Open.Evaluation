@@ -1,6 +1,6 @@
 ﻿using Open.Evaluation.Arithmetic;
 
-namespace Open.Evaluation.Tests;
+namespace Open.Evaluation.Tests.Core;
 
 public static class Product
 {
@@ -108,7 +108,7 @@ public static class Product
 
 				// Verify that the context is not needed after evaluation.
 				EvaluationResult<double> evaluated = default;
-				using(var context = new Context())
+				using (var context = new Context())
 				{
 					ReadOnlySpan<double> p = [1, 2, 3, 4];
 					context.Init(catalog, p);

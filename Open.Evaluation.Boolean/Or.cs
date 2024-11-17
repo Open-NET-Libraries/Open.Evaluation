@@ -33,7 +33,9 @@ public sealed class Or : OperatorBase<bool>,
 		return catalog.Register(new Or(catalog, param));
 	}
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
 	[SuppressMessage("Performance", "CA1822:Mark members as static")]
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 	public Or NewUsing(
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)

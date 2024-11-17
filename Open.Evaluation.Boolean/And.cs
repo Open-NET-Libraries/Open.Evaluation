@@ -32,7 +32,9 @@ public sealed class And : OperatorBase<bool>,
 		return catalog.Register(new And(catalog, param));
 	}
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
 	[SuppressMessage("Performance", "CA1822:Mark members as static")]
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 	public And NewUsing(
 		ICatalog<IEvaluate<bool>> catalog,
 		IEnumerable<IEvaluate<bool>> param)

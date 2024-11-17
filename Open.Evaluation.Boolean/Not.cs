@@ -21,7 +21,9 @@ public sealed class Not : OperatorBase<bool>,
 		IEvaluate<bool> param)
 		=> catalog.Register(new Not(catalog, param));
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
 	[SuppressMessage("Performance", "CA1822:Mark members as static")]
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 	public Not NewUsing(
 		ICatalog<IEvaluate<bool>> catalog,
 		IEvaluate<bool> param)

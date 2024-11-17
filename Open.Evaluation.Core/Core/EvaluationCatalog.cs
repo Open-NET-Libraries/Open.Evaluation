@@ -18,8 +18,8 @@ public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	//}
 
 	private MutationCatalog? _mutation;
-	public MutationCatalog Mutation =>
-		LazyInitializer.EnsureInitialized(ref _mutation, () => new MutationCatalog(this))!;
+	public MutationCatalog Mutation
+		=> LazyInitializer.EnsureInitialized(ref _mutation, () => new MutationCatalog(this))!;
 
 	public class MutationCatalog : SubmoduleBase<EvaluationCatalog<T>>
 	{
@@ -29,8 +29,8 @@ public class EvaluationCatalog<T> : Catalog<IEvaluate<T>>
 	}
 
 	private VariationCatalog? _variation;
-	public VariationCatalog Variation =>
-		LazyInitializer.EnsureInitialized(ref _variation, () => new VariationCatalog(this))!;
+	public VariationCatalog Variation
+		=> LazyInitializer.EnsureInitialized(ref _variation, () => new VariationCatalog(this))!;
 
 	public class VariationCatalog : SubmoduleBase<EvaluationCatalog<T>>
 	{

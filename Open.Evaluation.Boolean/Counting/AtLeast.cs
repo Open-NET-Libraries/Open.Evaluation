@@ -33,7 +33,9 @@ namespace Open.Evaluation.Boolean.Counting
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
 			=> catalog.Register(new AtLeast(catalog, param.count, param.children));
 
+#pragma warning disable IDE0079 // Remove unnecessary suppression
 		[SuppressMessage("Performance", "CA1822:Mark members as static")]
+#pragma warning restore IDE0079 // Remove unnecessary suppression
 		public AtLeast NewUsing(
 			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)

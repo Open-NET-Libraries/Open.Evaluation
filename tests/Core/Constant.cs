@@ -1,6 +1,6 @@
 ﻿using Open.Evaluation.Arithmetic;
 
-namespace Open.Evaluation.Tests;
+namespace Open.Evaluation.Tests.Core;
 
 [TestClass]
 public class Constant
