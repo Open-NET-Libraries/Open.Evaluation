@@ -44,7 +44,7 @@ public static partial class CatalogExtensions
 		{
 			return catalog.ApplyClone(sourceNode, newNode =>
 			{
-				var n = newNode.Children.First(s => s.Value is IConstant<T>);
+                Node<IEvaluate<T>> n = newNode.Children.First(s => s.Value is IConstant<T>);
 				var c = (IConstant<T>)(n.Value ?? throw new NotSupportedException(CannotOperateNewNodeNullValue));
 				n.Value = catalog.ProductOfConstants(multiple, c);
 			});
@@ -96,16 +96,16 @@ public static partial class CatalogExtensions
 		if (sourceNode.Value is not Product<T> p)
 			return MultiplyNode(catalog, sourceNode, delta + T.One);
 
-		var multiple = catalog.GetMultiple(p);
+        Constant<T> multiple = catalog.GetMultiple(p);
 		return multiple.Value switch
 		{
 			1 => catalog.MultiplyNode(sourceNode, delta + T.One),
 			_ => catalog.ApplyClone(sourceNode, newNode =>
 			{
-				var constantNodes = newNode.Children.Where(s => s.Value is IConstant<T>).ToArray();
+                Node<IEvaluate<T>>[] constantNodes = newNode.Children.Where(s => s.Value is IConstant<T>).ToArray();
 				constantNodes[0].Value = catalog.SumOfConstants(delta, multiple);
 
-				for (var i = 1; i < constantNodes.Length; i++)
+				for (int i = 1; i < constantNodes.Length; i++)
 					newNode.Remove(constantNodes[i]);
 			})
 		};

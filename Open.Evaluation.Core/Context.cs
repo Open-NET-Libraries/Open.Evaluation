@@ -31,7 +31,7 @@ public class Context : DisposableBase
 				goto resultAcquired;
 			}
 
-			tLazy = Lazy.New(() => factory(key));
+			tLazy = Lazy.Create(() => factory(key));
 			_registry[key] = new Lazy<IEvaluationResult>(() => tLazy.Value);
 		}
 
@@ -64,7 +64,7 @@ public class Context : DisposableBase
 				goto resultAcquired;
 			}
 
-			tLazy = Lazy.New(factory);
+			tLazy = Lazy.Create(factory);
 			_registry[key] = new Lazy<IEvaluationResult>(() => tLazy.Value);
 		}
 
@@ -74,7 +74,7 @@ public class Context : DisposableBase
 		return EvaluationResult<T>.Coerce(result);
 	}
 
-	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, [DisallowNull] T value)
+	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, T value)
 		where T : notnull
 	{
 		AssertIsAlive();

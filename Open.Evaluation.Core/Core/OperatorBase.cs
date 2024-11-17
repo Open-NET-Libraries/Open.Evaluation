@@ -30,20 +30,21 @@ public abstract class OperatorBase<TChild, T>
 		=> new(() =>
 		{
 			string r;
-			using (var lease = StringBuilderPool.Rent())
+			using (RecycleHelper<StringBuilder> lease = StringBuilderPool.Rent())
 			{
-				var result = lease.Item;
+                StringBuilder result = lease.Item;
 				result.Append('(');
-				var index = -1;
-				foreach (var o in children)
+                int index = -1;
+				foreach (Lazy<string> o in children)
 				{
 					ToStringInternal_OnAppendNextChild(result, ++index, o);
 				}
+
 				result.Append(')');
 				r = result.ToString();
 			}
 
-			var isEmpty = r == "()";
+            bool isEmpty = r == "()";
 			Debug.Assert(!isEmpty, "Operator has no children.");
 			// ReSharper disable once ConditionIsAlwaysTrueOrFalse
 			return isEmpty ? $"({Symbol.Character})" : r;
@@ -57,13 +58,13 @@ public abstract class OperatorBase<TChild, T>
 
 	protected IEnumerable<EvaluationResult<object>> ChildResults(Context context)
 	{
-		foreach (var child in Children)
+		foreach (TChild child in Children)
 			yield return child.Evaluate(context);
 	}
 
 	protected IEnumerable<Lazy<string>> ChildDescriptions()
 	{
-		foreach (var child in Children)
+		foreach (TChild child in Children)
 			yield return child.Description;
 	}
 
@@ -104,14 +105,14 @@ public abstract class OperatorBase<TChild, T>
 		if (y is IParameter<T>)
 			return -1;
 
-		var aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant<T>) ?? 0) + 1;
-		var bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant<T>) ?? 0) + 1;
+        int aChildCount = ((x as IParent)?.GetDescendants().Count(d => d is not IConstant<T>) ?? 0) + 1;
+        int bChildCount = ((y as IParent)?.GetDescendants().Count(d => d is not IConstant<T>) ?? 0) + 1;
 
 		if (aChildCount > bChildCount) return -1;
 		if (aChildCount < bChildCount) return +1;
 
-		var ats = x.Description.Value;
-		var bts = y.Description.Value;
+        string ats = x.Description.Value;
+        string bts = y.Description.Value;
 
 		return string.CompareOrdinal(ats, bts);
 	}
@@ -125,7 +126,7 @@ public abstract class OperatorBase<T>(
 {
 	protected new IEnumerable<EvaluationResult<T>> ChildResults(Context context)
 	{
-		foreach (var child in Children)
+		foreach (IEvaluate<T> child in Children)
 			yield return child.Evaluate(context);
 	}
 
@@ -137,11 +138,11 @@ public abstract class OperatorBase<T>(
 		transform.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		using var e = param.GetEnumerator();
+		using IEnumerator<IEvaluate<T>> e = param.GetEnumerator();
 		if (!e.MoveNext()) return transform([]);
-		var v0 = e.Current;
+        IEvaluate<T> v0 = e.Current;
 		if (!e.MoveNext()) return v0;
-		var builder = ImmutableArray.CreateBuilder<IEvaluate<T>>();
+        ImmutableArray<IEvaluate<T>>.Builder builder = ImmutableArray.CreateBuilder<IEvaluate<T>>();
 		builder.Add(v0);
 		do { builder.Add(e.Current); }
 		while (e.MoveNext());

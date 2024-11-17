@@ -22,16 +22,16 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 	public EvaluationResult(
 		T result,
 		Func<T, string> descriptionFactory)
-		: this(result, Lazy.New(() => descriptionFactory(result))) { }
+		: this(result, Lazy.Create(() => descriptionFactory(result))) { }
 
 	public EvaluationResult(
 		T result,
 		string description)
-		: this(result, Lazy.New(description ?? throw new ArgumentNullException(nameof(description)))) { }
+		: this(result, Lazy.FromValue(description ?? throw new ArgumentNullException(nameof(description)))) { }
 
 	public EvaluationResult(
 		T result)
-		: this(result, Lazy.New(() => result.ToString() ?? throw new Exception("result.ToString() returned null"))) { }
+		: this(result, Lazy.Create(() => result.ToString() ?? throw new Exception("result.ToString() returned null"))) { }
 
 	[NotNull]
 	public T Result { get; }
@@ -57,7 +57,7 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 		=> new(result);
 
 	public static implicit operator Lazy<IEvaluationResult>(EvaluationResult<T> result)
-		=> Lazy.New<IEvaluationResult>(result);
+		=> new(result);
 
 	public static EvaluationResult<T> Coerce(IEvaluationResult result)
 		=> result is EvaluationResult<T> r ? r

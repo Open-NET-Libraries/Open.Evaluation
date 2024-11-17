@@ -397,14 +397,14 @@ public static class Product
 
 	public static IEvaluate<TResult> ProductOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull] in TResult multiple,
+		in TResult multiple,
 		IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 		=> ProductOf(catalog, catalog.GetConstant(multiple), children);
 
 	public static IEvaluate<TResult> ProductOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
-		[DisallowNull] in TResult multiple,
+		in TResult multiple,
 		IEvaluate<TResult> first,
 		params IEvaluate<TResult>[] rest)
 		where TResult : notnull, INumber<TResult>
@@ -441,7 +441,7 @@ public static class Product
 
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull] in TValue c1,
+		in TValue c1,
 		IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 	{
@@ -495,7 +495,7 @@ public static class Product
 
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
-		[DisallowNull] in TValue c1,
+		in TValue c1,
 		IConstant<TValue> c2,
 		params IConstant<TValue>[] rest)
 		where TValue : notnull, INumber<TValue>

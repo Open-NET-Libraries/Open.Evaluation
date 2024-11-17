@@ -22,7 +22,7 @@ public class Exponent<T> : OperatorBase<T>,
 		PowerOfZeroReduction powerOfZeroReduction = PowerOfZeroReduction.One)
 		: base(catalog, Symbols.Exponent,
 			  // Need to provide to children so a node tree can be built.
-			  new[] { @base, power })
+			  [@base, power])
 	{
 		@base.ThrowIfNull().OnlyInDebug();
 		power.ThrowIfNull().OnlyInDebug();
@@ -37,8 +37,8 @@ public class Exponent<T> : OperatorBase<T>,
 
 	protected override EvaluationResult<T> EvaluateInternal(Context context)
 	{
-		var bas = Base.Evaluate(context);
-		var pow = Power.Evaluate(context);
+        EvaluationResult<T> bas = Base.Evaluate(context);
+        EvaluationResult<T> pow = Power.Evaluate(context);
 
 		return new(bas.Result.Pow(pow.Result), Describe([bas.Description, pow.Description]));
 	}
@@ -46,22 +46,22 @@ public class Exponent<T> : OperatorBase<T>,
 	protected Lazy<string> Describe(Lazy<string> bas, Lazy<string> pow)
 		=> new(() =>
 		{
-			var b = bas.Value;
-			var p = pow.Value;
+            string b = bas.Value;
+            string p = pow.Value;
 			Debug.Assert(!string.IsNullOrWhiteSpace(b));
 			Debug.Assert(!string.IsNullOrWhiteSpace(p));
 
 			if(p == "-1")
 				return $"(1/{b})";
 
-			var m = SquareRootPattern().Match(p);
+            Match m = SquareRootPattern().Match(p);
 			if (m.Success)
 				return '√' + b;
 
 			m = ConstantPowerPattern().Match(p);
 			if (!m.Success) return $"({b}^{p})"!;
 
-			var ps = p.Contains('.') || p.StartsWith('-')
+            string ps = p.Contains('.') || p.StartsWith('-')
 				? '^' + p
 				: ConvertToSuperScript(p);
 
@@ -76,7 +76,7 @@ public class Exponent<T> : OperatorBase<T>,
 		Lazy<string>? bas = null;
 		Lazy<string>? pow = null;
 		int count = 0;
-		foreach (var e in children)
+		foreach (Lazy<string> e in children)
 		{
 			switch (count++)
 			{
@@ -105,7 +105,7 @@ public class Exponent<T> : OperatorBase<T>,
 		IEvaluate<T> bas = catalog.GetReduced(Base);
 		IEvaluate<T> pow = catalog.GetReduced(Power);
 
-		var one = catalog.GetConstant(T.MultiplicativeIdentity);
+        Constant<T> one = catalog.GetConstant(T.MultiplicativeIdentity);
 		Debug.Assert(one.Value == T.One);
 		// No need to reduce if the power is already 1.
 		if (pow == one)
@@ -141,7 +141,7 @@ public class Exponent<T> : OperatorBase<T>,
 
 		IEvaluate<T> ReduceWherePowIsConstant(IEvaluate<T> bas, IConstant<T> pow)
 		{
-			var p = pow.Value;
+			T p = pow.Value;
 			Debug.Assert(p != T.One, "The case where the power is one have already been done.");
 
 			bool pZero = p == T.Zero;
@@ -151,7 +151,7 @@ public class Exponent<T> : OperatorBase<T>,
 			if (bas is IConstant<T> cBas)
 			{
 				// Whenver the bas is one, the result is one (the base)
-				var b = cBas.Value;
+				T b = cBas.Value;
 				if (b == T.One)
 					return bas;
 
@@ -199,7 +199,7 @@ public class Exponent<T> : OperatorBase<T>,
 
 		IEvaluate<T> ReduceWhereBaseIsConstant(IConstant<T> bas, IEvaluate<T> pow)
 		{
-			var b = bas.Value;
+			T b = bas.Value;
 			Debug.Assert(pow is not IConstant<T> cPow, "The case where the power is constant should be handled first.");
 
 			// Whenver the bas is one, the result is one (the base)
@@ -265,11 +265,11 @@ public static partial class Exponent
 
 	public static string ConvertToSuperScript(ReadOnlySpan<char> number)
 	{
-		var len = number.Length;
+        int len = number.Length;
 		Span<char> span = stackalloc char[len];
-		for (var i = 0; i < len; i++)
+		for (int i = 0; i < len; i++)
 		{
-			var n = char.GetNumericValue(number[i]);
+            double n = char.GetNumericValue(number[i]);
 			span[i] = SuperScriptDigits[(int)n];
 		}
 
@@ -327,7 +327,7 @@ public static partial class Exponent
 				result = T.One;
 				exponent = -exponent;
 				// Division.
-				for (var i = T.One; i <= exponent; i++)
+				for (T i = T.One; i <= exponent; i++)
 					result /= baseValue;
 
 				Debug.Assert(result != T.One, "Type must be capable of division.");
@@ -336,7 +336,7 @@ public static partial class Exponent
 			{
 				result = baseValue;
 				// Multiplication.
-				for (var i = T.One; i < exponent; i++)
+				for (T i = T.One; i < exponent; i++)
 					result *= baseValue;
 			}
 

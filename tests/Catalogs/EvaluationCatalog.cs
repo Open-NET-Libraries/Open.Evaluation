@@ -9,7 +9,7 @@ public class EvaluationCatalog
 	public void FixHierarchy()
 	{
 		using var catalog = new EvaluationCatalog<double>();
-		var branches = Enumerable
+        IEvaluate<double>[] branches = Enumerable
 			.Range(0, 3)
 			.Select(i => catalog.ProductOf(
 				catalog.GetParameter(i),
@@ -17,23 +17,23 @@ public class EvaluationCatalog
 			))
 			.ToArray();
 
-		var group01 = catalog.SumOf(branches);
+        IEvaluate<double> group01 = catalog.SumOf(branches);
 
-		var group02 = catalog.SumOf(branches.Skip(1));
+        IEvaluate<double> group02 = catalog.SumOf(branches.Skip(1));
 
-		var group03 = catalog.ProductOf(group01, group02);
+        IEvaluate<double> group03 = catalog.ProductOf(group01, group02);
 
-		var group04 = catalog.SumOf(
+        IEvaluate<double> group04 = catalog.SumOf(
 			group03,
 			catalog.GetParameter(0),
 			catalog.GetConstant(5));
 
-		var map = catalog.Factory.Map(group04);
+        Open.Hierarchy.Node<IEvaluate<double>> map = catalog.Factory.Map(group04);
 
 		map.RemoveAt(2);
 		map.AddValue(branches[1], true);
 
-		var result = catalog.FixHierarchy(map);
+        Open.Hierarchy.Node<IEvaluate<double>> result = catalog.FixHierarchy(map);
 
 		Assert.AreEqual(
 			"(((({0} * {1}) + ({1} * {2}) + ({2} * {3})) * (({1} * {2}) + ({2} * {3}))) + ({1} * {2}) + {0})",

@@ -4,15 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation;
 
-public static class Lazy
-{
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Lazy<T> New<T>(Func<T> factory) => new(factory);
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static Lazy<T> New<T>(T value) => new(value);
-}
-
 public static class Utility
 {
 	const int POOL_ARRAY_LEN = 128;

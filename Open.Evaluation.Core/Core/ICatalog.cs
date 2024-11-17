@@ -6,27 +6,23 @@ namespace Open.Evaluation.Core;
 /// A catalog of evaluations.
 /// </summary>
 public interface ICatalog<T> : IDisposable
-	where T : IEvaluate
+	where T : notnull, IEvaluate
 {
-	[return: NotNull]
 	TItem Register<TItem>(TItem item)
-		where TItem : T;
+		where TItem : notnull, T;
 
-	void Register<TItem>([DisallowNull, NotNull] ref TItem item)
-		where TItem : T;
+	void Register<TItem>(ref TItem item)
+		where TItem : notnull, T;
 
-	[return: NotNull]
 	TItem Register<TItem>(string id, Func<string, ICatalog<T>, TItem> factory)
-		where TItem : T;
+		where TItem : notnull, T;
 
-	[return: NotNull]
 	TItem Register<TItem, TParam>(string id, TParam param, Func<string, ICatalog<T>, TParam, TItem> factory)
-		where TItem : T;
+		where TItem : notnull, T;
 
 	bool TryGetItem<TItem>(string id, [MaybeNullWhen(false)] out TItem item)
-		where TItem : T;
+		where TItem : notnull, T;
 
-	[return: NotNull]
 	T GetReduced(T source);
 
 	// ReSharper disable once UnusedMemberInSuper.Global

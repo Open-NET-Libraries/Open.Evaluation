@@ -29,13 +29,13 @@ public static partial class CatalogExtensions
 			.Select(c => c.Value)
 			.Select(v =>
 		{
-			if (double.TryParse(v, out var constant)) return catalog.GetConstant(constant);
+			if (double.TryParse(v, out double constant)) return catalog.GetConstant(constant);
 
-			var span = v.AsSpan().Trim();
-			var negative = !span.IsEmpty && span[0] == '-';
+            ReadOnlySpan<char> span = v.AsSpan().Trim();
+            bool negative = !span.IsEmpty && span[0] == '-';
 			span = span.Trim(PlusMinus.AsSpan());
 
-			var len = span.Length;
+            int len = span.Length;
 			if (len == 0 || span[0] != '{' || span[len - 1] != '}')
 				throw new FormatException($"Unrecognized evaluation sequence: {span.ToString()}");
 
@@ -43,13 +43,13 @@ public static partial class CatalogExtensions
 
 			if (negative)
 			{
-				if (registry.TryGetValue(v, out var result)) return catalog.ProductOf(-1, result);
-				if (ushort.TryParse(v, out var p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
+				if (registry.TryGetValue(v, out IEvaluate<double>? result)) return catalog.ProductOf(-1, result);
+				if (ushort.TryParse(v, out ushort p)) return catalog.ProductOf(-1, catalog.GetParameter(p));
 			}
 			else
 			{
-				if (registry.TryGetValue(v, out var result)) return result;
-				if (ushort.TryParse(v, out var p)) return catalog.GetParameter(p);
+				if (registry.TryGetValue(v, out IEvaluate<double>? result)) return result;
+				if (ushort.TryParse(v, out ushort p)) return catalog.GetParameter(p);
 			}
 
 			throw new FormatException($"Unrecognized evaluation sequence: {v}");
@@ -57,18 +57,18 @@ public static partial class CatalogExtensions
 
 	public static IEvaluate<double> Parse(this Catalog<IEvaluate<double>> catalog, string evaluation)
 	{
-		var original = evaluation ?? throw new ArgumentNullException(nameof(evaluation));
+        string original = evaluation ?? throw new ArgumentNullException(nameof(evaluation));
 		if (string.IsNullOrWhiteSpace(evaluation))
 			throw new ArgumentException("Must be more than just whitespace or empty.", nameof(evaluation));
 
-		var oParenCount = OpenParenPattern.Matches(evaluation).Count;
-		var cParenCount = CloseParenPattern.Matches(evaluation).Count;
+        int oParenCount = OpenParenPattern.Matches(evaluation).Count;
+        int cParenCount = CloseParenPattern.Matches(evaluation).Count;
 		if (oParenCount > cParenCount) throw new FormatException("Missing close parenthesis.");
 		if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
 
-		var lease = DictionaryPool<string, IEvaluate<double>>.Rent();
-		var registry = lease.Item;
-		var count = 0;
+        RecycleHelper<Dictionary<string, IEvaluate<double>>> lease = DictionaryPool<string, IEvaluate<double>>.Rent();
+        Dictionary<string, IEvaluate<double>> registry = lease.Item;
+        int count = 0;
 
 		evaluation = evaluation.Trim();
 		string last;
@@ -78,30 +78,30 @@ public static partial class CatalogExtensions
 
 			evaluation = UnnecessaryParenPattern.Replace(evaluation, "$1");
 
-			if (double.TryParse(evaluation, out var constantOnly))
+			if (double.TryParse(evaluation, out double constantOnly))
 				return catalog.GetConstant(constantOnly);
 
-			var checkParamOnly = ParamOnlyPatern.Match(evaluation);
+            Match checkParamOnly = ParamOnlyPatern.Match(evaluation);
 			if (checkParamOnly.Success) return catalog.GetParameter(ushort.Parse(checkParamOnly.Groups[1].Value, CultureInfo.InvariantCulture));
 
 			evaluation = ProductsPattern.Replace(evaluation, m =>
 			{
-				var key = $"X{++count}";
+                string key = $"X{++count}";
 				registry.Add(key, catalog.ProductOf(SubMatches(catalog, registry, m)));
 				return $"{{{key}}}";
 			});
 
 			evaluation = SumsPattern.Replace(evaluation, m =>
 			{
-				var key = $"X{++count}";
+                string key = $"X{++count}";
 				registry.Add(key, catalog.SumOf(SubMatches(catalog, registry, m)));
 				return $"{{{key}}}";
 			});
 
 			evaluation = ExponentsPattern.Replace(evaluation, m =>
 			{
-				var key = $"X{++count}";
-				var sm = SubMatches(catalog, registry, m).ToArray();
+                string key = $"X{++count}";
+                IEvaluate<double>[] sm = SubMatches(catalog, registry, m).ToArray();
 				if (sm.Length != 2) throw new FormatException($"Exponent with {sm.Length} elements defined.");
 				registry.Add(key, catalog.GetExponent(sm[0], sm[^1]));
 				return $"{{{key}}}";
@@ -109,7 +109,7 @@ public static partial class CatalogExtensions
 		}
 		while (last != evaluation);
 
-		var checkRegisteredOnly = RegisteredOnlyPattern.Match(evaluation);
+        Match checkRegisteredOnly = RegisteredOnlyPattern.Match(evaluation);
 		return checkRegisteredOnly.Success
 			? registry[checkRegisteredOnly.Groups[1].Value]
 			: throw new FormatException($"Could not parse sequence: {original}");

@@ -7,12 +7,12 @@ public static class ParameterContextTests
 	{
 		var catalog = new EvaluationCatalog<double>();
 		// Shouldn't throw.
-		using var lease = Context.Rent();
-		var context = lease.Item;
+		using Disposable.RecycleHelper<Context> lease = Context.Rent();
+        Context context = lease.Item;
 
-		var c0 = catalog.GetConstant(0);
+        Constant<double> c0 = catalog.GetConstant(0);
 		context.GetOrAdd(c0, 0d);
-		var c1 = catalog.GetConstant(1);
+        Constant<double> c1 = catalog.GetConstant(1);
 		context.GetOrAdd(c1, 1d);
 	}
 }

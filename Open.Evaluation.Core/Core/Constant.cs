@@ -34,8 +34,8 @@ public class Constant<T>
 
 	internal static Constant<T> Create(ICatalog<IEvaluate<T>> catalog, T value)
 	{
-		// TODO: maybe introduce a faster method of acquiring a contant?
-		var constant = catalog.Register(ToStringRepresentation(in value), value, (_, c, v) => new Constant<T>(c, v));
+        // TODO: maybe introduce a faster method of acquiring a contant?
+        Constant<T> constant = catalog.Register(ToStringRepresentation(in value), value, (_, c, v) => new Constant<T>(c, v));
 		Debug.Assert(constant.Value.Equals(value));
 		return constant;
 	}

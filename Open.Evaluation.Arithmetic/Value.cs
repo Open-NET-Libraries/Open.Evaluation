@@ -7,7 +7,7 @@ internal static class Value<T> where T
 
 	static bool CheckFloat()
 	{
-		var onepointfive = Three / Two;
+		T onepointfive = Three / Two;
 		return onepointfive > T.One && onepointfive < Two;
 	}
 

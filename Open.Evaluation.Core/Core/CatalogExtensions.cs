@@ -16,12 +16,12 @@ public static class CatalogExtensions
 
 		static IEnumerable<T> FlattenCore(ICatalog<T> catalog, IEnumerable<T> source, Func<IParent<T>, bool> predicate)
 		{
-			foreach (var child in source)
+			foreach (T child in source)
 			{
-				var c = catalog.GetReduced(child);
+				T c = catalog.GetReduced(child);
 				if (c is IParent<T> parent && predicate(parent))
 				{
-					foreach (var sc in parent.Children)
+					foreach (T sc in parent.Children)
 						yield return sc;
 				}
 				else
@@ -58,15 +58,15 @@ public static class CatalogExtensions
 		if (target.Unmapped)
 			return target;
 
-		var value = target.Value;
+        IEvaluate<T> value = target.Value;
 		// Does this node's value contain children?
 		if (value is IParent<IEvaluate<T>>)
 		{
-			var fixedChildren = target.Children.ToArray()
+            IEvaluate<T>[] fixedChildren = target.Children.ToArray()
 				.Select(n =>
 				{
-					var f = catalog.FixHierarchy(n, true);
-					var v = f.Value;
+                    Node<IEvaluate<T>> f = catalog.FixHierarchy(n, true);
+                    IEvaluate<T>? v = f.Value;
 					Debug.Assert(v is not null);
 					if (f != n) f.Recycle(); // Only the owner of the target node should do the recycling.
 					return catalog.Register(v);
@@ -110,8 +110,8 @@ public static class CatalogExtensions
 
 		target.Clear();
 
-		var old = target.Value!;
-		var registered = catalog.Register(old); // Will throw if old is null.
+        IEvaluate<T> old = target.Value!;
+        IEvaluate<T> registered = catalog.Register(old); // Will throw if old is null.
 		if (old != registered)
 			target.Value = registered;
 
@@ -135,8 +135,8 @@ public static class CatalogExtensions
 		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		var node = sourceNode.CloneTree(); // * new 1
-		var root = node.Root;
+        Node<IEvaluate<T>> node = sourceNode.CloneTree(); // * new 1
+        Node<IEvaluate<T>> root = node.Root;
 		try
 		{
 			clonedNodeHandler(node);
@@ -165,15 +165,15 @@ public static class CatalogExtensions
 		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		var node = sourceNode.CloneTree(); // * new 1
-		var root = node.Root;
-		var parent = node.Parent;
+        Node<IEvaluate<T>> node = sourceNode.CloneTree(); // * new 1
+        Node<IEvaluate<T>> root = node.Root;
+        Node<IEvaluate<T>>? parent = node.Parent;
 		try
 		{
-			var replacement = clonedNodeHandler(node) ?? throw new ArgumentException(ReturnedNull, nameof(clonedNodeHandler));
+            IEvaluate<T> replacement = clonedNodeHandler(node) ?? throw new ArgumentException(ReturnedNull, nameof(clonedNodeHandler));
 			if (parent is null) return replacement;
 
-			var rn = sourceNode.Source.Map(replacement);
+            Node<IEvaluate<T>> rn = sourceNode.Source.Map(replacement);
 			try
 			{
 				parent.Replace(node, rn);
@@ -210,17 +210,17 @@ public static class CatalogExtensions
 		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		var node = sourceNode.CloneTree(); // * new 1
-		var root = node.Root;
-		var parent = node.Parent;
+        Node<IEvaluate<T>> node = sourceNode.CloneTree(); // * new 1
+        Node<IEvaluate<T>> root = node.Root;
+        Node<IEvaluate<T>>? parent = node.Parent;
 		try
 		{
-			var replacement = clonedNodeHandler(node, param)
+            IEvaluate<T> replacement = clonedNodeHandler(node, param)
 				?? throw new ArgumentException(ReturnedNull, nameof(clonedNodeHandler));
 
 			if (parent is null) return replacement;
 
-			var rn = sourceNode.Source.Map(replacement);
+            Node<IEvaluate<T>> rn = sourceNode.Source.Map(replacement);
 			try
 			{
 				parent.Replace(node, rn);
@@ -256,12 +256,12 @@ public static class CatalogExtensions
 		clonedNodeHandler.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		var node = sourceNode.CloneTree(); // * new 1
-		var root = node.Root;
-		var parent = node.Parent;
+        Node<IEvaluate<T>> node = sourceNode.CloneTree(); // * new 1
+        Node<IEvaluate<T>> root = node.Root;
+        Node<IEvaluate<T>>? parent = node.Parent;
 		try
 		{
-			var replacement = clonedNodeHandler(node)
+            Node<IEvaluate<T>> replacement = clonedNodeHandler(node)
 				?? throw new ArgumentException(ReturnedNull, nameof(clonedNodeHandler)); // * new 2
 
 			try
@@ -301,11 +301,11 @@ public static class CatalogExtensions
 	{
 		catalog.ThrowIfNull();
 		node.ThrowIfNull();
-		var parent = node.Parent
+        Node<IEvaluate<T>> parent = node.Parent
 			?? throw new ArgumentException("node cannot be removed without a parent.", nameof(node));
 		Contract.EndContractBlock();
 
-		var root = node.Root;
+        Node<IEvaluate<T>> root = node.Root;
 		parent.Remove(node);
 		return catalog.FixHierarchy(root, true);
 	}

@@ -17,8 +17,8 @@ public partial class Sum<T>
 		Children.Length.Throw("Cannot resolve sum of empty set.").IfEquals(0);
 
 		var descs = new List<Lazy<string>>();
-		var result = T.AdditiveIdentity;
-		foreach (var r in ChildResults(context))
+		T result = T.AdditiveIdentity;
+		foreach (EvaluationResult<T> r in ChildResults(context))
 		{
 			result += r.Result;
 			descs.Add(r.Description);
@@ -33,13 +33,14 @@ public partial class Sum<T>
 	{
 		if (a is Product<T> aP)
 		{
-			var count = 0;
+            int count = 0;
 			IConstant<T>? v = default;
-			foreach (var c in aP.Children.OfType<IConstant<T>>())
+			foreach (IConstant<T> c in aP.Children.OfType<IConstant<T>>())
 			{
 				v = c;
 				if (++count != 1) break;
 			}
+
 			if (count == 1)
 			{
 				value = v!;
@@ -56,11 +57,11 @@ public partial class Sum<T>
 		if (x is null) return y is null ? 0 : -1;
 		if (y is null) return +1;
 
-		var aFound = IsProductWithSingleConstant(x, out var aConstant);
-		var bFound = IsProductWithSingleConstant(y, out var bConstant);
+        bool aFound = IsProductWithSingleConstant(x, out IConstant<T>? aConstant);
+        bool bFound = IsProductWithSingleConstant(y, out IConstant<T>? bConstant);
 		if (aFound && bFound)
 		{
-			var result = base.Compare(aConstant, bConstant);
+            int result = base.Compare(aConstant, bConstant);
 			if (result != 0) return result;
 		}
 		else if (aFound)
@@ -86,8 +87,8 @@ public partial class Sum<T>
 		Debug.Assert(result is not null);
 		if (index != 0)
 		{
-			var c = child.Value;
-			var m = HasNegativeMultiple.Match(c);
+            string c = child.Value;
+            Match m = HasNegativeMultiple.Match(c);
 			if (m.Success)
 			{
 				result.Append(" - ");
@@ -108,7 +109,7 @@ public partial class Sum<T>
 		ICatalog<IEvaluate<T>> catalog)
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
-		var zero = catalog.GetConstant(T.Zero);
+        Constant<T> zero = catalog.GetConstant(T.Zero);
 
 		// Phase 1: Flatten sums of sums.
 		var children = catalog
@@ -118,13 +119,13 @@ public partial class Sum<T>
 					// Check for products that can be flattened as well.
 					if (a is not Product<T> aP || aP.Children.Length != 2) return a;
 
-					var aS = aP.Children.OfType<Sum<T>>().ToArray();
+                    Sum<T>[] aS = aP.Children.OfType<Sum<T>>().ToArray();
 					if (aS.Length != 1) return a;
 
-					var aC = aP.Children.OfType<IConstant<T>>().ToArray();
+                    IConstant<T>[] aC = aP.Children.OfType<IConstant<T>>().ToArray();
 					if (aC.Length != 1) return a;
 
-					var aCv = aC[0];
+                    IConstant<T> aCv = aC[0];
 					return catalog.SumOf(aS[0].Children.Select(c => catalog.ProductOf(aCv, c)));
 				}), parent => parent is Sum<T>)
 				.Where(c => c != zero)
@@ -140,16 +141,16 @@ public partial class Sum<T>
 		}
 
 		// Check for NaN.
-		foreach (var child in children.OfType<IConstant<T>>())
+		foreach (IConstant<T> child in children.OfType<IConstant<T>>())
 		{
-			var c = child.Value;
+			T c = child.Value;
 			if (c.IsNaN()) return catalog.GetConstant(c);
 		}
 
-		var one = catalog.GetConstant(T.One);
+        Constant<T> one = catalog.GetConstant(T.One);
 
-		// Phase 3: Look for groupings by "multiples".
-		var withMultiples = catalog.MultiplesExtracted(children, true).ToArray();
+        // Phase 3: Look for groupings by "multiples".
+        (string Hash, IConstant<T>? Multiple, IEvaluate<T> Entry)[] withMultiples = catalog.MultiplesExtracted(children, true).ToArray();
 
 		// Phase 4: Replace multipliable products with single merged version.
 		return catalog.SumOf(
@@ -198,12 +199,12 @@ public partial class Sum<T>
 		catalog.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
-		var one = catalog.GetConstant(T.One);
+        Constant<T> one = catalog.GetConstant(T.One);
 		greatestFactor = one;
 		sum = this;
 		// Phase 5: Try and group by GCF:
-		using var productsLease = ListPool<Product<T>>.Rent();
-		foreach (var c in Children)
+		using RecycleHelper<List<Product<T>>> productsLease = ListPool<Product<T>>.Rent();
+		foreach (IEvaluate<T> c in Children)
 		{
 			// All of them must be products for GCF to work.
 			if (c is Product<T> p)
@@ -213,14 +214,14 @@ public partial class Sum<T>
 		}
 
 		// Try and get all the constants, and if a product does not have one, then done.
-		using var constantLease = ListPool<T>.Rent();
-		var constants = constantLease.Item;
-		foreach (var p in productsLease.Item)
+		using RecycleHelper<List<T>> constantLease = ListPool<T>.Rent();
+        List<T> constants = constantLease.Item;
+		foreach (Product<T> p in productsLease.Item)
 		{
-			using var c = p.Children.OfType<IConstant<T>>().GetEnumerator();
+			using IEnumerator<IConstant<T>> c = p.Children.OfType<IConstant<T>>().GetEnumerator();
 			if (c.MoveNext()) // At least 1. OK.
 			{
-				var e = c.Current;
+                IConstant<T> e = c.Current;
 				if (!c.MoveNext()) // More than 1? Abort.
 				{
 					constants.Add(e.Value);
@@ -232,16 +233,17 @@ public partial class Sum<T>
 		}
 
 		// Convert all the constants to factors, and if any are invalid for factoring, then done.
-		using var factorsLease = ListPool<T>.Rent();
-		foreach (var v in constants)
+		using RecycleHelper<List<T>> factorsLease = ListPool<T>.Rent();
+		foreach (T v in constants)
 		{
 			var d = T.Abs(v);
 			if (d <= T.One || !d.IsInteger()) return false;
 			factorsLease.Item.Add(d);
 		}
+
 		constantLease.Dispose();
 
-		var gcf = Prime.GreatestFactor(factorsLease.Item);
+		T gcf = Prime.GreatestFactor(factorsLease.Item);
 		Debug.Assert(factorsLease.Item.All(f => f >= gcf));
 		factorsLease.Dispose();
 		if (gcf <= T.One) return false;
@@ -251,8 +253,8 @@ public partial class Sum<T>
 			.SumOf(catalog.MultiplesExtracted(productsLease.Item)
 			.Select(e =>
 			{
-				var m = e.Multiple ?? one;
-				return m != one && TryGetReducedFactor(m.Value, out var f)
+                IConstant<T> m = e.Multiple ?? one;
+				return m != one && TryGetReducedFactor(m.Value, out T? f)
 					? catalog.ProductOf(in f, e.Entry)
 					: e.Entry;
 			}));
@@ -261,7 +263,7 @@ public partial class Sum<T>
 
 		bool TryGetReducedFactor(T value, out T f)
 		{
-			var r = value / gcf;
+			T r = value / gcf;
 			f = r;
 			return r != T.One;
 		}
@@ -284,12 +286,12 @@ public static class Sum
 		catalog.ThrowIfNull().OnlyInDebug();
 		childList.ThrowIfNull().OnlyInDebug();
 
-		var constants = childList.ExtractType<IConstant<T>>();
+        List<IConstant<T>> constants = childList.ExtractType<IConstant<T>>();
 
 		if (constants.Count == 0)
 			return Create(catalog, childList);
 
-		var c = constants.Count == 1
+        IConstant<T> c = constants.Count == 1
 			? constants[0]
 			: catalog.SumOfConstants(constants);
 
@@ -322,8 +324,8 @@ public static class Sum
 
 			default:
 			{
-				using var childListRH = ListPool<IEvaluate<T>>.Rent();
-				var childList = childListRH.Item;
+				using RecycleHelper<List<IEvaluate<T>>> childListRH = ListPool<IEvaluate<T>>.Rent();
+                    List<IEvaluate<T>> childList = childListRH.Item;
 				childList.AddRange(children);
 				return SumOfCollection(catalog, childList);
 			}
@@ -342,13 +344,13 @@ public static class Sum
 		if (children is IReadOnlyList<IEvaluate<T>> ch)
 			return SumOf(catalog, ch);
 
-		using var e = children.GetEnumerator();
+		using IEnumerator<IEvaluate<T>> e = children.GetEnumerator();
 		if (!e.MoveNext()) return catalog.GetConstant(T.Zero);
-		var v0 = e.Current;
+        IEvaluate<T> v0 = e.Current;
 		if (!e.MoveNext()) return v0;
 
-		using var childListRH = ListPool<IEvaluate<T>>.Rent();
-		var childList = childListRH.Item;
+		using RecycleHelper<List<IEvaluate<T>>> childListRH = ListPool<IEvaluate<T>>.Rent();
+        List<IEvaluate<T>> childList = childListRH.Item;
 		childList.Add(v0);
 		do { childList.Add(e.Current); }
 		while (e.MoveNext());
@@ -384,17 +386,18 @@ public static class Sum
 		if (T.IsNaN(c1))
 			return catalog.GetConstant(c1);
 
-		var result = c1;
+		T result = c1;
 		// ReSharper disable once PossibleMultipleEnumeration
 		// ReSharper disable once LoopCanBeConvertedToQuery
-		foreach (var c in constants)
+		foreach (IConstant<T> c in constants)
 		{
-			var val = c.Value;
+			T val = c.Value;
 			if (T.IsNaN(val))
 				return catalog.GetConstant(val);
 
 			result += val;
 		}
+
 		return catalog.GetConstant(result);
 	}
 

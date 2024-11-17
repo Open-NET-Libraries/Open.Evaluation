@@ -6,8 +6,8 @@ public static partial class CatalogExtensions
 		where T : notnull, INumber<T>
 	{
 		if (gene == gene.Root) return ifRoot;
-		// Validate worthiness.
-		var parent = gene.Parent;
+        // Validate worthiness.
+        Node<IEvaluate<T>>? parent = gene.Parent;
 		Debug.Assert(parent is not null);
 
 		switch (parent.Value)
@@ -46,6 +46,7 @@ public static partial class CatalogExtensions
 				.Recycle()!;
 			return true;
 		}
+
 		newRoot = default!;
 		return false;
 	}
@@ -125,7 +126,7 @@ public static partial class CatalogExtensions
 		if (!Registry.Functions.Contains(fn))
 			throw new ArgumentException("Invalid function operator.", nameof(fn));
 
-		var c = catalog.Catalog;
+        EvaluationCatalog<T> c = catalog.Catalog;
 		return c.ApplyClone(node, _ =>
 			Registry.GetFunction(c, fn, parameters.ToArray()));
 	}
@@ -139,8 +140,8 @@ public static partial class CatalogExtensions
 		node.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		var c = catalog.Catalog;
-		var n = Registry.GetRandomFunction(c, node.Value!);
+        EvaluationCatalog<T> c = catalog.Catalog;
+        IEvaluate<T>? n = Registry.GetRandomFunction(c, node.Value!);
 		return n is null ? null : c.ApplyClone(node, _ => n);
 	}
 
@@ -170,9 +171,9 @@ public static partial class CatalogExtensions
 		if (root is not IParent)
 			return root;
 
-		var cat = catalog.Catalog;
-		var tree = cat.Factory.Map(root);
-		foreach (var p in tree
+        EvaluationCatalog<T> cat = catalog.Catalog;
+        Node<IEvaluate<T>> tree = cat.Factory.Map(root);
+		foreach (Node<IEvaluate<T>>? p in tree
 			.GetDescendantsOfType()
 			.Where(d => d.Value is IParameter<T>)
 			.ToArray())
@@ -186,8 +187,8 @@ public static partial class CatalogExtensions
 			if (p.Parent.Value is Exponent<T> exponent && exponent.Power is IConstant<T> c)
 			{
 				var a = T.Abs(c.Value);
-				var direction = T.IsNegative(c.Value) ? -T.One : +T.One;
-				var newValue = (a < T.One && a > T.Zero)
+				T direction = T.IsNegative(c.Value) ? -T.One : +T.One;
+				T newValue = (a < T.One && a > T.Zero)
 					? (T.IsPositive(c.Value) ? +T.One : -T.One)
 					: (c.Value + direction);
 
@@ -201,10 +202,10 @@ public static partial class CatalogExtensions
 			}
 		}
 
-		var pet = cat.FixHierarchy(tree).Recycle()!;
+        IEvaluate<T> pet = cat.FixHierarchy(tree).Recycle()!;
 		tree.Recycle();
 
-		return cat.TryGetReduced(pet, out var red) ? red : pet;
+		return cat.TryGetReduced(pet, out IEvaluate<T>? red) ? red : pet;
 	}
 
 	public static IEvaluate<TResult> FlattenProductofSums<TResult>(
@@ -216,14 +217,14 @@ public static partial class CatalogExtensions
 		root.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		var cat = catalog.Catalog;
+        EvaluationCatalog<TResult> cat = catalog.Catalog;
 
 	retry:
 		if (root is not IParent)
 			return root;
 
-		var tree = cat.Factory.Map(root);
-		var first = tree
+        Node<IEvaluate<TResult>> tree = cat.Factory.Map(root);
+        Node<IEvaluate<TResult>>? first = tree
 			.GetNodesOfType()
 			.FirstOrDefault(d => d.Value is Product<TResult> e
 				&& e.Children.Length > 1 && e.Children.OfType<Sum<TResult>>().Any());
@@ -235,13 +236,13 @@ public static partial class CatalogExtensions
 		}
 
 		var product = (Product<TResult>)first.Value;
-		var children = product.Children;
+        ImmutableArray<IEvaluate<TResult>> children = product.Children;
 		var newChildren = children.ToList();
-		var sums = newChildren.ExtractType<Sum<TResult>>();
+        List<Sum<TResult>> sums = newChildren.ExtractType<Sum<TResult>>();
 		IEvaluate<TResult> productOfSum;
 		if (sums.Count == 1)
 		{
-			var next = newChildren[0];
+            IEvaluate<TResult> next = newChildren[0];
 			newChildren.RemoveAt(0);
 			productOfSum = cat.ProductOfSum(next, sums[0]);
 		}
@@ -250,8 +251,8 @@ public static partial class CatalogExtensions
 			productOfSum = cat.ProductOfSums(sums);
 		}
 
-		var oRoot = root;
-		var replacment = newChildren.Count == 0 ? productOfSum : Product<TResult>.Create(cat, newChildren.Append(productOfSum));
+        IEvaluate<TResult> oRoot = root;
+        IEvaluate<TResult> replacment = newChildren.Count == 0 ? productOfSum : Product<TResult>.Create(cat, newChildren.Append(productOfSum));
 		if (root == product)
 		{
 			root = replacment;
@@ -260,9 +261,9 @@ public static partial class CatalogExtensions
 		{
 			if (first.Parent is null) throw new NotSupportedException("Impossible to replace when first parent is null.");
 			first.Parent.Replace(first, cat.Factory.Map(replacment));
-			var pet = cat.FixHierarchy(tree).Recycle()!;
+            IEvaluate<TResult> pet = cat.FixHierarchy(tree).Recycle()!;
 
-			root = cat.TryGetReduced(pet, out var red) ? red : pet;
+			root = cat.TryGetReduced(pet, out IEvaluate<TResult>? red) ? red : pet;
 		}
 
 		tree.Recycle();

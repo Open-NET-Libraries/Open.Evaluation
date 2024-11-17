@@ -51,7 +51,7 @@ public static class Registry
 		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		return Operators.TryRandomSelectOneExcept(out var op, except, others)
+		return Operators.TryRandomSelectOneExcept(out char op, except, others)
 			? GetOperator(catalog, op, children)
 			: null;
 	}
@@ -67,7 +67,7 @@ public static class Registry
 
 		return except is null
 			? GetOperator(catalog, Operators.RandomSelectOne(), children)
-			: Operators.TryRandomSelectOne(out var op, new HashSet<char>(except))
+			: Operators.TryRandomSelectOne(out char op, new HashSet<char>(except))
 			? GetOperator(catalog, op, children)
 			: null;
 	}

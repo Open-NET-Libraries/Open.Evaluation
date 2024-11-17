@@ -38,7 +38,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		Contract.EndContractBlock();
 
 		string key = item.ToString().ThrowIfNull();
-		var result = Registry.GetOrAdd(key, OnBeforeRegistration(item));
+        T? result = Registry.GetOrAdd(key, OnBeforeRegistration(item));
 		Debug.Assert(result is not null);
 		Debug.Assert(result is TItem);
 		Debug.Assert(result.Catalog == this);
@@ -55,10 +55,10 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
-			var e = factory(k, this);
+            TItem? e = factory(k, this);
 			Debug.Assert(e is not null);
 			Debug.Assert(e.Catalog == this);
-			var hash = e.ToString();
+            string? hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k ? throw new ArgumentException($"Does not match instance.ToString().\nkey: {k}\nhash: {hash}", nameof(id))
 				: (T)OnBeforeRegistration(e);
@@ -75,10 +75,10 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
-			var e = factory(k, this, param);
+            TItem? e = factory(k, this, param);
 			Debug.Assert(e is not null);
 			Debug.Assert(e.Catalog == this);
-			var hash = e.ToString();
+            string? hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k ? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
 				: (T)OnBeforeRegistration(e);
@@ -91,7 +91,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		id.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		var result = Registry.TryGetValue(id, out var e);
+        bool result = Registry.TryGetValue(id, out T? e);
 		Debug.Assert(e is not null);
 		Debug.Assert(e.Catalog == this);
 		item = (TItem)e;
@@ -105,14 +105,14 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	[return: NotNull]
 	public T GetReduced(T source)
 	{
-		var src = Register(source);
+		T src = Register(source);
 		return src is IReducibleEvaluation<T> s
 			? Reductions.GetValue(s, _ =>
 			{
-				var count = 0;
-				var result = src;
+                int count = 0;
+				T result = src;
 				while (result is IReducibleEvaluation<T> red
-					   && red.TryGetReduced(this, out var r) && r != result)
+					   && red.TryGetReduced(this, out T? r) && r != result)
 				{
 					result = r;
 					count++;

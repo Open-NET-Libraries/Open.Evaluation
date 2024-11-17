@@ -58,14 +58,14 @@ public static class Registry
 		children.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		using var lease = HashSetPool<char>.Rent();
-		var hs = lease.Item;
+		using RecycleHelper<HashSet<char>> lease = HashSetPool<char>.Rent();
+        HashSet<char> hs = lease.Item;
 #if NETSTANDARD2_1_OR_GREATER
 		hs.EnsureCapacity(moreExcept.Length + 1);
 #endif
 		hs.Add(except);
-		foreach (var e in moreExcept) hs.Add(e);
-		return Operators.TryRandomSelectOne(out var op, hs)
+		foreach (char e in moreExcept) hs.Add(e);
+		return Operators.TryRandomSelectOne(out char op, hs)
 			? GetOperator(catalog, op, children)
 			: null;
 	}
@@ -182,14 +182,14 @@ public static class Registry
 		catalog.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		using var lease = HashSetPool<char>.Rent();
-		var hs = lease.Item;
+		using RecycleHelper<HashSet<char>> lease = HashSetPool<char>.Rent();
+        HashSet<char> hs = lease.Item;
 #if NETSTANDARD2_1_OR_GREATER
 		hs.EnsureCapacity(moreExcept.Length+1);
 #endif
 		hs.Add(except);
-		foreach (var e in moreExcept) hs.Add(e);
-		return Functions.TryRandomSelectOne(out var op, hs)
+		foreach (char e in moreExcept) hs.Add(e);
+		return Functions.TryRandomSelectOne(out char op, hs)
 			? GetFunction(catalog, op, children)
 			: null;
 	}
