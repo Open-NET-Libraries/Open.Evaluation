@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<RootNamespace>Open.Evaluation</RootNamespace>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Version>2.0.0</Version>
@@ -41,9 +41,9 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Open.Collections" Version="3.2.0" />
+		<PackageReference Include="Open.Collections" Version="4.0.1" />
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
-		<PackageReference Include="Open.Hierarchy" Version="1.10.0" />
+		<PackageReference Include="Open.Hierarchy" Version="2.0.0" />
 		<PackageReference Include="Open.RandomizationExtensions" Version="2.5.3" />
 		<PackageReference Include="Throw" Version="1.4.0" />
 	</ItemGroup>

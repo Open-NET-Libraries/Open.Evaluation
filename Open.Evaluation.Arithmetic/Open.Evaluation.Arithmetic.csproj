@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Version>2.0.0</Version>
@@ -46,7 +46,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
-		<PackageReference Include="Open.Numeric.Primes" Version="4.0.2" />
+		<PackageReference Include="Open.Numeric.Primes" Version="4.0.3" />
 	</ItemGroup>
 
 	<ItemGroup>

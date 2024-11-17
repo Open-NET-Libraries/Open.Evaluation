@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Version>2.0.0</Version>
 		<Nullable>enable</Nullable>
@@ -49,8 +49,8 @@ Part of the "Open" set of libraries.
 		  <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
-		<PackageReference Include="Open.Hierarchy" Version="1.9.2" />
-		<PackageReference Include="Open.Numeric.Primes" Version="4.0.1" />
+		<PackageReference Include="Open.Hierarchy" Version="2.0.0" />
+		<PackageReference Include="Open.Numeric.Primes" Version="4.0.3" />
 		<PackageReference Include="Open.RandomizationExtensions" Version="2.5.3" />
 		<PackageReference Include="Throw" Version="1.4.0" />
 	</ItemGroup>

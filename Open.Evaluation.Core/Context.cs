@@ -171,8 +171,17 @@ public class Context : DisposableBase
 			_registry.Clear();
 	}
 
-	public static SharedPool<Context> Shared { get; }
-		= new(() => new(), c => c.Clear(), c => c.Dispose(), 100);
+	public class ContextPool : InterlockedArrayObjectPool<Context>
+	{
+		public ContextPool()
+			: base(() => new Context(), c => c.Clear(), c => c.Dispose(), 100) { }
+
+		[Obsolete("Shared pools do not support disposal.")]
+		public new void Dispose()
+				=> throw new NotSupportedException("Shared pools cannot be disposed.");
+	}
+
+	public static ContextPool Shared { get; } = new();
 
 	public static Context Get()
 		=> Shared.Take();
