@@ -1,5 +1,4 @@
-﻿using Open.Threading;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
@@ -72,7 +71,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		Contract.EndContractBlock();
 
 		id = GetPooledId(id);
-		T? result = Registry.GetOrAdd(id, _ => OnBeforeRegistration(item));
+		T? result = Registry.GetOrAdd(id, OnBeforeRegistration(item));
 		Debug.Assert(result is not null);
 		Debug.Assert(result is TItem);
 		Debug.Assert(result.Catalog == this);

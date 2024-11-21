@@ -1,46 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\Common.props" />
+
 	<PropertyGroup>
 		<RootNamespace>Open.Evaluation</RootNamespace>
-		<TargetFramework>net9.0</TargetFramework>
-		<LangVersion>latest</LangVersion>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<Version>2.0.0-beta01</Version>
-		<Nullable>enable</Nullable>
-		<ImplicitUsings>enable</ImplicitUsings>
-		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-		<Authors>electricessence</Authors>
-		<Copyright>© electricessence (Oren F.) All rights reserved.</Copyright>
-		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<EnableNETAnalyzers>true</EnableNETAnalyzers>
-		<PackageProjectUrl>https://github.com/Open-NET-Libraries/Open.Evaluation/</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/Open-NET-Libraries/Open.Evaluation/</RepositoryUrl>
-		<IncludeSymbols>true</IncludeSymbols>
-		<SymbolPackageFormat>snupkg</SymbolPackageFormat>
-		<RepositoryType>git</RepositoryType>
-		<PublishRepositoryUrl>true</PublishRepositoryUrl>
-		<AnalysisLevel>latest</AnalysisLevel>
-		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<Description>A framework for evaluating complex formulas.  This is the core package for use with specific evaluation types.</Description>
-		<PackageIcon>logo.png</PackageIcon>
 	</PropertyGroup>
-	
-	<ItemGroup>
-		<None Include="..\logo.png">
-		  <Pack>True</Pack>
-		  <PackagePath>\</PackagePath>
-		</None>
-		<None Include="..\README.md">
-			<Pack>True</Pack>
-			<PackagePath>\</PackagePath>
-		</None>
-	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0">
-			<PrivateAssets>all</PrivateAssets>
-			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-		</PackageReference>
 		<PackageReference Include="Open.Collections" Version="4.0.2" />
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
 		<PackageReference Include="Open.Hierarchy" Version="2.0.0" />

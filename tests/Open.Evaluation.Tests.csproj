@@ -18,7 +18,6 @@
 	<ItemGroup>
 		<ProjectReference Include="..\Open.Evaluation.Arithmetic\Open.Evaluation.Arithmetic.csproj" />
 		<ProjectReference Include="..\Open.Evaluation.Core\Open.Evaluation.Core.csproj" />
-		<ProjectReference Include="..\source\Open.Evaluation.csproj" />
 	</ItemGroup>
 
 </Project>

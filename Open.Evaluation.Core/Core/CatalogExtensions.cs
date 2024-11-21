@@ -357,4 +357,17 @@ public static class CatalogExtensions
 		where TKey : class
 		where TValue : class?
 		=> source.GetValue(key, k => factory(k));
+
+	[MethodImpl(MethodImplOptions.AggressiveInlining)]
+	internal static TValue GetOrAdd<TKey, TValue>(this ConditionalWeakTable<TKey, TValue> source, TKey key, TValue value)
+		where TKey : class
+		where TValue : class?
+	{
+		// By attempting these two steps first, we potentially avoid the allocation required for the lambda.
+		if(source.TryGetValue(key, out TValue? existing)) return existing;
+		if(source.TryAdd(key, value)) return value;
+
+		// If the value was added by another thread, return the existing value.
+		return source.GetValue(key, _ => value);
+	}
 }
