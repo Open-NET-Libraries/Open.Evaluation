@@ -1,4 +1,5 @@
-﻿using System.Collections.Concurrent;
+﻿using Open.Threading;
+using System.Collections.Concurrent;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Core;
@@ -6,6 +7,11 @@ namespace Open.Evaluation.Core;
 public class Catalog<T> : DisposableBase, ICatalog<T>
 	where T : class, IEvaluate
 {
+	public Catalog()
+	{
+		IdLookup = IdPool.GetAlternateLookup<ReadOnlySpan<char>>();
+	}
+
 	private static Catalog<T>? _instance;
 	public static Catalog<T> Shared
 		=> LazyInitializer.EnsureInitialized(ref _instance);
@@ -14,9 +20,37 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	{
 		Registry.Clear();
 		Reductions.Clear();
+		IdPool.Clear();
 	}
 
-	readonly ConcurrentDictionary<string, T> Registry = new();
+	readonly ConditionalWeakTable<string, T> Registry = new();
+	readonly ConcurrentDictionary<string, string> IdPool = new();
+	readonly ConcurrentDictionary<string, string>.AlternateLookup<ReadOnlySpan<char>> IdLookup;
+
+	/// <summary>
+	/// Gets the actual string that will be used for looking up an entry in the catalog.
+	/// </summary>
+	/// <remarks>
+	/// By using strings instead of the actual object, we can reduce the memory footprint of the catalog
+	/// and entries that are not used can be garbage collected.
+	/// </remarks>
+	public string GetPooledId(string id)
+	{
+		id.ThrowIfNull().OnlyInDebug();
+		Contract.EndContractBlock();
+
+		if (IdLookup.TryGetValue(id, out string? result))
+			return result;
+
+		if (IdLookup.TryAdd(id, id))
+			return id;
+
+		if (IdLookup.TryGetValue(id, out result))
+			return result;
+
+		// Should never happen. Throw.
+		throw new UnreachableException("Failed to add ID to lookup.");
+	}
 
 	public void Register<TItem>(ref TItem item)
 		where TItem : notnull, T
@@ -34,10 +68,11 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		where TItem : notnull, T
 	{
 		item.ThrowIfNull();
+		string id = item.ToString().ThrowIfNull();
 		Contract.EndContractBlock();
 
-		string key = item.ToString().ThrowIfNull();
-        T? result = Registry.GetOrAdd(key, OnBeforeRegistration(item));
+		id = GetPooledId(id);
+		T? result = Registry.GetOrAdd(id, _ => OnBeforeRegistration(item));
 		Debug.Assert(result is not null);
 		Debug.Assert(result is TItem);
 		Debug.Assert(result.Catalog == this);
@@ -52,12 +87,13 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		factory.ThrowIfNull();
 		Contract.EndContractBlock();
 
+		id = GetPooledId(id);
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
-            TItem? e = factory(k, this);
+			TItem? e = factory(k, this);
 			Debug.Assert(e is not null);
 			Debug.Assert(e.Catalog == this);
-            string? hash = e.ToString();
+			string? hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k
 				? throw new ArgumentException($"Does not match instance.ToString().\nkey: {k}\nhash: {hash}", nameof(id))
@@ -73,12 +109,13 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		factory.ThrowIfNull();
 		Contract.EndContractBlock();
 
+		id = GetPooledId(id);
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
-            TItem? e = factory(k, this, param);
+			TItem? e = factory(k, this, param);
 			Debug.Assert(e is not null);
 			Debug.Assert(e.Catalog == this);
-            string? hash = e.ToString();
+			string? hash = e.ToString();
 			Debug.Assert(hash == k);
 			return hash != k
 				? throw new ArgumentException($"Does not match instance.ToStringRepresentation().\nkey: {k}\nhash: {hash}", nameof(id))
@@ -92,7 +129,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		id.ThrowIfNull();
 		Contract.EndContractBlock();
 
-        bool result = Registry.TryGetValue(id, out T? e);
+		id = GetPooledId(id);
+		bool result = Registry.TryGetValue(id, out T? e);
 		Debug.Assert(e is not null);
 		Debug.Assert(e.Catalog == this);
 		item = (TItem)e;
@@ -110,11 +148,13 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		return src is IReducibleEvaluation<T> s
 			? Reductions.GetValue(s, _ =>
 			{
-                int count = 0;
+				int count = 0;
 				T result = src;
 				while (result is IReducibleEvaluation<T> red
 					   && red.TryGetReduced(out T? r))
 				{
+					Debug.Assert(red.Description.Value != r.Description.Value, "Multiple instances of the same item are being exposed.");
+
 					result = r;
 					count++;
 #if DEBUG

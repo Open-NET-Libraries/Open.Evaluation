@@ -8,6 +8,8 @@ namespace Open.Evaluation.Core;
 public interface ICatalog<T> : IDisposable
 	where T : notnull, IEvaluate
 {
+	string GetPooledId(string id);
+
 	TItem Register<TItem>(TItem item)
 		where TItem : notnull, T;
 

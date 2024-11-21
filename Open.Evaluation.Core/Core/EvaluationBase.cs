@@ -16,7 +16,8 @@ public abstract class EvaluationBase<T>
 {
 	protected EvaluationBase(ICatalog<IEvaluate<T>> catalog)
 	{
-		Description = new(Describe);
+		// Get the pooled ID here to optimize for subsequent lookups.
+		Description = new(() => catalog.GetPooledId(Describe()));
 		Catalog = catalog;
 	}
 
@@ -29,7 +30,6 @@ public abstract class EvaluationBase<T>
 	/// <summary>
 	/// Provides the non-paramerterized description of this evaluation.
 	/// </summary>
-	/// <returns></returns>
 	protected abstract string Describe();
 
 	/// <summary>
@@ -39,7 +39,7 @@ public abstract class EvaluationBase<T>
 	public Lazy<string> Description { get; }
 
 	public override string ToString() => Description.Value;
-		//=> $"{GetType()} {Description.Value}";
+	//=> $"{GetType()} {Description.Value}";
 
 	protected abstract EvaluationResult<T> EvaluateInternal(Context context); // **
 
