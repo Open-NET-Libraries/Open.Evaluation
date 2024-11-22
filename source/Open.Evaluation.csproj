@@ -1,5 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
+	<Import Project="..\Common.props" />
+	
 	<ItemGroup>
 	  <ProjectReference Include="..\Open.Evaluation.Arithmetic\Open.Evaluation.Arithmetic.csproj" />
 	  <ProjectReference Include="..\Open.Evaluation.Boolean\Open.Evaluation.Boolean.csproj" />
