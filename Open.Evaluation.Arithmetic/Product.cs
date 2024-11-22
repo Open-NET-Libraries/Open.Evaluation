@@ -34,7 +34,7 @@ public partial class Product<T> :
 			}
 
 			// Check for NaN.
-			if (r.IsNaN())
+			if (T.IsNaN(r))
 			{
 				result = r;
 				break;
@@ -334,7 +334,7 @@ public static class Product
 {
 	public static IEvaluate<TResult> ProductOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
-		IEnumerable<IEvaluate<TResult>> children)
+		params IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 	{
 		catalog.ThrowIfNull();
@@ -379,33 +379,10 @@ public static class Product
 
 	public static IEvaluate<TResult> ProductOf<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> multiple,
-		IEnumerable<IEvaluate<TResult>> children)
-		where TResult : notnull, INumber<TResult>
-		=> ProductOf(catalog, children.Append(multiple));
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IEvaluate<TResult> child1,
-		IEvaluate<TResult> child2,
-		params IEvaluate<TResult>[] moreChildren)
-		where TResult : notnull, INumber<TResult>
-		=> ProductOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
 		in TResult multiple,
-		IEnumerable<IEvaluate<TResult>> children)
+		params IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
 		=> ProductOf(catalog, catalog.GetConstant(multiple), children);
-
-	public static IEvaluate<TResult> ProductOf<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		in TResult multiple,
-		IEvaluate<TResult> first,
-		params IEvaluate<TResult>[] rest)
-		where TResult : notnull, INumber<TResult>
-		=> ProductOf(catalog, rest.Prepend(first).Prepend(catalog.GetConstant(multiple)));
 
 	public static IEvaluate<TResult> ProductOfSum<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
@@ -418,19 +395,11 @@ public static class Product
 
 	public static IEvaluate<TResult> ProductOfSums<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
-		Sum<TResult> a,
-		Sum<TResult> b)
-		where TResult : notnull, INumber<TResult>
-		=> catalog.GetReduced(catalog.SumOf(a.Children.Select(c => ProductOfSum(catalog, c, b))));
-
-	public static IEvaluate<TResult> ProductOfSums<TResult>(
-		this ICatalog<IEvaluate<TResult>> catalog,
-		IReadOnlyCollection<Sum<TResult>> sums)
+		params IEnumerable<Sum<TResult>> sums)
 		where TResult : notnull, INumber<TResult>
 	{
-		if (sums.Count == 0) return catalog.GetConstant(TResult.One);
 		using var e = sums.GetEnumerator();
-		if (!e.MoveNext()) throw new NotSupportedException("Collection empty with count > 0.");
+		if (!e.MoveNext()) return catalog.GetConstant(TResult.One);
 		IEvaluate<TResult> p = e.Current;
 		while (e.MoveNext()) p = ProductOfSum(catalog, p, e.Current);
 		return catalog.GetReduced(p);
@@ -439,7 +408,7 @@ public static class Product
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
 		in TValue c1,
-		IEnumerable<IConstant<TValue>> constants)
+		params IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -471,32 +440,9 @@ public static class Product
 
 	public static Constant<TValue> ProductOfConstants<TValue>(
 		this ICatalog<IEvaluate<TValue>> catalog,
-		IEnumerable<IConstant<TValue>> constants)
+		params IEnumerable<IConstant<TValue>> constants)
 		where TValue : notnull, IComparable<TValue>, IComparable, INumber<TValue>
 		=> ProductOfConstants(catalog, TValue.MultiplicativeIdentity, constants);
-
-	public static Constant<TValue> ProductOfConstants<TValue>(
-		this ICatalog<IEvaluate<TValue>> catalog,
-		in IConstant<TValue> c1,
-		in IConstant<TValue> c2,
-		params IConstant<TValue>[] rest)
-		where TValue : notnull, INumber<TValue>
-	{
-		catalog.ThrowIfNull().OnlyInDebug();
-		c1.ThrowIfNull().OnlyInDebug();
-		c1.ThrowIfNull().OnlyInDebug();
-		Contract.EndContractBlock();
-
-		return ProductOfConstants(catalog, c1.Value, rest.Prepend(c2));
-	}
-
-	public static Constant<TValue> ProductOfConstants<TValue>(
-		this ICatalog<IEvaluate<TValue>> catalog,
-		in TValue c1,
-		IConstant<TValue> c2,
-		params IConstant<TValue>[] rest)
-		where TValue : notnull, INumber<TValue>
-		=> ProductOfConstants(catalog, c1, rest.Prepend(c2));
 
 	public static IEnumerable<(string Hash, IConstant<TResult>? Multiple, IEvaluate<TResult> Entry)> MultiplesExtracted<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,

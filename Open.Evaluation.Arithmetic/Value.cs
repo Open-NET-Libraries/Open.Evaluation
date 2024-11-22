@@ -26,9 +26,4 @@ internal static class ValueUtility
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsInteger<T>(this T value)
 		where T : notnull, INumber<T> => value % T.One == T.Zero;
-
-	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsNaN<T>(this INumber<T> number)
-		where T : notnull, INumber<T>
-		=> number != number;
 }

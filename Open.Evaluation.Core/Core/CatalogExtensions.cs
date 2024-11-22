@@ -364,10 +364,24 @@ public static class CatalogExtensions
 		where TValue : class?
 	{
 		// By attempting these two steps first, we potentially avoid the allocation required for the lambda.
-		if(source.TryGetValue(key, out TValue? existing)) return existing;
-		if(source.TryAdd(key, value)) return value;
+		if (source.TryGetValue(key, out TValue? existing)) return existing;
+		if (source.TryAdd(key, value)) return value;
 
 		// If the value was added by another thread, return the existing value.
 		return source.GetValue(key, _ => value);
+	}
+
+	/// <summary>
+	/// Will throw if any of the evaluations do not belong to the catalog.
+	/// </summary>
+	/// <exception cref="ArgumentException">When one is found that doesn't belong.</exception>
+	public static void AssertBelongs<T>(this ICatalog<T> catalog, params IEnumerable<T> evaluations)
+		where T : notnull, IEvaluate
+	{
+		foreach (T e in evaluations)
+		{
+			if(e.Catalog != catalog)
+				throw new ArgumentException("Evaluation does not belong to this catalog.", nameof(evaluations));
+		}
 	}
 }

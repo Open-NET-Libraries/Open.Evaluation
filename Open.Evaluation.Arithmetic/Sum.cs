@@ -142,7 +142,7 @@ public partial class Sum<T>
 		foreach (IConstant<T> child in children.OfType<IConstant<T>>())
 		{
 			T c = child.Value;
-			if (c.IsNaN()) return Catalog.GetConstant(c);
+			if (T.IsNaN(c)) return Catalog.GetConstant(c);
 		}
 
         Constant<T> one = Catalog.GetConstant(T.One);
@@ -284,7 +284,7 @@ public static class Sum
 		catalog.ThrowIfNull().OnlyInDebug();
 		childList.ThrowIfNull().OnlyInDebug();
 
-        List<IConstant<T>> constants = childList.ExtractType<IConstant<T>>();
+		List<IConstant<T>> constants = childList.ExtractType<IConstant<T>>();
 
 		if (constants.Count == 0)
 			return Create(catalog, childList);
@@ -332,7 +332,7 @@ public static class Sum
 
 	public static IEvaluate<T> SumOf<T>(
 		this ICatalog<IEvaluate<T>> catalog,
-		IEnumerable<IEvaluate<T>> children)
+		params IEnumerable<IEvaluate<T>> children)
 		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -357,24 +357,15 @@ public static class Sum
 
 	public static IEvaluate<T> SumOf<T>(
 		this ICatalog<IEvaluate<T>> catalog,
-		IEvaluate<T> child1,
-		IEvaluate<T> child2,
-		params IEvaluate<T>[] moreChildren)
-		where T : notnull, INumber<T>
-		=> SumOf(catalog, moreChildren.Prepend(child2).Prepend(child1));
-
-	public static IEvaluate<T> SumOf<T>(
-		this ICatalog<IEvaluate<T>> catalog,
 		in T multiple,
-		IEvaluate<T> child,
-		params IEvaluate<T>[] moreChildren)
+		params IEnumerable<IEvaluate<T>> moreChildren)
 		where T : notnull, INumber<T>
-		=> SumOf(catalog, moreChildren.Prepend(child).Prepend(catalog.GetConstant(multiple)));
+		=> SumOf(catalog, moreChildren.Prepend(catalog.GetConstant(multiple)));
 
 	public static Constant<T> SumOfConstants<T>(
 		this ICatalog<IEvaluate<T>> catalog,
 		in T c1,
-		IEnumerable<IConstant<T>> constants)
+		params IEnumerable<IConstant<T>> constants)
 		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
@@ -401,28 +392,41 @@ public static class Sum
 
 	public static Constant<T> SumOfConstants<T>(
 		this ICatalog<IEvaluate<T>> catalog,
-		IEnumerable<IConstant<T>> constants)
+		params IEnumerable<IConstant<T>> constants)
 		where T : notnull, INumber<T>
 		=> SumOfConstants(catalog, T.AdditiveIdentity, constants);
 
 	public static Constant<T> SumOfConstants<T>(
 		this ICatalog<IEvaluate<T>> catalog,
 		in T c1, in IConstant<T> c2,
-		params IConstant<T>[] rest)
-		where T : notnull, IComparable<T>, IComparable, INumber<T>
+		params IEnumerable<IConstant<T>> rest)
+		where T : notnull, INumber<T>
 		=> SumOfConstants(catalog, c1, rest.Prepend(c2));
 
 	public static Constant<T> SumOfConstants<T>(
 		this ICatalog<IEvaluate<T>> catalog,
 		in IConstant<T> c1,
 		in IConstant<T> c2,
-		params IConstant<T>[] rest)
-		where T : notnull, IComparable<T>, IComparable, INumber<T>
+		params IEnumerable<IConstant<T>> rest)
+		where T : notnull, INumber<T>
 	{
 		c1.ThrowIfNull().OnlyInDebug();
 		c2.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		return SumOfConstants(catalog, c1.Value, rest.Prepend(c2));
+	}
+
+	public static Constant<T> OfConstants<T>(
+		in IConstant<T> c1,
+		params IEnumerable<IConstant<T>> rest)
+		where T : notnull, INumber<T>
+	{
+		c1.ThrowIfNull().OnlyInDebug();
+		var catalog = c1.Catalog;
+		catalog.AssertBelongs(rest);
+		Contract.EndContractBlock();
+
+		return SumOfConstants(catalog, rest.Prepend(c1));
 	}
 }

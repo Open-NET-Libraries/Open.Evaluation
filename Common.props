@@ -1,7 +1,7 @@
 <Project>
 	
 	<PropertyGroup>
-		<Version>2.0.0-beta01</Version>
+		<Version>2.0.0-alpha01</Version>
 		<TargetFramework>net9.0</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<ImplicitUsings>enable</ImplicitUsings>
@@ -21,7 +21,7 @@
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageIcon>logo.png</PackageIcon>
 		<Description>A framework for evaluating complex formulas. Part of the "Open" set of libraries.</Description>
-		<PackageLicenseExpression>GPL v3</PackageLicenseExpression>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 	</PropertyGroup>
 
 	<ItemGroup>
