@@ -242,3 +242,6 @@ dotnet_style_prefer_conditional_expression_over_assignment = true:warning
 dotnet_style_prefer_conditional_expression_over_return = true:warning
 dotnet_style_explicit_tuple_names = true:suggestion
 dotnet_style_prefer_collection_expression = true:silent
+
+# VSSpell001: Spell Check
+dotnet_diagnostic.VSSpell001.severity = none

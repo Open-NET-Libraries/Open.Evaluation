@@ -11,6 +11,7 @@ public static class Extensions
 			_ => target.Count == 0 // Value does not have children? Return true only if this has no children.
 		};
 
+	[Pure]
 	public static int CountDistinctDescendantValuesOfType<T, TType, TSelect>(this Node<T> node, Func<TType, TSelect> selector)
 		=> node
 			.GetDescendantsOfType()
@@ -20,6 +21,7 @@ public static class Extensions
 			.Distinct()
 			.Count();
 
+	[Pure]
 	public static int CountDistinctDescendantValuesOfType<T, TType>(this Node<T> node)
 		=> node
 			.GetDescendantsOfType()
@@ -28,6 +30,7 @@ public static class Extensions
 			.Distinct()
 			.Count();
 
+	[Pure]
 	public static int CountDistinctParameters<T>(this Node<T> node)
 		=> node.CountDistinctDescendantValuesOfType<T, IParameter, ushort>(p => p.Id);
 }

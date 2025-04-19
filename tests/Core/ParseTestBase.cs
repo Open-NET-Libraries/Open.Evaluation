@@ -4,7 +4,7 @@ namespace Open.Evaluation.Tests.Core;
 
 public abstract class ParseTestBase
 {
-	protected readonly double[] PV = { 2, 3, 4, 5 };
+	protected readonly double[] PV = [2, 3, 4, 5];
 	protected readonly EvaluationCatalog<double> Catalog;
 	// ReSharper disable once NotAccessedField.Global
 	protected readonly string Format;
@@ -30,7 +30,7 @@ public abstract class ParseTestBase
 
 	protected abstract double Expected { get; }
 
-	[TestMethod, Description("Compares the parsed evalution to the expected value.")]
+	[TestMethod, Description("Compares the parsed evaluation to the expected value.")]
 	public void Evaluate()
 	{
 		using var lease = Context.Rent();
@@ -53,7 +53,7 @@ public abstract class ParseTestBase
 		}
 	}
 
-	[TestMethod, Description("Compares the parsed evalution .ToString(context) to the actual formatted string.")]
+	[TestMethod, Description("Compares the parsed evaluation .ToString(context) to the actual formatted string.")]
 	public void ToStringValues()
 	{
 		using var lease = Context.Rent();
@@ -69,7 +69,7 @@ public abstract class ParseTestBase
 		}
 	}
 
-	[TestMethod, Description("Compares the parsed evalution .ToStringRepresentation() to the provided format string.")]
+	[TestMethod, Description("Compares the parsed evaluation .ToStringRepresentation() to the provided format string.")]
 	public void ToStringRepresentation()
 	{
 		Evaluation.Description.Value

@@ -19,7 +19,7 @@ public interface IReducibleEvaluation<T> : IEvaluate
 	T GetReduction();
 
 	/// <summary>
-	/// Attempts a recduction on this instance.
+	/// Attempts a reduction on this instance.
 	/// </summary>
 	/// <returns><see langword="true"/> if <paramref name="reduction"/> is different than this instance; otherwise <see langword="false"/>.</returns>
 	bool TryGetReduced([MaybeNullWhen(false)] out T reduction);

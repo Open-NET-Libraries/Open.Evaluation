@@ -4,6 +4,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\Open.Evaluation.Core\Open.Evaluation.Core.csproj" />
+		<PackageReference Include="PurelySharp.Attributes" Version="0.0.1" PrivateAssets="All" />
 	</ItemGroup>
 	
 </Project>

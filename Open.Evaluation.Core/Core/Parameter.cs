@@ -13,8 +13,10 @@ public class Parameter<T>
 
 	public ushort Id { get; }
 
+	[Pure]
 	protected static string ToStringRepresentation(ushort id) => $"{{{id}}}";
 
+	[Pure]
 	protected override string Describe()
 		=> ToStringRepresentation(Id);
 

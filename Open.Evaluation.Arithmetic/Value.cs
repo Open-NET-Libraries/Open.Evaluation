@@ -5,6 +5,7 @@ internal static class Value<T> where T
 	public static readonly T Two = T.One + T.One;
 	public static readonly T Three = Two + T.One;
 
+	[Pure]
 	static bool CheckFloat()
 	{
 		T onepointfive = Three / Two;
@@ -23,6 +24,7 @@ internal static class ValueFloat<T> where T
 
 internal static class ValueUtility
 {
+	[Pure]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
 	public static bool IsInteger<T>(this T value)
 		where T : notnull, INumber<T> => value % T.One == T.Zero;

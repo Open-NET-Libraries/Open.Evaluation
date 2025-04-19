@@ -7,12 +7,13 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Open.Collections" Version="4.0.2" />
+		<PackageReference Include="Open.Collections" Version="4.1.1" />
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
 		<PackageReference Include="Open.Hierarchy" Version="2.0.0" />
 		<PackageReference Include="Open.Lazy.Extensions" Version="1.4.1" />
 		<PackageReference Include="Open.RandomizationExtensions" Version="2.5.3" />
 		<PackageReference Include="Throw" Version="1.4.0" />
+		<PackageReference Include="PurelySharp.Attributes" Version="0.0.1" PrivateAssets="All" />
 	</ItemGroup>
 
 </Project>

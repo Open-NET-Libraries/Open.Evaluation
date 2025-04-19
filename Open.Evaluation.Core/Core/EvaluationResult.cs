@@ -31,16 +31,24 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 
 	public EvaluationResult(
 		T result)
-		: this(result, Lazy.Create(() => result.ToString() ?? throw new Exception("result.ToString() returned null"))) { }
+		: this(result, Lazy.Create(
+			() => result.ToString()
+				?? throw new Exception("result.ToString() returned null")))
+	{ }
 
+	[Pure]
 	public T Result { get; }
 
+	[Pure]
 	public Lazy<string> Description { get; }
 
+	[Pure]
 	object IEvaluationResult.Result => Result;
 
+	[Pure]
 	public static implicit operator T(EvaluationResult<T> result) => result.Result;
 
+	[Pure]
 	public static implicit operator EvaluationResult<object>(EvaluationResult<T> result)
 		=> new(result.Result, result.Description);
 
@@ -52,12 +60,15 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 			: throw new InvalidCastException($"Cannot coerce from {r.GetType()} to {typeof(T)}.");
 	}
 
+	[Pure]
 	public static implicit operator Lazy<EvaluationResult<T>>(EvaluationResult<T> result)
 		=> new(result);
 
+	[Pure]
 	public static implicit operator Lazy<IEvaluationResult>(EvaluationResult<T> result)
 		=> new(result);
 
+	[Pure]
 	public static EvaluationResult<T> Coerce(IEvaluationResult result)
 		=> result is EvaluationResult<T> r ? r
 			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(T)}.");
@@ -65,24 +76,28 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 
 public static class EvaluationResult
 {
+	[Pure]
 	public static EvaluationResult<T> Create<T>(
 		in T result,
 		Lazy<string> description)
 		where T : notnull
 		=> new(in result, description);
 
+	[Pure]
 	public static EvaluationResult<T> Create<T>(
 		T result,
 		Func<T, string> descriptionFactory)
 		where T : notnull
 		=> new(result, descriptionFactory);
 
+	[Pure]
 	public static EvaluationResult<T> Create<T>(
 		T result,
 		string description)
 		where T : notnull
 		=> new(result, description);
 
+	[Pure]
 	public static EvaluationResult<T> Create<T>(
 		T result)
 		where T : notnull

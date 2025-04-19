@@ -4,7 +4,9 @@
 
 	<ItemGroup>
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
-		<PackageReference Include="Open.Numeric.Primes" Version="4.0.3" />
+		<PackageReference Include="Open.Numeric.Primes" Version="4.0.4" />
+		<PackageReference Include="PurelySharp.Attributes" Version="0.0.1" PrivateAssets="All" />
+
 	</ItemGroup>
 
 	<ItemGroup>

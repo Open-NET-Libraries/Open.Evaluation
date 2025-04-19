@@ -60,6 +60,6 @@ namespace Open.Evaluation.Boolean
 		public static AtLeast CountAtLeast(
 			this ICatalog<IEvaluate<bool>> catalog,
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
-			=> Counting.AtLeast.Create(catalog, param);
+			=> AtLeast.Create(catalog, param);
 	}
 }
