@@ -65,7 +65,11 @@ public class Exponent<T> : OperatorBase<T>,
 				? '^' + p
 				: ConvertToSuperScript(p);
 
-			if (ps == "¹") return b;
+			// An unreduced power-of-one must render distinctly from the bare base: rendering
+			// it as just `b` would collide with the base's own catalog key, causing
+			// Catalog.Register to hand back the base (wrong type) on an interning hit.
+			// GetReduction() still collapses x^1 to x; only the unreduced string changes.
+			if (ps == "¹") return $"({b}^{p})";
 
 			// Check for negative to invert the base.
 			return ps.StartsWith('-') || ps.StartsWith("(-", StringComparison.Ordinal) ? $"(1/{b}{ps})" : $"({b}{ps})";
@@ -344,9 +348,18 @@ public static partial class Exponent
 				exponent = -exponent;
 				// Division.
 				for (T i = T.One; i <= exponent; i++)
+				{
 					result /= baseValue;
 
-				Debug.Assert(result != T.One, "Type must be capable of division.");
+					// Canary: baseValue is never 0 or 1 here (both short-circuit above),
+					// so dividing 1 by baseValue exactly once can only reproduce 1 if this
+					// T's division is incapable (e.g. a no-op or non-reciprocal type).
+					// Checked on the first division only: base == -1 legitimately RETURNS
+					// to 1 every second division (a 2-cycle), which would falsely trip an
+					// every-iteration check without indicating incapable division.
+					if (i == T.One)
+						Debug.Assert(result != T.One, "Type must be capable of division.");
+				}
 			}
 			else if (Value<T>.IsBinaryInteger)
 			{

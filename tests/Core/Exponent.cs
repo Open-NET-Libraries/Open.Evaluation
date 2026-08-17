@@ -1,4 +1,6 @@
-﻿namespace Open.Evaluation.Tests.Core;
+﻿using Open.Evaluation.Arithmetic;
+
+namespace Open.Evaluation.Tests.Core;
 
 public static class Exponent
 {
@@ -81,5 +83,95 @@ public static class Exponent
 		public ExponentOfConstants() : base(FORMAT, "(({0}³)²)", "({0}⁶)") { }
 
 		protected override double Expected => Math.Pow(PV[0], 6);
+	}
+
+	// Issue #6: constructing x^1 via the public catalog path used to throw
+	// InvalidCastException because the unreduced rendering collided with the bare base's
+	// own catalog key ("x^1" rendered as just "x"). These tests exercise that path directly
+	// (catalog.GetExponent), rather than through the string parser, to pin the fix down at
+	// its source: Exponent<T>.Describe and Catalog.Register.
+	[TestClass]
+	public class PowerOfOneIdentity
+	{
+		[TestMethod]
+		public void ConstructingPowerOfOne_DoesNotThrow()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var x = catalog.GetParameter(0);
+			var one = catalog.GetConstant(1d);
+
+			Exponent<double>? exponent = null;
+			Action act = () => exponent = catalog.GetExponent(x, one);
+
+			act.Should().NotThrow();
+			exponent.Should().NotBeNull();
+		}
+
+		[TestMethod]
+		public void RendersDistinctlyFromTheBareBase()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var x = catalog.GetParameter(0);
+			var one = catalog.GetConstant(1d);
+			var exponent = catalog.GetExponent(x, one);
+
+			exponent.Description.Value.Should().Be("({0}^1)");
+			exponent.Description.Value.Should().NotBe(x.Description.Value);
+		}
+
+		[TestMethod]
+		public void ReductionReturnsTheSameCatalogParameterInstance()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var x = catalog.GetParameter(0);
+			var one = catalog.GetConstant(1d);
+			var exponent = catalog.GetExponent(x, one);
+
+			var reduced = catalog.GetReduced(exponent);
+
+			ReferenceEquals(reduced, x).Should().BeTrue("reduction of x^1 should hand back the catalog's own x instance, not a copy");
+		}
+
+		[TestMethod]
+		public void EvaluatingUnreducedEqualsEvaluatingBase()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var x = catalog.GetParameter(0);
+			var one = catalog.GetConstant(1d);
+			var exponent = catalog.GetExponent(x, one);
+
+			foreach (double v in new[] { 2d, -3.5, 0d, 100d })
+			{
+				using var lease = Context.Rent();
+				var context = lease.Item.Init(catalog, (ReadOnlySpan<double>)[v]);
+
+				exponent.Evaluate(context).Result
+					.Should().Be(x.Evaluate(context).Result);
+			}
+		}
+	}
+
+	// Issue #6(b): checking the analogous exponent==0 case for the same collision class.
+	// Unlike x^1, x^0 never collided (constant `1` renders as "1", not "(x⁰)"), so no
+	// rendering change was needed there -- this test pins down that it stays that way.
+	// (tests/Core/Exponent.cs's OneCollapse class already covers this indirectly via the
+	// string parser; this covers the same ground directly through the public catalog path.)
+	[TestClass]
+	public class PowerOfZeroNoCollision
+	{
+		[TestMethod]
+		public void ConstructingPowerOfZero_DoesNotThrow_AndRendersDistinctlyFromConstantOne()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var x = catalog.GetParameter(0);
+			var zero = catalog.GetConstant(0d);
+
+			Exponent<double>? exponent = null;
+			Action act = () => exponent = catalog.GetExponent(x, zero);
+
+			act.Should().NotThrow();
+			exponent!.Description.Value.Should().Be("({0}⁰)");
+			exponent.Description.Value.Should().NotBe(catalog.GetConstant(1d).Description.Value);
+		}
 	}
 }

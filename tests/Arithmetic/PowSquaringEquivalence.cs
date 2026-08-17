@@ -13,22 +13,16 @@ namespace Open.Evaluation.Tests.Arithmetic;
 ///
 /// <c>Pow&lt;T&gt;</c> is invoked directly via reflection (it is `internal`, and the test
 /// assembly has no InternalsVisibleTo) rather than through the public
-/// catalog/Exponent&lt;T&gt;-node evaluation path. This is deliberate, not a workaround for
-/// this change: while writing this grid, driving Pow through
-/// <c>catalog.GetExponent(catalog.GetConstant(b), catalog.GetConstant(1))</c> was found to
-/// throw <see cref="InvalidCastException"/> from <c>Catalog.Register</c> for ANY base once
-/// exponent == 1. Cause: <c>Exponent&lt;T&gt;.Describe</c> deliberately renders "x^1" as
-/// just "x" (see the `ps == "¹"` case), so the new Exponent node's interning key collides
-/// with the already-registered base Constant's key in the same
-/// ConditionalWeakTable&lt;string,T&gt; registry -- Catalog.Register finds the existing
-/// Constant under that key and hands it back as if it satisfies the Exponent&lt;T&gt; type
-/// parameter. This is a pre-existing catalog/interning defect (Register keys purely by
-/// ToString() with no type disambiguation) orthogonal to the Pow change and out of scope
-/// here (Exponent.GetReduction never triggers it because it special-cases pow==1 BEFORE
-/// constructing any node) -- worth reporting upstream, not something this change should
-/// paper over. Calling Pow&lt;T&gt; directly targets exactly the changed method and sidesteps
-/// the unrelated catalog machinery entirely. A separate small end-to-end test below
-/// confirms the public evaluation path still works for ordinary (non-colliding) cases.
+/// catalog/Exponent&lt;T&gt;-node evaluation path. This is deliberate, not a workaround: it
+/// targets exactly the changed method and sidesteps the unrelated catalog machinery
+/// entirely. (An earlier version of this comment also cited a since-fixed catalog/interning
+/// defect -- exponent == 1 used to collide with the base's own key because
+/// <c>Exponent&lt;T&gt;.Describe</c> rendered "x^1" as just "x", so <c>Catalog.Register</c>
+/// handed back the wrong type on that interning hit. See
+/// tests/Core/Exponent.cs's PowerOfOneIdentity and tests/Core/Catalog.cs for the fix and its
+/// coverage; that collision is no longer a reason to avoid the public path here.) A separate
+/// small end-to-end test below confirms the public evaluation path still works for ordinary
+/// cases.
 ///
 /// Every grid case is checked against TWO independent oracles:
 ///  1. A reference sequential-multiplication loop, reproduced in-test exactly as it existed
@@ -224,18 +218,20 @@ public class PowSquaringEquivalence
         // tests/Arithmetic/GenericNumeric.cs) is unchanged for a couple of extra cases,
         // through the actual Pow<T> method.
         //
-        // NOTE: base=-1 with an EVEN-magnitude negative exponent (e.g. (-1)^-4) is
-        // deliberately NOT exercised here: it trips a separate, pre-existing Debug-only
-        // defect in that untouched loop -- Debug.Assert(result != T.One, "Type must be
-        // capable of division.") fires incorrectly, because dividing 1 by -1 an even
-        // number of times legitimately lands back on 1 (the mathematically correct
-        // answer), which the assert wrongly treats as proof the type can't divide. Only
-        // reproduces in Debug builds (Debug.Assert compiles out in Release). Found while
-        // writing this test; out of scope for this change (untouched branch) -- worth
-        // reporting upstream separately.
+        // base=-1 with an EVEN-magnitude negative exponent (e.g. (-1)^-4) used to trip a
+        // separate, Debug-only defect in that same loop: Debug.Assert(result != T.One,
+        // "Type must be capable of division.") fired incorrectly, because dividing 1 by -1
+        // an even number of times legitimately lands back on 1 (the mathematically correct
+        // answer), which the assert wrongly treated as proof the type can't divide. Fixed
+        // (issue #7) by checking the assert's canary condition only after the FIRST
+        // division in the loop -- the point where an incapable-division type would
+        // actually reveal itself, since base is never 0 or 1 there (both short-circuit
+        // earlier, above). Now exercised here (previously excluded with this same note).
         InvokeProductionPow(2, -1).Should().Be(0);
         InvokeProductionPow(2, -3).Should().Be(0);
         InvokeProductionPow(-1, -3).Should().Be(-1);
+        InvokeProductionPow(-1, -2).Should().Be(1);
+        InvokeProductionPow(-1, -4).Should().Be(1);
     }
 
     [TestMethod]
@@ -243,8 +239,7 @@ public class PowSquaringEquivalence
     {
         // Confirms the real public path (EvaluationCatalog -> Exponent<T> node ->
         // Context.Evaluate) still produces the correct, squaring-accelerated result for
-        // typical cases that don't hit the pre-existing exponent==1 interning defect noted
-        // in the class doc comment.
+        // typical cases.
         using var catalog = new EvaluationCatalog<int>();
 
         var exp = catalog.GetExponent(catalog.GetConstant(3), catalog.GetConstant(5));
