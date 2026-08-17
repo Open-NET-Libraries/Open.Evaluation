@@ -348,6 +348,36 @@ public static partial class Exponent
 
 				Debug.Assert(result != T.One, "Type must be capable of division.");
 			}
+			else if (Value<T>.IsBinaryInteger)
+			{
+				// Exponentiation by squaring: O(log exponent) multiplications instead of
+				// O(exponent). Safe here -- and ONLY here -- because T : IBinaryInteger<T>'s
+				// unchecked multiplication is exact commutative-ring arithmetic (mod 2^n for
+				// fixed-width integers, exact for arbitrary-precision types such as
+				// BigInteger). In a commutative ring, the product of `exponent` copies of
+				// `baseValue` is independent of the order/grouping in which the
+				// multiplications are performed -- including how/when wraparound overflow
+				// occurs, since modular reduction commutes with ring addition/multiplication:
+				// (x mod m) * (y mod m) mod m == (x * y) mod m regardless of grouping. That
+				// makes this loop's result bit-identical to the sequential loop below, just
+				// computed in fewer multiplications. This does NOT hold for floating-point T
+				// (double/float/decimal): float multiplication is not associative under
+				// rounding, so a different grouping can produce a different result. Those
+				// types must keep taking the sequential-loop path (the final `else` below) --
+				// deliberately left untouched here; author decision pending on whether to
+				// adopt squaring there too (rounding-path reproducibility trade-off).
+				T two = Value<T>.Two;
+				T e = exponent;
+				T b = baseValue;
+				result = T.One;
+				while (e > T.Zero)
+				{
+					if (!T.IsEvenInteger(e))
+						result *= b;
+					b *= b;
+					e /= two;
+				}
+			}
 			else
 			{
 				result = baseValue;
