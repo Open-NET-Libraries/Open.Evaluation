@@ -131,4 +131,39 @@ public class EvaluationResultTests
 
 		a.Equals(b).Should().BeTrue();
 	}
+
+	[TestMethod]
+	public void StaticCreate_WithLazyDescription_UsesProvidedLazyVerbatim()
+	{
+		var description = Lazy.FromValue("verbatim");
+		var result = EvaluationResult.Create(5d, description);
+
+		result.Result.Should().Be(5d);
+		ReferenceEquals(result.Description, description).Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void StaticCreate_WithDescriptionFactory_IsLazy_NotInvokedUntilAccessed()
+	{
+		var invoked = false;
+		var result = EvaluationResult.Create(5d, (double v) =>
+		{
+			invoked = true;
+			return v.ToString(CultureInfo.InvariantCulture);
+		});
+
+		invoked.Should().BeFalse();
+		result.Description.Value.Should().Be("5");
+		invoked.Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void ImplicitConversion_ToLazyOfEvaluationResult_WrapsWithoutRecomputing()
+	{
+		var result = EvaluationResult.Create(5d, "five");
+		Lazy<EvaluationResult<double>> lazy = result;
+
+		lazy.Value.Result.Should().Be(5d);
+		lazy.Value.Description.Value.Should().Be("five");
+	}
 }

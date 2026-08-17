@@ -137,4 +137,61 @@ public class UtilityTests
 		pool.Rent(50, (int[] a) => observedLength = a.Length);
 		observedLength.Should().Be(50);
 	}
+
+	[TestMethod]
+	public void Rent_Action_LargeMinLength_UsesPooledArray_AtLeastRequestedLength()
+	{
+		// Above the 128 threshold (and below MAX_ARRAY_LEN), the actual ArrayPool<T>.Rent path
+		// is used, which commonly rounds up to the next power-of-two bucket.
+		var pool = System.Buffers.ArrayPool<int>.Shared;
+		var observedLength = -1;
+		pool.Rent(500, (int[] a) => observedLength = a.Length);
+		(observedLength >= 500).Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void Rent_Func_LargeMinLength_UsesPooledArray_AtLeastRequestedLength()
+	{
+		var pool = System.Buffers.ArrayPool<int>.Shared;
+		var result = pool.Rent(500, (int[] a) => a.Length >= 500);
+		result.Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void Rent_WithParam_Action_SmallMinLength_UsesExactPlainArray()
+	{
+		var pool = System.Buffers.ArrayPool<int>.Shared;
+		var observedLength = -1;
+		pool.Rent(50, "param", (string p, int[] a) =>
+		{
+			p.Should().Be("param");
+			observedLength = a.Length;
+		});
+		observedLength.Should().Be(50);
+	}
+
+	[TestMethod]
+	public void Rent_WithParam_Action_LargeMinLength_UsesPooledArray()
+	{
+		var pool = System.Buffers.ArrayPool<int>.Shared;
+		var observedLength = -1;
+		pool.Rent(500, "param", (string p, int[] a) => observedLength = a.Length);
+		(observedLength >= 500).Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void Rent_WithParam_Func_SmallMinLength_UsesExactPlainArray()
+	{
+		var pool = System.Buffers.ArrayPool<int>.Shared;
+		var result = pool.Rent(50, 7, (int p, int[] a) => p + a.Length);
+		result.Should().Be(57);
+	}
+
+	[TestMethod]
+	public void Rent_WithParam_Func_LargeMinLength_UsesPooledArray()
+	{
+		var pool = System.Buffers.ArrayPool<int>.Shared;
+		var result = pool.Rent(500, 7, (int p, int[] a) => p + a.Length);
+		(result >= 507).Should().BeTrue();
+	}
 }

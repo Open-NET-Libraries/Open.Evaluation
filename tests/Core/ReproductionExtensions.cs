@@ -78,4 +78,49 @@ public class ReproductionExtensionsTests
 
 		((And)result).Children.Should().BeEquivalentTo([p0, p1]);
 	}
+
+	[TestMethod]
+	public void NewUsing_ChildPlusParamsRest_InstanceOverload_UsesTargetsOwnCatalog()
+	{
+		var (_, p0, p1, _, and) = Setup();
+
+		var result = and.NewUsing<And, IEvaluate<bool>, IEvaluate<bool>>(p0, p1);
+
+		((And)result).Children.Should().BeEquivalentTo([p0, p1]);
+	}
+
+	[TestMethod]
+	public void NewWithIndexReplaced_InstanceOverload_UsesTargetsOwnCatalog()
+	{
+		var (_, p0, _, p2, and) = Setup();
+		var replacement = ((And)and).Catalog.GetParameter(9);
+
+		var result = and.NewWithIndexReplaced<And, IEvaluate<bool>, IEvaluate<bool>>(1, replacement);
+
+		((And)result).Children.Should().BeEquivalentTo([p0, p2, replacement]);
+	}
+
+	[TestMethod]
+	public void NewWithAppended_Enumerable_InstanceOverload_UsesTargetsOwnCatalog()
+	{
+		var (_, p0, p1, p2, and) = Setup();
+		var extra = ((And)and).Catalog.GetParameter(9);
+
+		var result = and.NewWithAppended<And, IEvaluate<bool>, IEvaluate<bool>>([extra]);
+
+		((And)result).Children.Should().BeEquivalentTo([p0, p1, p2, extra]);
+	}
+
+	[TestMethod]
+	public void NewWithAppended_ParamsOverload_InstanceOverload_UsesTargetsOwnCatalog()
+	{
+		var (_, p0, p1, p2, and) = Setup();
+		var catalog = ((And)and).Catalog;
+		var extra1 = catalog.GetParameter(9);
+		var extra2 = catalog.GetParameter(10);
+
+		var result = and.NewWithAppended<And, IEvaluate<bool>, IEvaluate<bool>>(extra1, extra2);
+
+		((And)result).Children.Should().BeEquivalentTo([p0, p1, p2, extra1, extra2]);
+	}
 }

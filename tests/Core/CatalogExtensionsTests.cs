@@ -116,4 +116,105 @@ public class CatalogExtensionsTests
 			node.Recycle();
 		}
 	}
+
+	[TestMethod]
+	public void RemoveDescendant_ByBreadthFirstIndex_RemovesThatDescendantAndFixesHierarchy()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0);
+		var p1 = catalog.GetParameter(1);
+		var p2 = catalog.GetParameter(2);
+		var sum = catalog.SumOf(p0, p1, p2);
+
+		var node = catalog.Factory.Map(sum);
+		try
+		{
+			// Descendant index 1 (breadth-first, 0-based) is the second child: {1}.
+			var result = catalog.RemoveDescendant(node, 1);
+
+			using var lease = Context.Rent();
+			var context = lease.Item.Init(catalog, (ReadOnlySpan<double>)[2d, 3d, 4d]);
+			result.Evaluate(context).Result.Should().Be(6d, "2 + 4, with the {1} descendant removed");
+		}
+		finally
+		{
+			node.Recycle();
+		}
+	}
+
+	[TestMethod]
+	public void ApplyClone_FuncOverload_RootSourceNode_ReturnsHandlerResultDirectly()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0);
+		var sum = catalog.SumOf(p0, catalog.GetParameter(1));
+		var replacement = catalog.GetConstant(123d);
+
+		var node = catalog.Factory.Map(sum);
+		try
+		{
+			// sourceNode IS the tree's own root (no parent), so the "parent is null" fast path
+			// returns the handler's result verbatim, without a FixHierarchy pass.
+			var result = catalog.ApplyClone(node, _ => (IEvaluate<double>)replacement);
+
+			ReferenceEquals(result, replacement).Should().BeTrue();
+		}
+		finally
+		{
+			node.Recycle();
+		}
+	}
+
+	[TestMethod]
+	public void ApplyClone_FuncOverload_NonRootSourceNode_ReplacesInPlaceAndFixesHierarchy()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0);
+		var p1 = catalog.GetParameter(1);
+		var sum = catalog.SumOf(p0, p1);
+
+		var node = catalog.Factory.Map(sum);
+		try
+		{
+			var childNode = node.Children[1]; // has a parent -> exercises the non-root path.
+			var replacement = catalog.GetConstant(99d);
+
+			var result = catalog.ApplyClone(childNode, _ => (IEvaluate<double>)replacement);
+
+			using var lease = Context.Rent();
+			var context = lease.Item.Init(catalog, (ReadOnlySpan<double>)[2d, 3d]);
+			result.Evaluate(context).Result.Should().Be(101d, "2 + 99, with the second child replaced");
+		}
+		finally
+		{
+			node.Recycle();
+		}
+	}
+
+	[TestMethod]
+	public void ApplyClone_FuncWithParamOverload_PassesParamThroughToHandler()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0);
+		var p1 = catalog.GetParameter(1);
+		var sum = catalog.SumOf(p0, p1);
+
+		var node = catalog.Factory.Map(sum);
+		try
+		{
+			var childNode = node.Children[1];
+			const double param = 77d;
+
+			var result = catalog.ApplyClone(childNode, param,
+				(_, p) => (IEvaluate<double>)catalog.GetConstant(p));
+
+			using var lease = Context.Rent();
+			var context = lease.Item.Init(catalog, (ReadOnlySpan<double>)[2d, 3d]);
+			result.Evaluate(context).Result.Should().Be(79d, "2 + 77, using the param passed through to the handler");
+		}
+		finally
+		{
+			node.Recycle();
+		}
+	}
 }
