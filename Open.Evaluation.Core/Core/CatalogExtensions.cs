@@ -337,11 +337,16 @@ public static class CatalogExtensions
 		this ICatalog<IEvaluate<T>> catalog,
 		Node<IEvaluate<T>> sourceNode, T value)
 		where T : notnull, IEquatable<T>, IComparable<T>
-		=> sourceNode.Value is IParent<IEvaluate<T>>
+	{
+		sourceNode.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return sourceNode.Value is IParent<IEvaluate<T>>
 			? catalog.ApplyClone(
 				sourceNode,
 				newNode => newNode.Add(sourceNode.Source.Map(catalog.GetConstant(value))))
 			: null;
+	}
 
 	[OverloadResolutionPriority(1)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -378,6 +383,9 @@ public static class CatalogExtensions
 	public static void AssertBelongs<T>(this ICatalog<T> catalog, params IEnumerable<T> evaluations)
 		where T : notnull, IEvaluate
 	{
+		evaluations.ThrowIfNull();
+		Contract.EndContractBlock();
+
 		foreach (T e in evaluations)
 		{
 			if(e.Catalog != catalog)

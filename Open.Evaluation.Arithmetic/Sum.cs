@@ -84,7 +84,10 @@ public partial class Sum<T>
 
 	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
-		Debug.Assert(result is not null);
+		result.ThrowIfNull();
+		child.ThrowIfNull();
+		Contract.EndContractBlock();
+
 		if (index != 0)
 		{
             string c = child.Value;

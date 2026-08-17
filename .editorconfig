@@ -245,3 +245,33 @@ dotnet_style_prefer_collection_expression = true:silent
 
 # VSSpell001: Spell Check
 dotnet_diagnostic.VSSpell001.severity = none
+
+#### CA analyzer bar (AnalysisLevel=latest-all) ####
+
+# CA5394: Random is used to mutate/vary formula trees during exploratory search (genetic-algorithm-style
+# operations), never for a security-sensitive purpose. Non-cryptographic randomness IS the domain here.
+dotnet_diagnostic.CA5394.severity = none
+
+# CA1716 (And/Or/Not/Boolean collide with reserved keywords in other CLS languages): these are the
+# domain vocabulary for boolean formula operators -- renaming them would defeat the purpose of the
+# library's readable operator names. Mirrors the 1.x line's precedent of accepting this collision.
+dotnet_diagnostic.CA1716.severity = none
+
+# The following are deferred to the 2.0 API review rather than fixed now: fixing them would mean
+# changing public API shape, which is out of scope for this packaging/analyzer-bar pass. Kept visible
+# as IDE suggestions (not build warnings) so they aren't lost before that review.
+# deferred to 2.0 API review: CA2225 (operator overloads without a named alternate method)
+dotnet_diagnostic.CA2225.severity = suggestion
+# deferred to 2.0 API review: CA1034 (nested public types -- SubmoduleBase, ContextPool, MutationCatalog, VariationCatalog)
+dotnet_diagnostic.CA1034.severity = suggestion
+# deferred to 2.0 API review: CA1000 (static members on generic types -- Catalog<T>.Shared, EvaluationCatalog<T> factories)
+dotnet_diagnostic.CA1000.severity = suggestion
+# deferred to 2.0 API review: CA1002 (List<T> returned from Utility.Extract/ExtractType)
+dotnet_diagnostic.CA1002.severity = suggestion
+# deferred to 2.0 API review: CA1051 (visible instance fields)
+dotnet_diagnostic.CA1051.severity = suggestion
+# deferred to 2.0 API review: CA1724 (public 'Extensions' class name conflicts with Microsoft.Extensions.*)
+dotnet_diagnostic.CA1724.severity = suggestion
+# deferred to 2.0 API review: CA1707 (OperatorBase.ToStringInternal_OnAppendNextChild -- protected virtual;
+# renaming would break subclassers, so this is an API-shape question, not a quick fix)
+dotnet_diagnostic.CA1707.severity = suggestion

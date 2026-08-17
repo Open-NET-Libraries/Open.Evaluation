@@ -61,8 +61,8 @@ public static partial class CatalogExtensions
 		if (string.IsNullOrWhiteSpace(evaluation))
 			throw new ArgumentException("Must be more than just whitespace or empty.", nameof(evaluation));
 
-        int oParenCount = OpenParenPattern.Matches(evaluation).Count;
-        int cParenCount = CloseParenPattern.Matches(evaluation).Count;
+        int oParenCount = OpenParenPattern.Count(evaluation);
+        int cParenCount = CloseParenPattern.Count(evaluation);
 		if (oParenCount > cParenCount) throw new FormatException("Missing close parenthesis.");
 		if (oParenCount < cParenCount) throw new FormatException("Missing open parenthesis.");
 

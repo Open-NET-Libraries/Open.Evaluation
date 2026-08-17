@@ -52,6 +52,10 @@ public abstract class OperatorBase<TChild, T>
 
 	protected virtual void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
+		result.ThrowIfNull();
+		child.ThrowIfNull();
+		Contract.EndContractBlock();
+
 		if (index is not 0) result.Append(Symbol.Text);
 		result.Append(child.Value);
 	}

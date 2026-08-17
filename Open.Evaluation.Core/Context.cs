@@ -131,9 +131,14 @@ public class Context : DisposableBase
 
 	public Context AddParam<T>(ICatalog<IEvaluate<T>> catalog, ushort id, T value)
 		where T : notnull, IEquatable<T>, IComparable<T>
-		=> Add(
+	{
+		catalog.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return Add(
 			Parameter<T>.Create(catalog, id),
 			EvaluationResult.Create(value));
+	}
 
 	public Context InitRange<T>(ICatalog<IEvaluate<T>> catalog, IEnumerable<T> value)
 		where T : notnull, IEquatable<T>, IComparable<T>
@@ -198,6 +203,9 @@ public class Context : DisposableBase
 	public static EvaluationResult<T> Evaluate<T>(IEvaluate<T> e, ReadOnlySpan<T> values)
 		where T : notnull, IEquatable<T>, IComparable<T>
 	{
+		e.ThrowIfNull();
+		Contract.EndContractBlock();
+
 		var context = Get();
 		context.Init(e.Catalog, values);
 		var result = e.Evaluate(context);

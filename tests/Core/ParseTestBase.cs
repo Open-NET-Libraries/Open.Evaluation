@@ -20,9 +20,9 @@ public abstract class ParseTestBase
 	{
 		Format = format ?? throw new ArgumentNullException(nameof(format));
 		Representation = representation ?? format;
-		RepresentationResolved = string.Format(Representation, PV.Cast<object>().ToArray());
+		RepresentationResolved = string.Format(CultureInfo.InvariantCulture, Representation, PV.Cast<object>().ToArray());
 		Reduction = reduction ?? Representation;
-		ReductionResolved = reduction is null ? RepresentationResolved : string.Format(reduction, PV.Cast<object>().ToArray());
+		ReductionResolved = reduction is null ? RepresentationResolved : string.Format(CultureInfo.InvariantCulture, reduction, PV.Cast<object>().ToArray());
 		Catalog = new EvaluationCatalog<double>();
 		Evaluation = Catalog.Parse(format);
 		EvaluationReduced = Catalog.GetReduced(Evaluation);

@@ -28,7 +28,7 @@ public class UtilityTests
 	public void SkipAt_NegativeIndex_Throws()
 	{
 		int[] source = [1, 2, 3];
-		Action act = () => Open.Evaluation.Utility.SkipAt(source, -1).ToArray();
+		Action act = () => _ = Open.Evaluation.Utility.SkipAt(source, -1).ToArray();
 		act.Should().Throw<Exception>();
 	}
 
@@ -57,7 +57,7 @@ public class UtilityTests
 	public void InsertAt_SingleItem_NegativeIndex_Throws()
 	{
 		int[] source = [1, 2, 3];
-		Action act = () => Open.Evaluation.Utility.InsertAt(source, -1, 99).ToArray();
+		Action act = () => _ = Open.Evaluation.Utility.InsertAt(source, -1, 99).ToArray();
 		act.Should().Throw<ArgumentOutOfRangeException>();
 	}
 

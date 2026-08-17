@@ -10,7 +10,7 @@ public class EvaluationResultTests
 		var result = new EvaluationResult<double>(5d, v =>
 		{
 			invoked = true;
-			return v.ToString();
+			return v.ToString(CultureInfo.InvariantCulture);
 		});
 
 		invoked.Should().BeFalse("the description factory must not run until .Description.Value is accessed");
@@ -38,7 +38,7 @@ public class EvaluationResultTests
 	[TestMethod]
 	public void NullDescription_Throws()
 	{
-		Action act = () => new EvaluationResult<double>(5d, (string)null!);
+		Action act = () => _ = new EvaluationResult<double>(5d, (string)null!);
 		act.Should().Throw<ArgumentNullException>();
 	}
 

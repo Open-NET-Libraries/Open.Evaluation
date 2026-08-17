@@ -6,6 +6,23 @@
 		<IsPackable>false</IsPackable>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
+		<AnalysisLevel>latest-all</AnalysisLevel>
+		<EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+		<!--
+			Test-infrastructure-only suppressions (not library concerns):
+			CA1707 - underscore-separated test method names are the MSTest/xUnit convention.
+			CA1515 - test classes/types don't need to be sealed/internal; MSTest needs them public.
+			CA5394 - non-cryptographic randomness is fine in test code (mirrors the library's own domain use).
+			CA1052 - static-holder-shaped test fixture classes are not meant to be sealed/static here.
+			CA1001 - test fixtures own a Catalog<T> field without implementing IDisposable; disposal isn't
+			         meaningful for these throwaway, per-test catalogs and MSTest doesn't provide a disposal hook here.
+			CA1062 - the 4 sites are test-data-driven method parameters (DataRow/DynamicData inputs); these
+			         are test helpers, not a public API surface that untrusted callers can hand null to.
+			CA2000 - inspected: all sites are short-lived 'new EvaluationCatalog<T>()' test locals that are
+			         never returned or shared; Catalog<T>.Dispose only clears internal lookup tables (no
+			         unmanaged resources), so leaving them undisposed in test scaffolding is benign.
+		-->
+		<NoWarn>$(NoWarn);CA1707;CA1515;CA5394;CA1052;CA1001;CA1062;CA2000</NoWarn>
 	</PropertyGroup>
 
 	<ItemGroup>

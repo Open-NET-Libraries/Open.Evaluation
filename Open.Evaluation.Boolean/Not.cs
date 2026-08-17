@@ -1,5 +1,7 @@
 ﻿using Open.Evaluation.Core;
 using System.Diagnostics.CodeAnalysis;
+using System.Diagnostics.Contracts;
+using Throw;
 
 namespace Open.Evaluation.Boolean;
 
@@ -38,7 +40,12 @@ public sealed class Not : OperatorBase<bool>,
 	public Not NewUsing(
 		ICatalog<IEvaluate<bool>> catalog,
 		IEvaluate<bool> param)
-		=> Create(catalog, param);
+	{
+		catalog.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return Create(catalog, param);
+	}
 
 	public Not NewUsing(
 		IEvaluate<bool> param)
@@ -56,5 +63,10 @@ public static partial class BooleanExtensions
 	public static Not Not(
 		this ICatalog<IEvaluate<bool>> catalog,
 		IEvaluate<bool> param)
-		=> Boolean.Not.Create(catalog, param);
+	{
+		catalog.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return Boolean.Not.Create(catalog, param);
+	}
 }

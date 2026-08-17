@@ -207,7 +207,10 @@ public partial class Product<T> :
 
 	protected override void ToStringInternal_OnAppendNextChild(StringBuilder result, int index, Lazy<string> child)
 	{
-		Debug.Assert(result is not null);
+		result.ThrowIfNull();
+		child.ThrowIfNull();
+		Contract.EndContractBlock();
+
 		if (index != 0)
 		{
 			var m = IsInvertedPattern().Match(child.Value);
@@ -395,19 +398,29 @@ public static class Product
 		IEvaluate<TResult> multiple,
 		Sum<TResult> sum)
 		where TResult : notnull, INumber<TResult>
-		=> multiple is Sum<TResult> m
-		// Distribute sum's terms across each of the multiple's own terms (FOIL).
-		// NOTE: must not delegate back to ProductOfSums(catalog, m, sum) here: that pairwise
-		// call resolves to ProductOfSum(catalog, m, sum) again with the *same* arguments,
-		// causing unconditional infinite recursion (StackOverflowException) for any pair of sums.
-		? catalog.GetReduced(catalog.SumOf(m.Children.Select(c => ProductOfSum(catalog, c, sum))))
-		: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
+	{
+		catalog.ThrowIfNull();
+		sum.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return multiple is Sum<TResult> m
+			// Distribute sum's terms across each of the multiple's own terms (FOIL).
+			// NOTE: must not delegate back to ProductOfSums(catalog, m, sum) here: that pairwise
+			// call resolves to ProductOfSum(catalog, m, sum) again with the *same* arguments,
+			// causing unconditional infinite recursion (StackOverflowException) for any pair of sums.
+			? catalog.GetReduced(catalog.SumOf(m.Children.Select(c => ProductOfSum(catalog, c, sum))))
+			: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
+	}
 
 	public static IEvaluate<TResult> ProductOfSums<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
 		params IEnumerable<Sum<TResult>> sums)
 		where TResult : notnull, INumber<TResult>
 	{
+		catalog.ThrowIfNull();
+		sums.ThrowIfNull();
+		Contract.EndContractBlock();
+
 		using var e = sums.GetEnumerator();
 		if (!e.MoveNext()) return catalog.GetConstant(TResult.One);
 		IEvaluate<TResult> p = e.Current;
@@ -459,23 +472,33 @@ public static class Product
 		IEnumerable<IEvaluate<TResult>> source, bool reduce = false)
 		where TResult : notnull, INumber<TResult>
 	{
-		foreach (var c in source)
+		source.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return MultiplesExtractedCore(catalog, source, reduce);
+
+		static IEnumerable<(string Hash, IConstant<TResult>? Multiple, IEvaluate<TResult> Entry)> MultiplesExtractedCore(
+			ICatalog<IEvaluate<TResult>> catalog,
+			IEnumerable<IEvaluate<TResult>> source, bool reduce)
 		{
-			if (c is not Product<TResult> p)
+			foreach (var c in source)
 			{
-				yield return (c.Description.Value, default(IConstant<TResult>?), c);
-				continue;
+				if (c is not Product<TResult> p)
+				{
+					yield return (c.Description.Value, default(IConstant<TResult>?), c);
+					continue;
+				}
+
+				var reduced = reduce
+					? p.ReductionWithMutlipleExtracted(catalog, out var multiple)
+					: p.ExtractMultiple(catalog, out multiple);
+
+				yield return (
+					reduced.Description.Value,
+					multiple,
+					reduced
+				);
 			}
-
-			var reduced = reduce
-				? p.ReductionWithMutlipleExtracted(catalog, out var multiple)
-				: p.ExtractMultiple(catalog, out multiple);
-
-			yield return (
-				reduced.Description.Value,
-				multiple,
-				reduced
-			);
 		}
 	}
 }

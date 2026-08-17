@@ -10,6 +10,9 @@ public static class Utility
 	const int MAX_ARRAY_LEN = int.MaxValue / 2;
 	public static void Rent<T, TParam>(this ArrayPool<T> pool, int minLength, TParam param, Action<TParam, T[]> action)
 	{
+		pool.ThrowIfNull().OnlyInDebug();
+		action.ThrowIfNull().OnlyInDebug();
+
 		if (minLength is > POOL_ARRAY_LEN and < MAX_ARRAY_LEN)
 		{
 			var a = pool.Rent(minLength);
@@ -30,6 +33,9 @@ public static class Utility
 
 	public static void Rent<T>(this ArrayPool<T> pool, int minLength, Action<T[]> action)
 	{
+		pool.ThrowIfNull().OnlyInDebug();
+		action.ThrowIfNull().OnlyInDebug();
+
 		if (minLength is > POOL_ARRAY_LEN and < MAX_ARRAY_LEN)
 		{
 			var a = pool.Rent(minLength);
@@ -54,6 +60,9 @@ public static class Utility
 		[DisallowNull] TParam param,
 		Func<TParam, T[], TResult> action)
 	{
+		pool.ThrowIfNull().OnlyInDebug();
+		action.ThrowIfNull().OnlyInDebug();
+
 		if (minLength is > POOL_ARRAY_LEN and < MAX_ARRAY_LEN)
 		{
 			var a = pool.Rent(minLength);
@@ -174,6 +183,8 @@ public static class Utility
 		int index,
 		T injection)
 	{
+		source.ThrowIfNull().OnlyInDebug();
+
 		return index < 0
 			? throw new ArgumentOutOfRangeException(nameof(index), index, "Must be at least zero.")
 			: InsertAtCore(source, index, injection);

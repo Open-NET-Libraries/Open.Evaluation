@@ -2,6 +2,21 @@
 	
 	<Import Project="..\Common.props" />
 
+	<PropertyGroup>
+		<Description>Sum, Product, and Exponent arithmetic operators over generic numeric types, plus catalog extensions for parsing, mutating, and varying arithmetic formula trees.</Description>
+		<EnablePackageValidation>true</EnablePackageValidation>
+		<!-- Baseline validation resumes once the first net10-targeted version (2.0.0-alpha02) is published:
+		     the net9.0-built alpha01 baseline cannot be resolved by the net10 SDK ApiCompat (PKV006). -->
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="..\README.md" />
+		<None Include="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
 	<ItemGroup>
 		<!--<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />-->
 		<PackageReference Include="Open.Numeric.Primes" Version="4.0.4" />

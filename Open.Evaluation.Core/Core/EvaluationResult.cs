@@ -33,7 +33,7 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 		T result)
 		: this(result, Lazy.Create(
 			() => result.ToString()
-				?? throw new Exception("result.ToString() returned null")))
+				?? throw new InvalidOperationException("result.ToString() returned null")))
 	{ }
 
 	[Pure]
@@ -70,8 +70,13 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 
 	[Pure]
 	public static EvaluationResult<T> Coerce(IEvaluationResult result)
-		=> result is EvaluationResult<T> r ? r
+	{
+		result.ThrowIfNull();
+		Contract.EndContractBlock();
+
+		return result is EvaluationResult<T> r ? r
 			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(T)}.");
+	}
 }
 
 public static class EvaluationResult
