@@ -33,7 +33,7 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 		T result)
 		: this(result, Lazy.Create(
 			() => result.ToString()
-				?? throw new Exception("result.ToString() returned null")))
+				?? throw new InvalidOperationException("result.ToString() returned null")))
 	{ }
 
 	[Pure]

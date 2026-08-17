@@ -1,7 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<Import Project="..\Common.props" />
-	
+
+	<PropertyGroup>
+		<!-- Metapackage has no lib by design: it only aggregates the Arithmetic and Boolean packages (transitively Core). -->
+		<IncludeBuildOutput>false</IncludeBuildOutput>
+		<NoWarn>$(NoWarn);NU5128</NoWarn>
+		<IncludeSymbols>false</IncludeSymbols>
+		<Description>Metapackage that aggregates Open.Evaluation.Arithmetic and Open.Evaluation.Boolean (and, transitively, Open.Evaluation.Core) for consumers who want the full operator set with a single reference.</Description>
+	</PropertyGroup>
+
 	<ItemGroup>
 	  <ProjectReference Include="..\Open.Evaluation.Arithmetic\Open.Evaluation.Arithmetic.csproj" />
 	  <ProjectReference Include="..\Open.Evaluation.Boolean\Open.Evaluation.Boolean.csproj" />

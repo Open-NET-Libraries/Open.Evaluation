@@ -61,14 +61,14 @@ public class Exponent<T> : OperatorBase<T>,
 			m = ConstantPowerPattern().Match(p);
 			if (!m.Success) return $"({b}^{p})"!;
 
-            string ps = p.Contains('.') || p.StartsWith('-')
+            string ps = p.Contains('.', StringComparison.Ordinal) || p.StartsWith('-')
 				? '^' + p
 				: ConvertToSuperScript(p);
 
 			if (ps == "¹") return b;
 
 			// Check for negative to invert the base.
-			return ps.StartsWith('-') || ps.StartsWith("(-") ? $"(1/{b}{ps})" : $"({b}{ps})";
+			return ps.StartsWith('-') || ps.StartsWith("(-", StringComparison.Ordinal) ? $"(1/{b}{ps})" : $"({b}{ps})";
 		});
 
 	protected override Lazy<string> Describe(IEnumerable<Lazy<string>> children)

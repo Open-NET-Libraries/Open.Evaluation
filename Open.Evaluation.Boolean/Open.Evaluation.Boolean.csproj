@@ -2,9 +2,24 @@
 	
 	<Import Project="..\Common.props" />
 
+	<PropertyGroup>
+		<Description>And, Or, Not, and Conditional boolean operators, plus Exactly/AtLeast/AtMost fuzzy-logic counting operators, for building and evaluating boolean formula trees.</Description>
+		<EnablePackageValidation>true</EnablePackageValidation>
+		<!-- Baseline validation resumes once the first net10-targeted version (2.0.0-alpha02) is published:
+		     the net9.0-built alpha01 baseline cannot be resolved by the net10 SDK ApiCompat (PKV006). -->
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Remove="..\README.md" />
+		<None Include="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
 	<ItemGroup>
 	  <ProjectReference Include="..\Open.Evaluation.Core\Open.Evaluation.Core.csproj" />
 		<PackageReference Include="PurelySharp.Attributes" Version="0.0.1" PrivateAssets="All" />
 	</ItemGroup>
-	
+
 </Project>
