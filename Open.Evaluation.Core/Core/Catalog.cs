@@ -73,9 +73,16 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		id = GetPooledId(id);
 		T? result = Registry.GetOrAdd(id, OnBeforeRegistration(item));
 		Debug.Assert(result is not null);
-		Debug.Assert(result is TItem);
 		Debug.Assert(result.Catalog == this);
-		return (TItem)result;
+
+		// Interning is keyed purely by string (ToString()/Describe()), so a rendering
+		// collision between two distinct node types would otherwise surface here as a
+		// blind, unhelpful InvalidCastException. This is a cold (registration-only) path,
+		// so the check stays always-on rather than Debug-only.
+		return result is TItem typed
+			? typed
+			: throw new InvalidOperationException(
+				$"Catalog identity collision: key '{id}' is registered as {result.GetType()} but {typeof(TItem)} was requested.");
 	}
 
 	public TItem Register<TItem>(
