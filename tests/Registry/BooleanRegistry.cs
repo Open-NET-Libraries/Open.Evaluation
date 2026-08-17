@@ -131,7 +131,8 @@ public class BooleanRegistry
 	/// <see cref="GetRandomOperator_ExceptEnumerable_ExcludesGivenGlyphs"/>) uses a different,
 	/// unaffected code path (TryRandomSelectOne with a HashSet) and works correctly.
 	/// </summary>
-	[Ignore("BUG (upstream, Open.RandomizationExtensions.Randomizer.TryRandomSelectOneExcept): the 'others' params array is silently ignored, so excluding more than one glyph via (except, params others) does not actually exclude the extras. See doc comment for an isolated repro.")]
+	// Un-ignored with Open.RandomizationExtensions 2.6.0: the upstream fix makes
+	// multi-value exclusions real, so excluding both operators must yield null.
 	[TestMethod]
 	public void GetRandomOperator_ExceptBoth_ReturnsNull()
 	{
