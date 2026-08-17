@@ -22,7 +22,9 @@ public class Parameter<T>
 
 	protected override EvaluationResult<T> EvaluateInternal(Context context)
 	{
-		context.ThrowIfNull();
+		// Debug-only guard: the sole call path (EvaluationBase<T>.Evaluate) has already
+		// validated context, and Parameter evaluation is the per-leaf hot path.
+		context.ThrowIfNull().OnlyInDebug();
 		Contract.EndContractBlock();
 
 		return context.TryGetResult(this, out EvaluationResult<T> result) ? result
