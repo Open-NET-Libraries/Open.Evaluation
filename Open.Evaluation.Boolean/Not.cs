@@ -13,8 +13,19 @@ public sealed class Not : OperatorBase<bool>,
 	protected override EvaluationResult<bool> EvaluateInternal(Context context)
 	{
 		var r = ChildResults(context).Single();
-		return new(!r.Result, v => $"!{v}");
+		return new(!r.Result, Describe([r.Description]));
 	}
+
+	// NOTE: without this override, the inherited default OperatorBase.Describe(children) simply
+	// wraps a single child in parens (it only injects the operator's Symbol.Text *between*
+	// multiple children), so Not's static/unparameterized description - and therefore its
+	// ToString()/catalog interning key - silently lost its "!" and rendered as e.g. "({0})"
+	// instead of "!{0}". This affected both the static Description and (since EvaluateInternal
+	// now reuses this) the evaluated Description, which previously showed the negated *result*
+	// value (e.g. "!True" when the actual result was true) rather than the child's own
+	// resolved text.
+	protected override Lazy<string> Describe(IEnumerable<Lazy<string>> children)
+		=> new(() => $"{Symbol.Text}{children.Single().Value}");
 
 	internal static Not Create(
 		ICatalog<IEvaluate<bool>> catalog,

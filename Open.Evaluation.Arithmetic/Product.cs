@@ -382,7 +382,13 @@ public static class Product
 		in TResult multiple,
 		params IEnumerable<IEvaluate<TResult>> children)
 		where TResult : notnull, INumber<TResult>
-		=> ProductOf(catalog, catalog.GetConstant(multiple), children);
+		// NOTE: must not call ProductOf(catalog, catalog.GetConstant(multiple), children) here.
+		// Constant<TResult> has an implicit conversion back to TResult, so overload resolution
+		// re-selects *this* (in TResult, params children) overload with the same effective
+		// arguments, causing unconditional infinite recursion (StackOverflowException).
+		// Prepending onto the children collection instead unambiguously targets the
+		// single-collection overload below, mirroring Sum.SumOf's equivalent overload.
+		=> ProductOf(catalog, children.Prepend(catalog.GetConstant(multiple)));
 
 	public static IEvaluate<TResult> ProductOfSum<TResult>(
 		this ICatalog<IEvaluate<TResult>> catalog,
@@ -390,7 +396,11 @@ public static class Product
 		Sum<TResult> sum)
 		where TResult : notnull, INumber<TResult>
 		=> multiple is Sum<TResult> m
-		? ProductOfSums(catalog, m, sum)
+		// Distribute sum's terms across each of the multiple's own terms (FOIL).
+		// NOTE: must not delegate back to ProductOfSums(catalog, m, sum) here: that pairwise
+		// call resolves to ProductOfSum(catalog, m, sum) again with the *same* arguments,
+		// causing unconditional infinite recursion (StackOverflowException) for any pair of sums.
+		? catalog.GetReduced(catalog.SumOf(m.Children.Select(c => ProductOfSum(catalog, c, sum))))
 		: catalog.GetReduced(catalog.SumOf(sum.Children.Select(c => ProductOf(catalog, multiple, c))));
 
 	public static IEvaluate<TResult> ProductOfSums<TResult>(
