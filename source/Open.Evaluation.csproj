@@ -49,7 +49,7 @@
 		<PackageReference Include="ClrHeapAllocationAnalyzer" Version="3.0.0" PrivateAssets="All" />
 		<PackageReference Include="Open.Hierarchy" Version="1.9.1" />
 		<PackageReference Include="Open.Numeric.Primes" Version="2.0.2" />
-		<PackageReference Include="Open.RandomizationExtensions" Version="2.5.3" />
+		<PackageReference Include="Open.RandomizationExtensions" Version="2.6.0" />
 	</ItemGroup>
 
 	<ItemGroup>
