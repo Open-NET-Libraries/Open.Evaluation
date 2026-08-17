@@ -25,7 +25,7 @@ public class Or : OperatorBase<bool>,
 	protected override bool EvaluateInternal(object context)
 		=> Children.Length == 0
 			? throw new NotSupportedException("Cannot resolve boolean of empty set.")
-			: ChildResults(context).Cast<bool>().Any();
+			: ChildResults(context).Any(result => (bool)result);
 
 	internal static Or Create(
 		ICatalog<IEvaluate<bool>> catalog,
