@@ -13,11 +13,13 @@
 		<PackageReference Include="MSTest.TestAdapter" Version="3.8.3" />
 		<PackageReference Include="MSTest.TestFramework" Version="3.8.3" />
 		<PackageReference Include="FluentAssertions" Version="6.12.2" />
+		<PackageReference Include="coverlet.collector" Version="6.0.4" />
 	</ItemGroup>
 
 	<ItemGroup>
 		<ProjectReference Include="..\Open.Evaluation.Arithmetic\Open.Evaluation.Arithmetic.csproj" />
 		<ProjectReference Include="..\Open.Evaluation.Core\Open.Evaluation.Core.csproj" />
+		<ProjectReference Include="..\Open.Evaluation.Boolean\Open.Evaluation.Boolean.csproj" />
 	</ItemGroup>
 
 </Project>
