@@ -223,4 +223,13 @@ public class ContextTests
 
 		captured.Should().Be(10d);
 	}
+
+	[TestMethod]
+	public void SharedPool_Dispose_ThrowsNotSupported()
+	{
+#pragma warning disable CS0618 // Intentionally verifying the obsolete override's behavior.
+		Action act = () => Context.Shared.Dispose();
+#pragma warning restore CS0618
+		act.Should().Throw<NotSupportedException>();
+	}
 }
