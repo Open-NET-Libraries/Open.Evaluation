@@ -73,9 +73,6 @@ public class Exponent<T> : OperatorBase<T>,
 
 	protected override Lazy<string> Describe(IEnumerable<Lazy<string>> children)
 	{
-		children.ThrowIfNull();
-		Contract.EndContractBlock();
-
 		Lazy<string>? bas = null;
 		Lazy<string>? pow = null;
 		int count = 0;
@@ -312,9 +309,6 @@ public static partial class Exponent
 	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
 		where T : notnull, INumber<T>
 	{
-		exponent.ThrowIfNull();
-		Contract.EndContractBlock();
-
 		var pow = exponent.Power;
 		if (exponent.Catalog.TryGetItem<IEvaluate<T>>("0.5", out var point5) && pow == point5)
 			return true;

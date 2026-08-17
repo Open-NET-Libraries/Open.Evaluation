@@ -56,7 +56,6 @@ public static class Registry
 	{
 		catalog.ThrowIfNull();
 		children.ThrowIfNull();
-		moreExcept.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		using RecycleHelper<HashSet<char>> lease = HashSetPool<char>.Rent();
@@ -181,7 +180,6 @@ public static class Registry
 		where T : notnull, INumber<T>
 	{
 		catalog.ThrowIfNull();
-		moreExcept.ThrowIfNull();
 		Contract.EndContractBlock();
 
 		using RecycleHelper<HashSet<char>> lease = HashSetPool<char>.Rent();

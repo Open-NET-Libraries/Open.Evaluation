@@ -70,13 +70,8 @@ public readonly record struct EvaluationResult<T> : IEvaluationResult
 
 	[Pure]
 	public static EvaluationResult<T> Coerce(IEvaluationResult result)
-	{
-		result.ThrowIfNull();
-		Contract.EndContractBlock();
-
-		return result is EvaluationResult<T> r ? r
+		=> result is EvaluationResult<T> r ? r
 			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(T)}.");
-	}
 }
 
 public static class EvaluationResult

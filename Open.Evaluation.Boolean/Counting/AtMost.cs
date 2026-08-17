@@ -1,8 +1,6 @@
 ﻿using Open.Evaluation.Boolean.Counting;
 using Open.Evaluation.Core;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using Throw;
 
 namespace Open.Evaluation.Boolean.Counting
 {
@@ -39,12 +37,7 @@ namespace Open.Evaluation.Boolean.Counting
 		public AtMost NewUsing(
 			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)
-		{
-			catalog.ThrowIfNull();
-			Contract.EndContractBlock();
-
-			return Create(catalog, param);
-		}
+			=> Create(catalog, param);
 
 		public AtMost NewUsing(
 			(int, IEnumerable<IEvaluate<bool>>) param)
@@ -65,11 +58,6 @@ namespace Open.Evaluation.Boolean
 		public static AtMost CountAtMost(
 			this ICatalog<IEvaluate<bool>> catalog,
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
-		{
-			catalog.ThrowIfNull();
-			Contract.EndContractBlock();
-
-			return AtMost.Create(catalog, param);
-		}
+			=> AtMost.Create(catalog, param);
 	}
 }

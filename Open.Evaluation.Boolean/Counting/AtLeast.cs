@@ -1,8 +1,6 @@
 ﻿using Open.Evaluation.Boolean.Counting;
 using Open.Evaluation.Core;
 using System.Diagnostics.CodeAnalysis;
-using System.Diagnostics.Contracts;
-using Throw;
 
 namespace Open.Evaluation.Boolean.Counting
 {
@@ -41,12 +39,7 @@ namespace Open.Evaluation.Boolean.Counting
 		public AtLeast NewUsing(
 			ICatalog<IEvaluate<bool>> catalog,
 			(int, IEnumerable<IEvaluate<bool>>) param)
-		{
-			catalog.ThrowIfNull();
-			Contract.EndContractBlock();
-
-			return Create(catalog, param);
-		}
+			=> Create(catalog, param);
 
 		public AtLeast NewUsing(
 			(int, IEnumerable<IEvaluate<bool>>) param)
@@ -67,11 +60,6 @@ namespace Open.Evaluation.Boolean
 		public static AtLeast CountAtLeast(
 			this ICatalog<IEvaluate<bool>> catalog,
 			(int count, IEnumerable<IEvaluate<bool>> children) param)
-		{
-			catalog.ThrowIfNull();
-			Contract.EndContractBlock();
-
-			return AtLeast.Create(catalog, param);
-		}
+			=> AtLeast.Create(catalog, param);
 	}
 }

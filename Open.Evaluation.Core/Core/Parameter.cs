@@ -21,15 +21,8 @@ public class Parameter<T>
 		=> ToStringRepresentation(Id);
 
 	protected override EvaluationResult<T> EvaluateInternal(Context context)
-	{
-		// Debug-only guard: the sole call path (EvaluationBase<T>.Evaluate) has already
-		// validated context, and Parameter evaluation is the per-leaf hot path.
-		context.ThrowIfNull().OnlyInDebug();
-		Contract.EndContractBlock();
-
-		return context.TryGetResult(this, out EvaluationResult<T> result) ? result
+		=> context.TryGetResult(this, out EvaluationResult<T> result) ? result
 			: throw new InvalidOperationException($"Parameter {Id} result not found in the context.");
-	}
 
 	internal static Parameter<T> Create(ICatalog<IEvaluate<T>> catalog, ushort id)
 		=> catalog.Register(ToStringRepresentation(id), id, (_, c, id) => new Parameter<T>(c, id));
@@ -41,12 +34,7 @@ public class Parameter<T>
 				.IfOutOfRange(ushort.MinValue, ushort.MaxValue));
 
 	public virtual Parameter<T> NewUsing(ICatalog<IEvaluate<T>> catalog, ushort param)
-	{
-		catalog.ThrowIfNull();
-		Contract.EndContractBlock();
-
-		return Create(catalog, param);
-	}
+		=> Create(catalog, param);
 
 	public Parameter<T> NewUsing(ushort param)
 		=> NewUsing(Catalog, param);
@@ -63,22 +51,12 @@ public static class ParameterExtensions
 	public static IParameter<T> GetParameter<T>(
 		this ICatalog<IEvaluate<T>> catalog, ushort id)
 		where T : notnull, IEquatable<T>, IComparable<T>
-	{
-		catalog.ThrowIfNull();
-		Contract.EndContractBlock();
-
-		return Parameter<T>.Create(catalog, id);
-	}
+		=> Parameter<T>.Create(catalog, id);
 
 	public static IParameter<T> GetParameter<T>(
 	this ICatalog<IEvaluate<T>> catalog, int id)
 		where T : notnull, IEquatable<T>, IComparable<T>
-	{
-		catalog.ThrowIfNull();
-		Contract.EndContractBlock();
-
-		return id > ushort.MaxValue
+		=> id > ushort.MaxValue
 			? throw new ArgumentOutOfRangeException(nameof(id), id, "Cannot exceed an unsigned 16-bit integer.")
 			: (IParameter<T>)Parameter<T>.Create(catalog, (ushort)id);
-	}
 }

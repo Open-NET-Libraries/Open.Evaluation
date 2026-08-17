@@ -5,9 +5,6 @@ public static partial class CatalogExtensions
 	public static bool IsValidForRemoval<T>(this Node<IEvaluate<T>> gene, bool ifRoot = false)
 		where T : notnull, INumber<T>
 	{
-		gene.ThrowIfNull();
-		Contract.EndContractBlock();
-
 		if (gene == gene.Root) return ifRoot;
         // Validate worthiness.
         Node<IEvaluate<T>>? parent = gene.Parent;

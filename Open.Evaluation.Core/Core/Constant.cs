@@ -42,12 +42,7 @@ public class Constant<T>
 
 	/// <inheritdoc cref="IReproducable{TParam, TEval}.NewUsing(ICatalog{TEval}, TParam)" />
 	public virtual Constant<T> NewUsing(ICatalog<IEvaluate<T>> catalog, T param)
-	{
-		catalog.ThrowIfNull();
-		Contract.EndContractBlock();
-
-		return Create(catalog, param);
-	}
+		=> Create(catalog, param);
 
 	/// <inheritdoc cref="IReproducable{TParam, TEval}.NewUsing(TParam)" />
 	public Constant<T> NewUsing(T param)
@@ -58,12 +53,7 @@ public class Constant<T>
 		=> NewUsing(param);
 
 	public static implicit operator T(Constant<T> constant)
-	{
-		constant.ThrowIfNull();
-		Contract.EndContractBlock();
-
-		return constant.Value;
-	}
+		=> constant.Value;
 }
 
 public static class ConstantExtensions

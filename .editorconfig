@@ -275,3 +275,10 @@ dotnet_diagnostic.CA1724.severity = suggestion
 # deferred to 2.0 API review: CA1707 (OperatorBase.ToStringInternal_OnAppendNextChild -- protected virtual;
 # renaming would break subclassers, so this is an API-shape question, not a quick fix)
 dotnet_diagnostic.CA1707.severity = suggestion
+
+# CA1062: interior null re-checks are deliberately NOT added in this library.
+# Nulls are guarded carefully at the boundary sites that matter; all interior
+# signatures are non-nullable contracts enforced by nullable reference types.
+# Re-validating inside the call chain is redundant work the design intentionally
+# avoids (author decision, PR #4 review). New BOUNDARY APIs should still guard.
+dotnet_diagnostic.CA1062.severity = none
