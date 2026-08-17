@@ -261,8 +261,8 @@ public static class Registry
 			Debug.Assert(op != '\0'); // May have created a 'default' value for an operator upstream.
 			return op switch
 			{
-				AND => catalog.SumOf(children),
-				OR => catalog.ProductOf(children),
+				AND => catalog.And(children),
+				OR => catalog.Or(children),
 
 				_ => throw new ArgumentException($"Invalid operator: {op}", nameof(op)),
 			};
