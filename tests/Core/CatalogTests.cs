@@ -45,17 +45,12 @@ public class CatalogTests
 		ReferenceEquals(found, p0).Should().BeTrue();
 	}
 
+	// Issue #11: Catalog<T>.TryGetItem's Debug.Assert(e is not null) used to fire unconditionally,
+	// including on the legitimate "not found" result (Registry.TryGetValue returning false), so in
+	// DEBUG builds calling TryGetItem for an id that was never registered threw instead of
+	// returning false as the Try-pattern promises. Fixed by narrowing the asserts to only fire when
+	// the lookup actually succeeded.
 	[TestMethod]
-	[Ignore("QUESTION FOR AUTHOR: Catalog<T>.TryGetItem's `Debug.Assert(e is not null)` fires on the " +
-		"legitimate 'not found' result (Registry.TryGetValue returning false), so in DEBUG builds " +
-		"calling TryGetItem for an id that was never registered throws instead of returning false as " +
-		"the Try-pattern promises. Observed directly: catalog.TryGetItem<Parameter<double>>(\"{9999}\", " +
-		"out _) throws (MSTest's TestHostTraceListener converts the Debug.Fail into a " +
-		"DebugAssertException with message 'e is not null'). In RELEASE builds the " +
-		"[Conditional(\"DEBUG\")] assert is compiled out and it correctly returns false - so the API's " +
-		"behavior differs by build configuration. Is the assert meant to guard something else (e.g. an " +
-		"invariant that's supposed to be established earlier), or should TryGetItem's not-found path " +
-		"not assert on `e` at all?")]
 	public void TryGetItem_ForUnregisteredId_DebugAssertFiresInsteadOfReturningFalse()
 	{
 		using var catalog = new EvaluationCatalog<double>();

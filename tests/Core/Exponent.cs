@@ -174,4 +174,49 @@ public static class Exponent
 			exponent.Description.Value.Should().NotBe(catalog.GetConstant(1d).Description.Value);
 		}
 	}
+
+	// Issue #19 (paired with #11): IsSquareRoot's fallback check used to go through
+	// Catalog.Register("(1/2)", ...), but the factory's computation -- GetExponent(2, -1)
+	// .GetReduction() -- reduces to a Constant registered under "0.5", not "(1/2)". Register's
+	// id/hash consistency check then threw ArgumentException on the very first call against a
+	// fresh catalog (before that could even surface, TryGetItem's own issue #11 defect could
+	// FailFast in DEBUG on the way in). Fixed by computing the reduction directly instead of
+	// through the mismatched Register call; the "0.5" fast path is unaffected.
+	[TestClass]
+	public class IsSquareRootTests
+	{
+		[TestMethod]
+		public void NonSquareRootExponent_OnFreshCatalog_ReturnsFalseWithoutFailFast()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var p0 = catalog.GetParameter(0);
+			var square = catalog.GetExponent(p0, catalog.GetConstant(2d));
+
+			bool result = false;
+			Action act = () => result = square.IsSquareRoot();
+
+			act.Should().NotThrow();
+			result.Should().BeFalse();
+		}
+
+		[TestMethod]
+		public void GenuineHalfPower_OnFreshCatalog_ReturnsTrue()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var p0 = catalog.GetParameter(0);
+
+			// Built the same way the real pipeline would organically arrive at 0.5 (e.g. via
+			// GetFloatFunction(SquareRoot, x) -> GetExponent(x, ValueFloat<T>.Half)), without
+			// calling GetConstant(0.5d) directly first -- so the "0.5" fast path inside
+			// IsSquareRoot hasn't already been pre-populated by this test itself.
+			var half = catalog.GetExponent(catalog.GetConstant(2d), catalog.GetConstant(-1d)).GetReduction();
+			var sqrtOfX = catalog.GetExponent(p0, half);
+
+			bool result = false;
+			Action act = () => result = sqrtOfX.IsSquareRoot();
+
+			act.Should().NotThrow();
+			result.Should().BeTrue();
+		}
+	}
 }

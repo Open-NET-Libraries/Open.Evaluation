@@ -317,13 +317,17 @@ public static partial class Exponent
 		if (exponent.Catalog.TryGetItem<IEvaluate<T>>("0.5", out var point5) && pow == point5)
 			return true;
 
-		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
-		{
-			var b = c.GetConstant(Value<T>.Two);
-			var p = c.GetConstant(-T.One);
-			var h = c.GetExponent(b, p);
-			return h.GetReduction();
-		});
+		// Issue #19: this used to go through Catalog.Register("(1/2)", ...), but the factory
+		// computes GetExponent(2, -1).GetReduction(), which for a float-capable T reduces to a
+		// Constant registered under "0.5" -- not "(1/2)". Register's id/hash consistency check
+		// then threw ArgumentException on the very first call for a fresh catalog. Computing the
+		// reduction directly (without the mismatched id) keeps it self-consistently interned via
+		// the normal GetExponent/GetConstant catalog paths; the "0.5" fast path above is
+		// unaffected.
+		var half = exponent.Catalog.GetExponent(
+			exponent.Catalog.GetConstant(Value<T>.Two),
+			exponent.Catalog.GetConstant(-T.One))
+			.GetReduction();
 
 		return exponent.Power == half;
 	}

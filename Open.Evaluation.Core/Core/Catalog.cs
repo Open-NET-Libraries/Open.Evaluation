@@ -137,9 +137,12 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		id = GetPooledId(id);
 		bool result = Registry.TryGetValue(id, out T? e);
-		Debug.Assert(e is not null);
-		Debug.Assert(e.Catalog == this);
-		item = (TItem)e;
+		// A not-found result (result == false, e == null) is a legitimate outcome of the
+		// Try-pattern, not a bug -- these asserts only guard the invariant that a *successful*
+		// lookup returns a non-null item belonging to this catalog (issue #11).
+		Debug.Assert(!result || e is not null);
+		Debug.Assert(!result || e!.Catalog == this);
+		item = (TItem)e!;
 		return result;
 	}
 
