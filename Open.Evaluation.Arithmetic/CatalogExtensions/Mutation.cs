@@ -100,7 +100,7 @@ public static partial class CatalogExtensions
 		ArgumentNullException.ThrowIfNull(catalog);
 		node.ThrowIfNull();
 
-		if (node.Value is not IOperator<T> o)
+		if (node.Value is not IOperator<IEvaluate<T>, T> o)
 			throw new ArgumentException("Does not contain an Operation.", nameof(node));
 
         Symbol symbol = o.Symbol;
