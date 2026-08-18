@@ -117,8 +117,8 @@ public class ThreadSafetyTests
 	[TestMethod]
 	public void ConcurrentEvaluation_ColdContext_ManyWorkersManyDistinctNewNodes_CompletesWithConsistentResults()
 	{
-		// Formerly the #14 repro (issue: Context.GetOrAdd's unlocked Dictionary fast-path read raced
-		// locked inserts and hung reliably under this exact pattern). Fixed by switching the memo
+		// Regression repro: Context.GetOrAdd's unlocked Dictionary fast-path read raced
+		// locked inserts and hung reliably under this exact pattern. Fixed by switching the memo
 		// table to ConcurrentDictionary<IEvaluate, Lazy<IEvaluationResult>> - see Context.cs.
 		using var catalog = new EvaluationCatalog<double>();
 		const int paramCount = 8;
