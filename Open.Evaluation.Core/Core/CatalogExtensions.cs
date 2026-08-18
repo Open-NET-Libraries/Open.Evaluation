@@ -98,6 +98,27 @@ public static class CatalogExtensions
 					);
 					break;
 
+				// Conditionals: (condition, ifTrue, ifFalse). When T is bool the condition is a
+				// typed child too (three mapped children); otherwise only the two branches are
+				// typed and the condition -- untouched by a typed rebuild -- is recovered from
+				// the untyped view.
+				case IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>> c:
+				{
+					IEvaluate<bool>? condition = fixedChildren.Length == 3
+						? fixedChildren[0] as IEvaluate<bool>
+						: (value as IParent)?.Children[0] as IEvaluate<bool>;
+					if (condition is null || fixedChildren.Length < 2)
+						throw new NotSupportedException("Conditional node without a recoverable condition and two branches.");
+
+					node = target.Source.Map(
+						c.NewUsing(
+							catalog,
+							(condition, fixedChildren[^2], fixedChildren[^1])
+						)
+					);
+					break;
+				}
+
 				default:
 					throw new NotSupportedException("Unknown IParent / IReproducable.");
 			}
