@@ -218,5 +218,33 @@ public static class Exponent
 			act.Should().NotThrow();
 			result.Should().BeTrue();
 		}
+
+		[TestMethod]
+		public void SymbolicHalfPower_Unreduced_ReturnsTrue()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var p0 = catalog.GetParameter(0);
+
+			// The power is the UNREDUCED symbolic (1/2) node itself -- previously a confirmed
+			// gap (matched neither the "0.5" constant nor the interned symbolic by reference).
+			// Comparing REDUCTIONS of both sides makes any power that genuinely reduces to
+			// one half qualify.
+			var symbolicHalf = catalog.GetExponent(catalog.GetConstant(2d), catalog.GetConstant(-1d));
+			var sqrtOfX = catalog.GetExponent(p0, symbolicHalf);
+
+			((Exponent<double>)sqrtOfX).IsSquareRoot().Should().BeTrue();
+		}
+
+		[TestMethod]
+		public void IntegerCatalog_HalfTruncationCannotYieldFalsePositive()
+		{
+			using var catalog = new EvaluationCatalog<int>();
+			var p0 = catalog.GetParameter(0);
+
+			// For integer T the half reduction truncates to zero; without the floating-point
+			// gate, x^0 would have answered "true".
+			var xToZero = catalog.GetExponent(p0, catalog.GetConstant(0));
+			((Exponent<int>)xToZero).IsSquareRoot().Should().BeFalse();
+		}
 	}
 }

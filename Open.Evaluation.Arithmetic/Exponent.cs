@@ -326,9 +326,11 @@ public static partial class Exponent
 		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
 			c.GetExponent(c.GetConstant(Value<T>.Two), c.GetConstant(-T.One)));
 
-		// A naturally-built square root's Power is the constant 0.5, so the comparison uses
-		// the symbolic half's reduction (itself interned under "0.5" as a side effect).
-		return exponent.Power == half.GetReduction();
+		// Compare REDUCTIONS of both sides: a naturally-built square root carries the constant
+		// 0.5, a symbolically-built one carries (1/2) itself, and anything else that genuinely
+		// reduces to one half also qualifies -- reductions intern to canonical nodes, so this
+		// remains a single reference comparison.
+		return exponent.Catalog.GetReduced(exponent.Power) == exponent.Catalog.GetReduced(half);
 	}
 
 	internal static T Pow<T>(this T baseValue, T exponent)
