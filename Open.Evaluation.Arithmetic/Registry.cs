@@ -187,7 +187,7 @@ public static class Registry
 		// it's drawn. Only reachable when T is floating-point capable (see above), so the
 		// division below is provably safe.
 		return op == Glyphs.SquareRoot && children.Count == 1
-			? catalog.GetExponent(children[0], Value<T>.Half)
+			? catalog.GetExponent(children[0], T.One / (T.One + T.One))
 			: GetFunction(catalog, op, children);
 	}
 
@@ -215,7 +215,7 @@ public static class Registry
 			return null;
 
 		return op == Glyphs.SquareRoot && children.Count == 1
-			? catalog.GetExponent(children[0], Value<T>.Half)
+			? catalog.GetExponent(children[0], T.One / (T.One + T.One))
 			: GetFunction(catalog, op, children);
 	}
 
@@ -267,7 +267,7 @@ public static class Registry
 		// it's drawn. Only reachable when T is floating-point capable (see above), so the
 		// division below is provably safe.
 		return op == Glyphs.SquareRoot
-			? catalog.GetExponent(child, Value<T>.Half)
+			? catalog.GetExponent(child, T.One / (T.One + T.One))
 			: GetFunction(catalog, op, child);
 	}
 
