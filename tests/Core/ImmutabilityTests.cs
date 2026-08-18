@@ -36,23 +36,12 @@ public class ImmutabilityTests
 	}
 
 	[TestMethod]
-	[Ignore("QUESTION FOR AUTHOR: OperatorBase<T>.ConditionalTransform (Core/OperatorBase.cs) builds " +
-		"its replacement children via `ImmutableArray.CreateBuilder<IEvaluate<T>>()` (default, growable " +
-		"capacity) and then calls `builder.MoveToImmutable()`. MoveToImmutable requires Count==Capacity " +
-		"exactly, but a growable builder's Capacity is essentially never exactly equal to the final " +
-		"Count after N `.Add()` calls, so this throws for any 2+-item transform. Observed directly: " +
-		"sum.NewWithIndexReplaced<Sum<double>,...>(catalog, 1, replacement) - which internally calls " +
-		"Sum<T>.NewUsing(catalog, IEnumerable<IEvaluate<T>>), which falls through to ConditionalTransform " +
-		"because ReproductionExtensions builds the replacement children via Utility.ReplaceAt (a lazy " +
-		"IEnumerable, not an IReadOnlyList) - throws System.InvalidOperationException: 'MoveToImmutable " +
-		"can only be performed when Count equals Capacity.' This means NewWithIndexReplaced, " +
-		"NewWithAppended, and NewUsing(child, params rest[]) are all broken for Sum<T>/Product<T> " +
-		"(ArithmeticOperatorBase<T>) whenever the resulting child count is 2 or more - the exact common " +
-		"case. And/Or/Not/Conditional (Boolean) are unaffected because they implement NewUsing directly " +
-		"without delegating to ConditionalTransform. Should ConditionalTransform use `.ToImmutable()` " +
-		"instead of `.MoveToImmutable()`, or pre-size the builder to a known capacity?")]
-	public void NewWithIndexReplaced_OnSum_ThrowsFromConditionalTransformBug()
+	public void NewWithIndexReplaced_OnSum_ReturnsNewExpression_OriginalStillEvaluatesUnchanged()
 	{
+		// Formerly the #12 repro (issue: OperatorBase<T>.ConditionalTransform built its replacement
+		// children via a growable ImmutableArray.Builder and then called MoveToImmutable(), which
+		// requires Count==Capacity exactly and so threw for any 2+-child transform). Fixed by
+		// switching to DrainToImmutable() - see OperatorBase.cs.
 		using var catalog = new EvaluationCatalog<double>();
 		var p0 = catalog.GetParameter(0);
 		var p1 = catalog.GetParameter(1);
@@ -67,6 +56,32 @@ public class ImmutabilityTests
 		sum.Evaluate(context).Result.Should().Be(5d, "the original node must evaluate exactly as before");
 		modified.Evaluate(context).Result.Should().Be(102d, "the new node reflects the replacement");
 		ReferenceEquals(modified, sum).Should().BeFalse();
+		((Sum<double>)modified).Children.Length.Should().Be(2);
+		sum.Children.Length.Should().Be(2, "the original's own Children must be untouched");
+	}
+
+	[TestMethod]
+	public void NewWithAppended_OnSum_ReturnsNewExpression_OriginalStillEvaluatesUnchanged()
+	{
+		// Same #12 repro shape as NewWithIndexReplaced above (ConditionalTransform via
+		// DrainToImmutable), but for the append path: a 3-child Sum<double> growing to 4 children.
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0);
+		var p1 = catalog.GetParameter(1);
+		var p2 = catalog.GetParameter(2);
+		var sum = (Sum<double>)catalog.SumOf(p0, p1, p2);
+		var extra = catalog.GetConstant(100d);
+
+		var modified = sum.NewWithAppended<Sum<double>, IEvaluate<double>, IEvaluate<double>>(catalog, extra);
+
+		using var lease = Context.Rent();
+		var context = lease.Item.Init(catalog, (ReadOnlySpan<double>)[2d, 3d, 4d]);
+
+		sum.Evaluate(context).Result.Should().Be(9d, "the original node must evaluate exactly as before");
+		modified.Evaluate(context).Result.Should().Be(109d, "the new node includes the appended child");
+		ReferenceEquals(modified, sum).Should().BeFalse();
+		((Sum<double>)modified).Children.Length.Should().Be(4);
+		sum.Children.Length.Should().Be(3, "the original's own Children must be untouched");
 	}
 
 	[TestMethod]
@@ -74,8 +89,8 @@ public class ImmutabilityTests
 	{
 		// Uses And (Boolean) rather than Sum<double>/Product<double>: And.NewUsing constructs
 		// directly instead of delegating to OperatorBase<T>.ConditionalTransform, so this proves the
-		// SAME ReproductionExtensions contract (new node, original untouched) without tripping the
-		// ConditionalTransform defect documented above.
+		// SAME ReproductionExtensions contract (new node, original untouched) independently of the
+		// ConditionalTransform path exercised by the Sum<double> tests above.
 		using var catalog = new EvaluationCatalog<bool>();
 		var p0 = catalog.GetParameter(0);
 		var p1 = catalog.GetParameter(1);
