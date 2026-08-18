@@ -1,6 +1,6 @@
 namespace Open.Evaluation.Tests.Core;
 
-// Issue #6(c): Catalog.Register interns purely by ToString()/Describe(), with no type
+// Catalog.Register interns purely by ToString()/Describe(), with no type
 // disambiguation. On an interning HIT (the key already maps to a registered instance),
 // the old code blindly cast that instance to the requested TItem, throwing an unhelpful
 // InvalidCastException if the types didn't match (as happened for Exponent(x,1) colliding

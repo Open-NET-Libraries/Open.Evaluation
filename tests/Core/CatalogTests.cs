@@ -45,7 +45,7 @@ public class CatalogTests
 		ReferenceEquals(found, p0).Should().BeTrue();
 	}
 
-	// Issue #11: Catalog<T>.TryGetItem's Debug.Assert(e is not null) used to fire unconditionally,
+	// Catalog<T>.TryGetItem's Debug.Assert(e is not null) used to fire unconditionally,
 	// including on the legitimate "not found" result (Registry.TryGetValue returning false), so in
 	// DEBUG builds calling TryGetItem for an id that was never registered threw instead of
 	// returning false as the Try-pattern promises. Fixed by narrowing the asserts to only fire when

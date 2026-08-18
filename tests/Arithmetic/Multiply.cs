@@ -190,7 +190,7 @@ public class Multiply
 		}
 	}
 
-	// Issue #17: AdjustNodeMultiple used `multiple.Value switch { 1 => ..., _ => ... }`, a
+	// AdjustNodeMultiple used `multiple.Value switch { 1 => ..., _ => ... }`, a
 	// constant pattern that the compiler lowers to boxed object.Equals against a boxed
 	// System.Int32(1) -- which never equals a boxed System.Double(1.0) (or any other T). So for
 	// T=double the switch always took the "_" branch, even when the combined constant multiple

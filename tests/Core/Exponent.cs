@@ -85,7 +85,7 @@ public static class Exponent
 		protected override double Expected => Math.Pow(PV[0], 6);
 	}
 
-	// Issue #6: constructing x^1 via the public catalog path used to throw
+	// Constructing x^1 via the public catalog path used to throw
 	// InvalidCastException because the unreduced rendering collided with the bare base's
 	// own catalog key ("x^1" rendered as just "x"). These tests exercise that path directly
 	// (catalog.GetExponent), rather than through the string parser, to pin the fix down at
@@ -151,7 +151,7 @@ public static class Exponent
 		}
 	}
 
-	// Issue #6(b): checking the analogous exponent==0 case for the same collision class.
+	// Checking the analogous exponent==0 case for the same collision class.
 	// Unlike x^1, x^0 never collided (constant `1` renders as "1", not "(x⁰)"), so no
 	// rendering change was needed there -- this test pins down that it stays that way.
 	// (tests/Core/Exponent.cs's OneCollapse class already covers this indirectly via the
@@ -175,11 +175,11 @@ public static class Exponent
 		}
 	}
 
-	// Issue #19 (paired with #11): IsSquareRoot's fallback check used to go through
+	// IsSquareRoot's fallback check used to go through
 	// Catalog.Register("(1/2)", ...), but the factory's computation -- GetExponent(2, -1)
 	// .GetReduction() -- reduces to a Constant registered under "0.5", not "(1/2)". Register's
 	// id/hash consistency check then threw ArgumentException on the very first call against a
-	// fresh catalog (before that could even surface, TryGetItem's own issue #11 defect could
+	// fresh catalog (before that could even surface, TryGetItem's own always-firing assert could
 	// FailFast in DEBUG on the way in). Fixed by computing the reduction directly instead of
 	// through the mismatched Register call; the "0.5" fast path is unaffected.
 	[TestClass]

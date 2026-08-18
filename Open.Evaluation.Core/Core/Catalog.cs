@@ -177,8 +177,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 			return true;
 		}
 
-		// A not-found result is a legitimate outcome of the Try-pattern, not a bug
-		// (issue #11). Register guarantees a successful lookup never yields null:
+		// A not-found result is a legitimate outcome of the Try-pattern, not a bug.
+		// Register guarantees a successful lookup never yields null:
 		Debug.Assert(!result, "a successful lookup must never yield a null entry");
 		item = default;
 		return false;

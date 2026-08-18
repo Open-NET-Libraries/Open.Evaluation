@@ -4,7 +4,7 @@ namespace Open.Evaluation.Tests.Arithmetic;
 
 /// <summary>
 /// Covers EvaluationCatalog{T}.MutationCatalog.ChangeOperation (CatalogExtensions/Mutation.cs).
-/// Issue #18: the type check used a single-arg <c>IOperator{T}</c>, but Sum{T}/Product{T}/
+/// The type check used a single-arg <c>IOperator{T}</c>, but Sum{T}/Product{T}/
 /// Exponent{T} (via ArithmeticOperatorBase{T}/OperatorBase{T}) implement only the two-arg
 /// <c>IOperator{IEvaluate{T}, T}</c> directly. Implementing a base interface does not grant a
 /// more-derived named interface that merely extends it, so the old check was unsatisfiable for

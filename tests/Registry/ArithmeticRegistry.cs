@@ -163,7 +163,7 @@ public class ArithmeticRegistry
 		}
 	}
 
-	// Issue #16 (author-approved intent flip): GetRandomFunction previously dispatched every
+	// Author-approved intent flip: GetRandomFunction previously dispatched every
 	// draw through the non-float GetFunction, which always throws NotSupportedException for
 	// SquareRoot regardless of T -- so SquareRoot could never actually be produced by
 	// GetRandomFunction for ANY T, including float-capable ones like double. The fix computes

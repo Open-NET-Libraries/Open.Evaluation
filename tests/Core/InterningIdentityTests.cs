@@ -61,7 +61,7 @@ public class InterningIdentityTests
 		var p0 = catalog.GetParameter(0);
 		var p1 = catalog.GetParameter(1);
 
-		// NOTE: deliberately avoids constructing Exponent(base, constant-1) - per issue #6, that
+		// NOTE: deliberately avoids constructing Exponent(base, constant-1) - that
 		// shape's Description collapses to the bare base's own Description (the superscript "¹"
 		// case), which causes a Catalog.Register id collision. Powers other than 1 are safe.
 		//
