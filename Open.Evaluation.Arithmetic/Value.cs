@@ -7,8 +7,10 @@ internal static class Value<T> where T
 
 	/// <summary>
 	/// One half (T.One / Two). NOTE: this is the raw VALUE only -- truncates to zero for
-	/// integer T (callers gate on IsFloatingPoint), and catalog registration still happens
-	/// at the point of use via GetConstant/GetExponent as with any constant.
+	/// integer T, so every use site MUST be gated by <see cref="IsFloatingPoint"/>. Where T
+	/// is already compile-time constrained to IFloatingPoint, prefer ValueFloat&lt;T&gt;.Half,
+	/// which makes truncation unrepresentable instead of merely guarded. Catalog registration
+	/// still happens at the point of use via GetConstant/GetExponent as with any constant.
 	/// </summary>
 	public static readonly T Half = T.One / Two;
 

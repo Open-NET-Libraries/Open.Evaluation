@@ -147,7 +147,7 @@ public static class Registry
 		{
 			Glyphs.Square => catalog.GetExponent(child, ValueFloat<T>.Two),
 			Glyphs.Invert => catalog.GetExponent(child, -T.One),
-			Glyphs.SquareRoot => catalog.GetExponent(child, Value<T>.Half),
+			Glyphs.SquareRoot => catalog.GetExponent(child, ValueFloat<T>.Half),
 			Glyphs.Exponent => throw new ArgumentException("Must have 2 child params for an exponent."),
 			_ => throw new ArgumentException("Invalid function.", nameof(op)),
 		};
