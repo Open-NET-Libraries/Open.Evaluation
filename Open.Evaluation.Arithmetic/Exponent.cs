@@ -107,6 +107,11 @@ public class Exponent<T> : OperatorBase<T>,
 		IEvaluate<T> bas = Catalog.GetReduced(Base);
 		IEvaluate<T> pow = Catalog.GetReduced(Power);
 
+		// Undefined poisons: an exponent over an undefined base or power is undefined.
+		// Checked before every other rule so no fold below can mask it.
+		if (bas is Undefined<T> || pow is Undefined<T>)
+			return Catalog.GetUndefined();
+
         Constant<T> one = Catalog.GetConstant(T.MultiplicativeIdentity);
 		Debug.Assert(one.Value == T.One);
 		// No need to reduce if the power is already 1.
@@ -169,11 +174,18 @@ public class Exponent<T> : OperatorBase<T>,
 
 							case PowerOfZeroReduction.Throw:
 								throw new InvalidOperationException("0 to the power of 0 is undefined.");
+
+							case PowerOfZeroReduction.Undefined:
+								return Catalog.GetUndefined();
 						}
 					}
 					else if (T.IsNegative(p))
 					{
-						throw new InvalidOperationException("0 to a negative power is undefined. (Cannot divide by zero.)");
+						// Zero to a negative power is division by zero: undefined everywhere, for
+						// every T. Reduction reports that as a value rather than throwing -- it is
+						// the validity detector, and it must stay total for callers that reduce
+						// speculatively (mutation, variation, predicates).
+						return Catalog.GetUndefined();
 					}
 
 					return Catalog.GetConstant(T.Zero);
@@ -256,7 +268,8 @@ public static partial class Exponent
 		One, // Any power of zero results in 1.
 		Zero, // Evaluate 0^0 as 0.
 		Retain, // Don't reduce.
-		Throw // Throw if the base is zero.
+		Throw, // Throw if the base is zero.
+		Undefined // Reduce 0^0 to the catalog's Undefined expression (see Undefined<T>).
 	}
 
 	public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";

@@ -143,14 +143,19 @@ public class Reduction
 		((Constant<double>)reduced).Value.Should().Be(1d);
 	}
 
+	// Intent flip: reduction used to throw here. It now reports the everywhere-undefined result
+	// as a value (the catalog's Undefined expression) so that reduction stays total for callers
+	// that reduce speculatively; see tests/Arithmetic/Undefined.cs for the full contract.
 	[TestMethod]
-	public void Exponent_ZeroBase_NegativePower_Throws()
+	public void Exponent_ZeroBase_NegativePower_ReducesToUndefined()
 	{
 		using var catalog = new EvaluationCatalog<double>();
 		var exp = catalog.GetExponent(catalog.GetConstant(0d), catalog.GetConstant(-1d));
 
-		Action act = () => catalog.GetReduced(exp);
-		act.Should().Throw<InvalidOperationException>();
+		IEvaluate<double>? reduced = null;
+		Action act = () => reduced = catalog.GetReduced(exp);
+		act.Should().NotThrow();
+		reduced.Should().BeSameAs(catalog.GetUndefined());
 	}
 
 	[TestMethod]

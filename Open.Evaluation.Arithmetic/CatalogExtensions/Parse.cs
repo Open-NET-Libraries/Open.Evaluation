@@ -71,6 +71,16 @@ public static partial class CatalogExtensions
         int count = 0;
 
 		evaluation = evaluation.Trim();
+
+		// The Undefined token is a bare word the operand grammar doesn't know; carry it as a
+		// pre-registered {key} so it composes with every operator pattern below and resolves
+		// through the same registry lookup as any other sub-expression.
+		if (evaluation.Contains(Undefined<double>.Token, StringComparison.Ordinal))
+		{
+			registry.Add(Undefined<double>.Token, catalog.GetUndefined());
+			evaluation = evaluation.Replace(Undefined<double>.Token, $"{{{Undefined<double>.Token}}}", StringComparison.Ordinal);
+		}
+
 		string last;
 		do
 		{
