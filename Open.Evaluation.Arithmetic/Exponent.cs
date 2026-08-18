@@ -313,24 +313,36 @@ public static partial class Exponent
 	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
 		where T : notnull, INumber<T>
 	{
-		// For integer T the half-power reduction truncates to zero, which would make x^0
-		// answer "true" -- square roots only exist for floating-point-capable types.
+		// Square roots only exist for floating-point-capable types. For integer T the
+		// interned symbolic (1/2) still EXISTS as a node (construction is unrestricted), so
+		// an integer x^(2^-1) would match it by reference below and answer "true" without
+		// this gate. (NOT about x^0: for non-float T the reduction machinery refuses the
+		// half division and keeps (1/2) symbolic -- it never truncates to a constant 0.)
 		if (!Value<T>.IsFloatingPoint)
 			return false;
 
-		// The symbolic half -- the UNREDUCED exponent 2^-1, which renders exactly "(1/2)" --
-		// is deliberately interned in the catalog under its own honest key, so anything that
-		// looks up "(1/2)" finds it. Register is find-or-create: after the first call this
-		// IS the fast path. (Issue #19's defect was a .GetReduction() INSIDE this factory,
-		// which collapsed the node to the constant "0.5" and broke the id/hash contract.)
+		var power = exponent.Power;
+
+		// Constant arm, zero catalog machinery: value + value == 1 identifies one half
+		// exactly (doubling is exact for binary floats and for decimal; no division, so
+		// integer truncation cannot manufacture a false positive on this arm even without
+		// the gate above). Value comparison also correctly accepts equal-valued constants
+		// interned under different renderings (e.g. decimal "0.5" vs "0.500").
+		if (power is Constant<T> constant)
+			return constant.Value + constant.Value == T.One;
+
+		// Symbolic arm: the UNREDUCED exponent 2^-1, which renders exactly "(1/2)", is
+		// deliberately interned in the catalog under its own honest key, so anything that
+		// looks up "(1/2)" finds it. Register is find-or-create: after the first call the
+		// hit path is a pure lookup, and interning makes this a single reference compare.
+		// Deliberately NEVER GetReduced(Power): reducing an arbitrary subtree can THROW on
+		// degenerate trees (a 0^negative anywhere inside -> "cannot divide by zero"), and a
+		// predicate on the mutation path must answer, not throw. The cost of that safety:
+		// an exotic power that merely REDUCES to one half (without being the constant or
+		// the symbolic) answers false -- same as every prior version of this method.
 		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
 			c.GetExponent(c.GetConstant(Value<T>.Two), c.GetConstant(-T.One)));
-
-		// Compare REDUCTIONS of both sides: a naturally-built square root carries the constant
-		// 0.5, a symbolically-built one carries (1/2) itself, and anything else that genuinely
-		// reduces to one half also qualifies -- reductions intern to canonical nodes, so this
-		// remains a single reference comparison.
-		return exponent.Catalog.GetReduced(exponent.Power) == exponent.Catalog.GetReduced(half);
+		return power == half;
 	}
 
 	internal static T Pow<T>(this T baseValue, T exponent)

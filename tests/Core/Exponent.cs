@@ -227,8 +227,8 @@ public static class Exponent
 
 			// The power is the UNREDUCED symbolic (1/2) node itself -- previously a confirmed
 			// gap (matched neither the "0.5" constant nor the interned symbolic by reference).
-			// Comparing REDUCTIONS of both sides makes any power that genuinely reduces to
-			// one half qualify.
+			// Interning makes the symbolic power and IsSquareRoot's registered (1/2) the SAME
+			// node, so the direct comparison matches by reference.
 			var symbolicHalf = catalog.GetExponent(catalog.GetConstant(2d), catalog.GetConstant(-1d));
 			var sqrtOfX = catalog.GetExponent(p0, symbolicHalf);
 
@@ -236,15 +236,72 @@ public static class Exponent
 		}
 
 		[TestMethod]
-		public void IntegerCatalog_HalfTruncationCannotYieldFalsePositive()
+		public void IntegerCatalog_SymbolicHalfPower_ReturnsFalse()
 		{
 			using var catalog = new EvaluationCatalog<int>();
 			var p0 = catalog.GetParameter(0);
 
-			// For integer T the half reduction truncates to zero; without the floating-point
-			// gate, x^0 would have answered "true".
-			var xToZero = catalog.GetExponent(p0, catalog.GetConstant(0));
-			((Exponent<int>)xToZero).IsSquareRoot().Should().BeFalse();
+			// THE case the IsFloatingPoint gate actually decides. Construction of the symbolic
+			// (1/2) node is unrestricted, so it exists even for integer T -- and for integer T
+			// the reduction machinery refuses the half division and keeps it SYMBOLIC. Without
+			// the gate, x^(2^-1) would match the interned (1/2) by reference and answer "true".
+			// (An earlier version of this test used x^0 believing the hazard was truncation --
+			// mutation testing proved that case is independently protected by the reduction
+			// guard and never reaches the comparison at all.)
+			var symbolicHalf = catalog.GetExponent(catalog.GetConstant(2), catalog.GetConstant(-1));
+			var sqrtShaped = catalog.GetExponent(p0, symbolicHalf);
+
+			((Exponent<int>)sqrtShaped).IsSquareRoot().Should().BeFalse();
+		}
+
+		[TestMethod]
+		public void DegeneratePowerSubtree_AnswersFalse_NeverThrows()
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			var p0 = catalog.GetParameter(0);
+
+			// x^(0^-1): a legal-to-construct tree whose power subtree is degenerate --
+			// REDUCING it throws ("0 to a negative power is undefined"). IsSquareRoot is a
+			// predicate on the mutation path (MutateSign's parentIsSquareRoot), so it must
+			// answer false here, not throw. Pins the deliberate never-reduce-Power choice.
+			var degenerate = catalog.GetExponent(catalog.GetConstant(0d), catalog.GetConstant(-1d));
+			var outer = catalog.GetExponent(p0, degenerate);
+
+			bool result = true;
+			Action act = () => result = ((Exponent<double>)outer).IsSquareRoot();
+
+			act.Should().NotThrow();
+			result.Should().BeFalse();
+		}
+
+		[TestMethod]
+		public void FloatCatalog_FreshCatalog_BothForms_ReturnTrue()
+		{
+			// Non-double floating T: the Register("(1/2)") key must match the factory
+			// product's rendering EXACTLY or the first call throws. Pins that Constant<float>
+			// renders invariantly ("2", "-1") like double.
+			using var catalog = new EvaluationCatalog<float>();
+			var p0 = catalog.GetParameter(0);
+
+			var symbolicHalf = catalog.GetExponent(catalog.GetConstant(2f), catalog.GetConstant(-1f));
+			((Exponent<float>)catalog.GetExponent(p0, symbolicHalf)).IsSquareRoot().Should().BeTrue();
+
+			var reducedHalf = catalog.GetReduced(symbolicHalf);
+			((Exponent<float>)catalog.GetExponent(p0, reducedHalf)).IsSquareRoot().Should().BeTrue();
+		}
+
+		[TestMethod]
+		public void DecimalCatalog_FreshCatalog_BothForms_ReturnTrue()
+		{
+			// Same rendering-contract pin for decimal (an IFloatingPoint that is not IEEE).
+			using var catalog = new EvaluationCatalog<decimal>();
+			var p0 = catalog.GetParameter(0);
+
+			var symbolicHalf = catalog.GetExponent(catalog.GetConstant(2m), catalog.GetConstant(-1m));
+			((Exponent<decimal>)catalog.GetExponent(p0, symbolicHalf)).IsSquareRoot().Should().BeTrue();
+
+			var reducedHalf = catalog.GetReduced(symbolicHalf);
+			((Exponent<decimal>)catalog.GetExponent(p0, reducedHalf)).IsSquareRoot().Should().BeTrue();
 		}
 	}
 }
