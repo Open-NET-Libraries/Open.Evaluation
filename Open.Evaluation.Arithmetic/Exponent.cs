@@ -317,19 +317,16 @@ public static partial class Exponent
 		if (exponent.Catalog.TryGetItem<IEvaluate<T>>("0.5", out var point5) && pow == point5)
 			return true;
 
-		// Issue #19: this used to go through Catalog.Register("(1/2)", ...), but the factory
-		// computes GetExponent(2, -1).GetReduction(), which for a float-capable T reduces to a
-		// Constant registered under "0.5" -- not "(1/2)". Register's id/hash consistency check
-		// then threw ArgumentException on the very first call for a fresh catalog. Computing the
-		// reduction directly (without the mismatched id) keeps it self-consistently interned via
-		// the normal GetExponent/GetConstant catalog paths; the "0.5" fast path above is
-		// unaffected.
-		var half = exponent.Catalog.GetExponent(
-			exponent.Catalog.GetConstant(Value<T>.Two),
-			exponent.Catalog.GetConstant(-T.One))
-			.GetReduction();
+		// The symbolic half -- the UNREDUCED exponent 2^-1, which renders exactly "(1/2)" --
+		// is deliberately interned in the catalog under its own honest key. (Issue #19's
+		// defect was a .GetReduction() INSIDE this factory, which collapsed the node to the
+		// constant "0.5" and broke Register's id/hash contract on the very first call.)
+		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
+			c.GetExponent(c.GetConstant(Value<T>.Two), c.GetConstant(-T.One)));
 
-		return exponent.Power == half;
+		// A naturally-built square root's Power is the constant 0.5, so the comparison uses
+		// the symbolic half's reduction (itself interned under "0.5" as a side effect).
+		return exponent.Power == half.GetReduction();
 	}
 
 	internal static T Pow<T>(this T baseValue, T exponent)
