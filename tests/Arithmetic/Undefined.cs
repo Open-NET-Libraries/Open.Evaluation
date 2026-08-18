@@ -124,9 +124,36 @@ public class UndefinedTests
 	{
 		using var catalog = new EvaluationCatalog<double>();
 		var x = catalog.GetParameter(0);
+		var y = catalog.GetParameter(1);
 		// 1/x and √x are undefined only at some inputs: poles, not invalid expressions.
 		catalog.IsValid(catalog.GetExponent(x, catalog.GetConstant(-1d))).Should().BeTrue();
 		catalog.IsValid(Sqrt(catalog, x)).Should().BeTrue();
+
+		// Half-line forms: √(-x) is defined for x ≤ 0. Distributing the half power over the
+		// product would manufacture (-1)^½ -- undefined nowhere-defined -- from a valid form;
+		// the detector must never do that. (This was a real false positive.)
+		catalog.IsValid(Sqrt(catalog, catalog.ProductOf(-1d, x))).Should().BeTrue();
+		catalog.IsValid(Sqrt(catalog, catalog.ProductOf(-2d, x, y))).Should().BeTrue();
+		catalog.IsValid(Sqrt(catalog, catalog.ProductOf(-1d, catalog.GetExponent(x, 3d)))).Should().BeTrue();
+		catalog.GetReduced(Sqrt(catalog, catalog.ProductOf(-1d, x))).Description.Value.Should().Be("√(-1 * {0})",
+			"a non-integer power stays over a product with a negative factor");
+	}
+
+	[TestMethod]
+	public void PowerOverProduct_DistributesOnlyWhenSound()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var x = catalog.GetParameter(0);
+		var y = catalog.GetParameter(1);
+
+		// Integer powers distribute freely: (x·y)² = x²·y², (-1·x)⁻¹ = -1/x.
+		catalog.GetReduced(catalog.GetExponent(catalog.ProductOf(x, y), 2d)).Description.Value.Should().Be("(({0}²) * ({1}²))");
+		catalog.GetReduced(catalog.GetExponent(catalog.ProductOf(-1d, x), -1d)).Description.Value.Should().Be("(-1 / {0})");
+
+		// A non-integer power pulls out only POSITIVE constant factors: √(4·x) = 2·√x ...
+		catalog.GetReduced(Sqrt(catalog, catalog.ProductOf(4d, x))).Description.Value.Should().Be("(2 * √{0})");
+		// ... and otherwise stays put: √(x·y) is NOT √x·√y over the reals (both negative).
+		catalog.GetReduced(Sqrt(catalog, catalog.ProductOf(x, y))).Description.Value.Should().Be("√({0} * {1})");
 	}
 
 	[TestMethod]

@@ -132,15 +132,42 @@ public class Exponent<T> : OperatorBase<T>,
 				if (pProd.Children.Length == 1)
 				{
 					bas = pProd.Children[0];
+					continue;
 				}
-				else
+
+				// Exponents of products can be converted into products of exponents -- but over
+				// the reals that is only sound for an INTEGER power. For any other power,
+				// (a·b)^p = a^p·b^p fails whenever a factor can be negative: √(-1·x) is defined
+				// for x ≤ 0, while (-1)^½ · x^½ is defined nowhere. Distributing there would
+				// manufacture an undefined form from a valid one -- exactly the false positive
+				// the Undefined detector must never produce. So a non-integer power is
+				// distributed only over POSITIVE constant factors (always sound); the rest of
+				// the product, sign and all, stays under the power.
+				if (pow is IConstant<T> pc && pc.Value.IsInteger())
 				{
-					// Exponents of products can be converted into products of exponents.
-					// By doing this, any other ungrouped products can be reduced including constants with exponents.
 					return Catalog.Register(
 						Catalog.ProductOf(
 							pProd.Children.Select(c => Catalog.GetReduced(Catalog.GetExponent(c, pow)))));
 				}
+
+				using var positivesLease = ListPool<IEvaluate<T>>.Shared.Rent();
+				using var restLease = ListPool<IEvaluate<T>>.Shared.Rent();
+				List<IEvaluate<T>> positives = positivesLease.Item;
+				List<IEvaluate<T>> rest = restLease.Item;
+				foreach (IEvaluate<T> c in pProd.Children)
+				{
+					if (c is IConstant<T> k && T.IsPositive(k.Value) && !T.IsZero(k.Value))
+						positives.Add(Catalog.GetReduced(Catalog.GetExponent(c, pow)));
+					else
+						rest.Add(c);
+				}
+
+				if (positives.Count == 0 || rest.Count == 0)
+					break; // Nothing to pull out soundly (or nothing left under the power).
+
+				IEvaluate<T> remainder = rest.Count == 1 ? rest[0] : Catalog.ProductOf(rest);
+				positives.Add(Catalog.GetExponent(remainder, pow));
+				return Catalog.Register(Catalog.ProductOf(positives));
 			}
 
 			return VerifyDifferences(bas, pow);
