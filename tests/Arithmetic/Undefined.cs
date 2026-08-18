@@ -78,9 +78,45 @@ public class UndefinedTests
 		catalog.GetReduced(tree).Should().BeSameAs(catalog.GetUndefined());
 		catalog.IsValid(tree).Should().BeFalse();
 
-		// Undefined as a POWER poisons too, and does so before the power==1 shortcut.
+		// Undefined as a POWER poisons too, and an Undefined base survives the power==1 shortcut.
 		catalog.GetReduced(catalog.GetExponent(x, catalog.GetUndefined())).Should().BeSameAs(catalog.GetUndefined());
 		catalog.GetReduced(catalog.GetExponent(catalog.GetUndefined(), catalog.GetConstant(1d))).Should().BeSameAs(catalog.GetUndefined());
+	}
+
+	[TestMethod]
+	public void NegativeBaseToNonIntegerPower_IsUndefined_ForTypesWithAndWithoutNaN()
+	{
+		// √(-4) has no real value: undefined everywhere, decided symbolically -- so it is
+		// Undefined rather than a NaN constant (double) or a throw (decimal cannot hold NaN).
+		using (var catalog = new EvaluationCatalog<double>())
+		{
+			var sqrtNeg = catalog.GetExponent(catalog.GetConstant(-4d), catalog.GetConstant(0.5d));
+			catalog.GetReduced(sqrtNeg).Should().BeSameAs(catalog.GetUndefined());
+			catalog.IsValid(sqrtNeg).Should().BeFalse();
+			// ...while an integer power of a negative base is perfectly defined.
+			catalog.GetReduced(catalog.GetExponent(catalog.GetConstant(-4d), catalog.GetConstant(-1d)))
+				.Should().BeSameAs(catalog.GetConstant(-0.25d));
+		}
+
+		using (var catalog = new EvaluationCatalog<decimal>())
+		{
+			var sqrtNeg = catalog.GetExponent(catalog.GetConstant(-4m), catalog.GetConstant(0.5m));
+			IEvaluate<decimal>? reduced = null;
+			Action act = () => reduced = catalog.GetReduced(sqrtNeg);
+			act.Should().NotThrow();
+			reduced.Should().BeSameAs(catalog.GetUndefined());
+		}
+	}
+
+	[TestMethod]
+	public void NonZeroBaseToZeroPower_IsOne_UnderEveryPolicy()
+	{
+		// Reachable only under non-default policies; the fold used to return zero.
+		using var catalog = new EvaluationCatalog<double>();
+		var five = catalog.GetConstant(5d);
+		var zero = catalog.GetConstant(0d);
+		var underUndefinedPolicy = catalog.Register(new UndefinedZeroExponent(catalog, five, zero));
+		catalog.GetReduced(underUndefinedPolicy).Should().BeSameAs(catalog.GetConstant(1d));
 	}
 
 	[TestMethod]
@@ -135,8 +171,10 @@ public class UndefinedTests
 		(untyped is IConstant).Should().BeFalse("Undefined must never be mistaken for a constant");
 
 		catalog.Parse("Undefined").Should().BeSameAs(u);
+		catalog.Parse("{Undefined}").Should().BeSameAs(u, "an already-braced token parses identically");
 		var parsedSum = catalog.Parse("(Undefined + {0})");
 		catalog.GetReduced(parsedSum).Should().BeSameAs(u, "the token composes with the operator grammar and poisons on reduction");
+		catalog.GetReduced(catalog.Parse("(2 * {Undefined})")).Should().BeSameAs(u);
 	}
 
 	[TestMethod]
@@ -144,7 +182,7 @@ public class UndefinedTests
 	{
 		// Every signed numeric type: unsigned types cannot express a negative power at all
 		// (-T.One wraps), so 0⁻¹ is not constructible for them in the first place.
-		Check<double>(); Check<float>(); Check<Half>(); Check<decimal>();
+		Check<double>(); Check<float>(); Check<Half>(); Check<System.Runtime.InteropServices.NFloat>(); Check<decimal>();
 		Check<int>(); Check<long>(); Check<sbyte>(); Check<BigInteger>(); Check<Int128>();
 
 		static void Check<T>() where T : notnull, INumber<T>

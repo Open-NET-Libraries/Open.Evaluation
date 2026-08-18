@@ -78,7 +78,9 @@ public static partial class CatalogExtensions
 		if (evaluation.Contains(Undefined<double>.Token, StringComparison.Ordinal))
 		{
 			registry.Add(Undefined<double>.Token, catalog.GetUndefined());
-			evaluation = evaluation.Replace(Undefined<double>.Token, $"{{{Undefined<double>.Token}}}", StringComparison.Ordinal);
+			// Only bare occurrences are wrapped: an already-braced {Undefined} is left alone,
+			// so the same text parses identically whether or not it was pre-tokenized.
+			evaluation = BareUndefinedTokenPattern().Replace(evaluation, $"{{{Undefined<double>.Token}}}");
 		}
 
 		string last;
@@ -135,4 +137,6 @@ public static partial class CatalogExtensions
 	private static partial Regex GetParamOnlyPattern();
 	[GeneratedRegex("^(?:{(\\w+)})$", RegexOptions.Compiled)]
 	private static partial Regex GetRegisteredOnlyPattern();
+	[GeneratedRegex("(?<!\\{)Undefined(?!\\})", RegexOptions.Compiled)]
+	private static partial Regex BareUndefinedTokenPattern();
 }

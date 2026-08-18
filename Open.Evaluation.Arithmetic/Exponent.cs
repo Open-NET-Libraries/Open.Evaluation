@@ -193,9 +193,18 @@ public class Exponent<T> : OperatorBase<T>,
 
 				if (pZero)
 				{
-					// If the power is zero, the result is always 1 unless the base is zero.
-					return Catalog.GetConstant(T.Zero);
+					// If the power is zero, the result is always 1 unless the base is zero
+					// (handled above). Only reachable under a non-default PowerOfZeroReduction
+					// policy -- the default returns `one` before ever getting here.
+					return one;
 				}
+
+				// A negative base to a non-integer power has no real value (√(-4) is complex):
+				// undefined everywhere, so it is Undefined -- decided symbolically here, before
+				// any numeric fold could turn it into a NaN constant or throw for a type that
+				// cannot represent NaN.
+				if (T.IsNegative(b) && !p.IsInteger())
+					return Catalog.GetUndefined();
 
 				// Division by a type that can't divide accurately?
 				if (T.IsNegative(p) && !Value<T>.IsFloatingPoint)
