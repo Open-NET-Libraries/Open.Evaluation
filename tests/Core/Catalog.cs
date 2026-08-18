@@ -40,6 +40,22 @@ public class Catalog
 			.WithMessage("*Catalog identity collision*");
 	}
 
+	// TryGetItem shares Register's identity-collision hazard (same string-keyed registry,
+	// same blind-cast history) -- pinned to the same descriptive guardrail so the two
+	// members can't drift apart again.
+	[TestMethod]
+	public void TryGetItem_TypeMismatchOnFoundEntry_ThrowsDescriptiveExceptionNotInvalidCast()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0); // registers key "{0}" as a Parameter<double>.
+		string key = p0.Description.Value;
+
+		Action act = () => catalog.TryGetItem<Constant<double>>(key, out _);
+
+		act.Should().Throw<InvalidOperationException>()
+			.WithMessage("*Catalog identity collision*");
+	}
+
 	[TestMethod]
 	public void Register_SameKeySameType_ReturnsTheExistingInstance()
 	{
