@@ -441,30 +441,14 @@ public static partial class Exponent
 			return result;
 		}
 
-		switch (exponent)
-		{
-			case double exp:
-			{
-				return baseValue is double bv
-					? (T)(object)Math.Pow(bv, exp)
-					: throw new UnreachableException("Strange type mismatch.");
-			}
-
-			case float exp:
-			{
-				return baseValue is float bv
-					? (T)(object)(float)Math.Pow(bv, exp)
-					: throw new UnreachableException("Strange type mismatch.");
-			}
-
-			case decimal exp:
-			{
-				return baseValue is decimal bv
-					? (T)(object)(decimal)Math.Pow(Convert.ToDouble(bv), Convert.ToDouble(exp))
-					: throw new UnreachableException("Strange type mismatch.");
-			}
-		}
-
-		throw new ArgumentException($"No supported calculation for exponent [{exponent.GetType()}]({exponent}).", nameof(exponent));
+		// Non-integer exponent: computed in double, the way the previous per-type switch
+		// already did for double, float and decimal -- now for EVERY numeric T (Half and NFloat
+		// used to throw "no supported calculation"), with no boxing on this hot path (the old
+		// switch allocated a box per call). Saturating conversions on both sides: values that
+		// do not fit T clamp instead of throwing (a NaN result becomes NaN where T has one and
+		// zero otherwise -- the same rule as Undefined; decimal used to throw OverflowException).
+		// Reduction never reaches this for the everywhere-undefined cases (negative base to a
+		// non-integer power) -- those are decided symbolically as Undefined first.
+		return T.CreateSaturating(Math.Pow(double.CreateSaturating(baseValue), double.CreateSaturating(exponent)));
 	}
 }
