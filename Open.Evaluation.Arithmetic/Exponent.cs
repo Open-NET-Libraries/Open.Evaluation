@@ -313,14 +313,16 @@ public static partial class Exponent
 	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
 		where T : notnull, INumber<T>
 	{
-		var pow = exponent.Power;
-		if (exponent.Catalog.TryGetItem<IEvaluate<T>>("0.5", out var point5) && pow == point5)
-			return true;
+		// For integer T the half-power reduction truncates to zero, which would make x^0
+		// answer "true" -- square roots only exist for floating-point-capable types.
+		if (!Value<T>.IsFloatingPoint)
+			return false;
 
 		// The symbolic half -- the UNREDUCED exponent 2^-1, which renders exactly "(1/2)" --
-		// is deliberately interned in the catalog under its own honest key. (Issue #19's
-		// defect was a .GetReduction() INSIDE this factory, which collapsed the node to the
-		// constant "0.5" and broke Register's id/hash contract on the very first call.)
+		// is deliberately interned in the catalog under its own honest key, so anything that
+		// looks up "(1/2)" finds it. Register is find-or-create: after the first call this
+		// IS the fast path. (Issue #19's defect was a .GetReduction() INSIDE this factory,
+		// which collapsed the node to the constant "0.5" and broke the id/hash contract.)
 		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
 			c.GetExponent(c.GetConstant(Value<T>.Two), c.GetConstant(-T.One)));
 

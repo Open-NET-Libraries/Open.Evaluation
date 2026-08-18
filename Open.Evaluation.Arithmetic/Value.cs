@@ -5,6 +5,13 @@ internal static class Value<T> where T
 	public static readonly T Two = T.One + T.One;
 	public static readonly T Three = Two + T.One;
 
+	/// <summary>
+	/// One half (T.One / Two). NOTE: this is the raw VALUE only -- truncates to zero for
+	/// integer T (callers gate on IsFloatingPoint), and catalog registration still happens
+	/// at the point of use via GetConstant/GetExponent as with any constant.
+	/// </summary>
+	public static readonly T Half = T.One / Two;
+
 	[Pure]
 	static bool CheckFloat()
 	{

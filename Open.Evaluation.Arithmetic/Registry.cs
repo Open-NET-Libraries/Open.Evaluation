@@ -147,7 +147,7 @@ public static class Registry
 		{
 			Glyphs.Square => catalog.GetExponent(child, ValueFloat<T>.Two),
 			Glyphs.Invert => catalog.GetExponent(child, -T.One),
-			Glyphs.SquareRoot => catalog.GetExponent(child, ValueFloat<T>.Half),
+			Glyphs.SquareRoot => catalog.GetExponent(child, Value<T>.Half),
 			Glyphs.Exponent => throw new ArgumentException("Must have 2 child params for an exponent."),
 			_ => throw new ArgumentException("Invalid function.", nameof(op)),
 		};
@@ -187,7 +187,7 @@ public static class Registry
 		// it's drawn. Only reachable when T is floating-point capable (see above), so the
 		// division below is provably safe.
 		return op == Glyphs.SquareRoot && children.Count == 1
-			? catalog.GetExponent(children[0], T.One / (T.One + T.One))
+			? catalog.GetExponent(children[0], Value<T>.Half)
 			: GetFunction(catalog, op, children);
 	}
 
@@ -215,7 +215,7 @@ public static class Registry
 			return null;
 
 		return op == Glyphs.SquareRoot && children.Count == 1
-			? catalog.GetExponent(children[0], T.One / (T.One + T.One))
+			? catalog.GetExponent(children[0], Value<T>.Half)
 			: GetFunction(catalog, op, children);
 	}
 
@@ -258,7 +258,8 @@ public static class Registry
 		{
 			HashSet<char> hs = except is null ? [] : new HashSet<char>(except);
 			if (excludeSquareRoot) hs.Add(Glyphs.SquareRoot);
-			Functions.TryRandomSelectOne(out op, hs);
+			if (!Functions.TryRandomSelectOne(out op, hs))
+				throw new InvalidOperationException("The exclusion set eliminates every available function for this T.");
 		}
 
 		// GetFunction can never produce a SquareRoot (it always throws NotSupportedException,
@@ -266,7 +267,7 @@ public static class Registry
 		// it's drawn. Only reachable when T is floating-point capable (see above), so the
 		// division below is provably safe.
 		return op == Glyphs.SquareRoot
-			? catalog.GetExponent(child, T.One / (T.One + T.One))
+			? catalog.GetExponent(child, Value<T>.Half)
 			: GetFunction(catalog, op, child);
 	}
 
