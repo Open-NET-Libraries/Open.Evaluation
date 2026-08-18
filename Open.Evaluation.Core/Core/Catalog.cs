@@ -129,7 +129,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		});
 	}
 
-	public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
+	public bool TryGetItem<TItem>(string id, [MaybeNullWhen(false)] out TItem item)
 		where TItem : notnull, T
 	{
 		id.ThrowIfNull();
@@ -137,13 +137,18 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		id = GetPooledId(id);
 		bool result = Registry.TryGetValue(id, out T? e);
-		// A not-found result (result == false, e == null) is a legitimate outcome of the
-		// Try-pattern, not a bug -- these asserts only guard the invariant that a *successful*
-		// lookup returns a non-null item belonging to this catalog (issue #11).
-		Debug.Assert(!result || e is not null);
-		Debug.Assert(!result || e!.Catalog == this);
-		item = (TItem)e!;
-		return result;
+		if (result && e is not null)
+		{
+			Debug.Assert(e.Catalog == this);
+			item = (TItem)e; // a found entry of the wrong TItem type still throws, as before
+			return true;
+		}
+
+		// A not-found result is a legitimate outcome of the Try-pattern, not a bug
+		// (issue #11). Register guarantees a successful lookup never yields null:
+		Debug.Assert(!result, "a successful lookup must never yield a null entry");
+		item = default;
+		return false;
 	}
 
 	public Node<T>.Factory Factory { get; } = new Node<T>.Factory();
