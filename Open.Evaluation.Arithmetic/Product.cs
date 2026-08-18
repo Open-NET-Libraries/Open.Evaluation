@@ -59,6 +59,12 @@ public partial class Product<T> :
 			.Flatten(Children, static parent => parent is Product<T>)
 			.Where(c => c != one)); // ** children's reduction is done here.
 
+		// Undefined poisons: any undefined factor makes the product undefined -- including
+		// alongside a zero constant (0 · (1/0) is not 0). Checked before any extraction, fold,
+		// or zero-collapse so nothing below can mask it.
+		if (children.Exists(static c => c is IUndefined))
+			return Catalog.GetUndefined();
+
 		// Phase 3: Try to extract common multiples...
 		var len = children.Count;
 		for (var i = 0; i < len; i++)

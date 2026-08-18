@@ -107,6 +107,11 @@ public class Exponent<T> : OperatorBase<T>,
 		IEvaluate<T> bas = Catalog.GetReduced(Base);
 		IEvaluate<T> pow = Catalog.GetReduced(Power);
 
+		// Undefined poisons: an exponent over an undefined base or power is undefined.
+		// Checked before every other rule so no fold below can mask it.
+		if (bas is IUndefined || pow is IUndefined)
+			return Catalog.GetUndefined();
+
         Constant<T> one = Catalog.GetConstant(T.MultiplicativeIdentity);
 		Debug.Assert(one.Value == T.One);
 		// No need to reduce if the power is already 1.
@@ -127,15 +132,42 @@ public class Exponent<T> : OperatorBase<T>,
 				if (pProd.Children.Length == 1)
 				{
 					bas = pProd.Children[0];
+					continue;
 				}
-				else
+
+				// Exponents of products can be converted into products of exponents -- but over
+				// the reals that is only sound for an INTEGER power. For any other power,
+				// (a·b)^p = a^p·b^p fails whenever a factor can be negative: √(-1·x) is defined
+				// for x ≤ 0, while (-1)^½ · x^½ is defined nowhere. Distributing there would
+				// manufacture an undefined form from a valid one -- exactly the false positive
+				// the Undefined detector must never produce. So a non-integer power is
+				// distributed only over POSITIVE constant factors (always sound); the rest of
+				// the product, sign and all, stays under the power.
+				if (pow is IConstant<T> pc && pc.Value.IsInteger())
 				{
-					// Exponents of products can be converted into products of exponents.
-					// By doing this, any other ungrouped products can be reduced including constants with exponents.
 					return Catalog.Register(
 						Catalog.ProductOf(
 							pProd.Children.Select(c => Catalog.GetReduced(Catalog.GetExponent(c, pow)))));
 				}
+
+				using var positivesLease = ListPool<IEvaluate<T>>.Shared.Rent();
+				using var restLease = ListPool<IEvaluate<T>>.Shared.Rent();
+				List<IEvaluate<T>> positives = positivesLease.Item;
+				List<IEvaluate<T>> rest = restLease.Item;
+				foreach (IEvaluate<T> c in pProd.Children)
+				{
+					if (c is IConstant<T> k && T.IsPositive(k.Value) && !T.IsZero(k.Value))
+						positives.Add(Catalog.GetReduced(Catalog.GetExponent(c, pow)));
+					else
+						rest.Add(c);
+				}
+
+				if (positives.Count == 0 || rest.Count == 0)
+					break; // Nothing to pull out soundly (or nothing left under the power).
+
+				IEvaluate<T> remainder = rest.Count == 1 ? rest[0] : Catalog.ProductOf(rest);
+				positives.Add(Catalog.GetExponent(remainder, pow));
+				return Catalog.Register(Catalog.ProductOf(positives));
 			}
 
 			return VerifyDifferences(bas, pow);
@@ -169,11 +201,18 @@ public class Exponent<T> : OperatorBase<T>,
 
 							case PowerOfZeroReduction.Throw:
 								throw new InvalidOperationException("0 to the power of 0 is undefined.");
+
+							case PowerOfZeroReduction.Undefined:
+								return Catalog.GetUndefined();
 						}
 					}
 					else if (T.IsNegative(p))
 					{
-						throw new InvalidOperationException("0 to a negative power is undefined. (Cannot divide by zero.)");
+						// Zero to a negative power is division by zero: undefined everywhere, for
+						// every T. Reduction reports that as a value rather than throwing -- it is
+						// the validity detector, and it must stay total for callers that reduce
+						// speculatively (mutation, variation, predicates).
+						return Catalog.GetUndefined();
 					}
 
 					return Catalog.GetConstant(T.Zero);
@@ -181,9 +220,18 @@ public class Exponent<T> : OperatorBase<T>,
 
 				if (pZero)
 				{
-					// If the power is zero, the result is always 1 unless the base is zero.
-					return Catalog.GetConstant(T.Zero);
+					// If the power is zero, the result is always 1 unless the base is zero
+					// (handled above). Only reachable under a non-default PowerOfZeroReduction
+					// policy -- the default returns `one` before ever getting here.
+					return one;
 				}
+
+				// A negative base to a non-integer power has no real value (√(-4) is complex):
+				// undefined everywhere, so it is Undefined -- decided symbolically here, before
+				// any numeric fold could turn it into a NaN constant or throw for a type that
+				// cannot represent NaN.
+				if (T.IsNegative(b) && !p.IsInteger())
+					return Catalog.GetUndefined();
 
 				// Division by a type that can't divide accurately?
 				if (T.IsNegative(p) && !Value<T>.IsFloatingPoint)
@@ -256,7 +304,8 @@ public static partial class Exponent
 		One, // Any power of zero results in 1.
 		Zero, // Evaluate 0^0 as 0.
 		Retain, // Don't reduce.
-		Throw // Throw if the base is zero.
+		Throw, // Throw if the base is zero.
+		Undefined // Reduce 0^0 to the catalog's Undefined expression (see Undefined<T>).
 	}
 
 	public const string SuperScriptDigits = "⁰¹²³⁴⁵⁶⁷⁸⁹";
@@ -419,30 +468,14 @@ public static partial class Exponent
 			return result;
 		}
 
-		switch (exponent)
-		{
-			case double exp:
-			{
-				return baseValue is double bv
-					? (T)(object)Math.Pow(bv, exp)
-					: throw new UnreachableException("Strange type mismatch.");
-			}
-
-			case float exp:
-			{
-				return baseValue is float bv
-					? (T)(object)(float)Math.Pow(bv, exp)
-					: throw new UnreachableException("Strange type mismatch.");
-			}
-
-			case decimal exp:
-			{
-				return baseValue is decimal bv
-					? (T)(object)(decimal)Math.Pow(Convert.ToDouble(bv), Convert.ToDouble(exp))
-					: throw new UnreachableException("Strange type mismatch.");
-			}
-		}
-
-		throw new ArgumentException($"No supported calculation for exponent [{exponent.GetType()}]({exponent}).", nameof(exponent));
+		// Non-integer exponent: computed in double, the way the previous per-type switch
+		// already did for double, float and decimal -- now for EVERY numeric T (Half and NFloat
+		// used to throw "no supported calculation"), with no boxing on this hot path (the old
+		// switch allocated a box per call). Saturating conversions on both sides: values that
+		// do not fit T clamp instead of throwing (a NaN result becomes NaN where T has one and
+		// zero otherwise -- the same rule as Undefined; decimal used to throw OverflowException).
+		// Reduction never reaches this for the everywhere-undefined cases (negative base to a
+		// non-integer power) -- those are decided symbolically as Undefined first.
+		return T.CreateSaturating(Math.Pow(double.CreateSaturating(baseValue), double.CreateSaturating(exponent)));
 	}
 }

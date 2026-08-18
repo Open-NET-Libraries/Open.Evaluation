@@ -71,6 +71,18 @@ public static partial class CatalogExtensions
         int count = 0;
 
 		evaluation = evaluation.Trim();
+
+		// The Undefined token is a bare word the operand grammar doesn't know; carry it as a
+		// pre-registered {key} so it composes with every operator pattern below and resolves
+		// through the same registry lookup as any other sub-expression.
+		if (evaluation.Contains(Undefined<double>.Token, StringComparison.Ordinal))
+		{
+			registry.Add(Undefined<double>.Token, catalog.GetUndefined());
+			// Only bare occurrences are wrapped: an already-braced {Undefined} is left alone,
+			// so the same text parses identically whether or not it was pre-tokenized.
+			evaluation = BareUndefinedTokenPattern().Replace(evaluation, $"{{{Undefined<double>.Token}}}");
+		}
+
 		string last;
 		do
 		{
@@ -125,4 +137,6 @@ public static partial class CatalogExtensions
 	private static partial Regex GetParamOnlyPattern();
 	[GeneratedRegex("^(?:{(\\w+)})$", RegexOptions.Compiled)]
 	private static partial Regex GetRegisteredOnlyPattern();
+	[GeneratedRegex("(?<!\\{)Undefined(?!\\})", RegexOptions.Compiled)]
+	private static partial Regex BareUndefinedTokenPattern();
 }

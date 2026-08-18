@@ -5,7 +5,7 @@
 	<PropertyGroup>
 		<Description>And, Or, Not, and Conditional boolean operators, plus Exactly/AtLeast/AtMost fuzzy-logic counting operators, for building and evaluating boolean formula trees.</Description>
 		<EnablePackageValidation>true</EnablePackageValidation>
-		<PackageValidationBaselineVersion>2.0.0-alpha02</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>2.0.0-alpha03</PackageValidationBaselineVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
