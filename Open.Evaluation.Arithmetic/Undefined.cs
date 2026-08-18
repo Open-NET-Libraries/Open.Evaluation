@@ -33,7 +33,7 @@ namespace Open.Evaluation.Arithmetic;
 /// </para>
 /// </remarks>
 [DebuggerDisplay("Undefined")]
-public sealed class Undefined<T> : EvaluationBase<T>
+public sealed class Undefined<T> : EvaluationBase<T>, IUndefined<T>
 	where T : notnull, INumber<T>
 {
 	/// <summary>The rendering of every Undefined expression -- and its catalog key.</summary>
@@ -79,9 +79,8 @@ public static class UndefinedExtensions
 
 	/// <summary>True if <paramref name="evaluation"/> is the Undefined expression itself.</summary>
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
-	public static bool IsUndefined<T>(this IEvaluate<T> evaluation)
-		where T : notnull, INumber<T>
-		=> evaluation is Undefined<T>;
+	public static bool IsUndefined(this IEvaluate evaluation)
+		=> evaluation is IUndefined;
 
 	/// <summary>
 	/// True if <paramref name="evaluation"/> is valid: its reduction (memoized by the catalog) is
@@ -93,6 +92,6 @@ public static class UndefinedExtensions
 	{
 		catalog.ThrowIfNull().OnlyInDebug();
 		evaluation.ThrowIfNull().OnlyInDebug();
-		return catalog.GetReduced(evaluation) is not Undefined<T>;
+		return catalog.GetReduced(evaluation) is not IUndefined;
 	}
 }

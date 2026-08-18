@@ -131,7 +131,7 @@ public partial class Sum<T>
 
 		// Undefined poisons: any undefined term makes the sum undefined. Checked before any
 		// collapse or fold so nothing below can mask it.
-		if (children.Exists(static c => c is Undefined<T>))
+		if (children.Exists(static c => c is IUndefined))
 			return Catalog.GetUndefined();
 
 		// Phase 2: Can we collapse?

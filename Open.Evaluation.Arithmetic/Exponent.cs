@@ -109,7 +109,7 @@ public class Exponent<T> : OperatorBase<T>,
 
 		// Undefined poisons: an exponent over an undefined base or power is undefined.
 		// Checked before every other rule so no fold below can mask it.
-		if (bas is Undefined<T> || pow is Undefined<T>)
+		if (bas is IUndefined || pow is IUndefined)
 			return Catalog.GetUndefined();
 
         Constant<T> one = Catalog.GetConstant(T.MultiplicativeIdentity);

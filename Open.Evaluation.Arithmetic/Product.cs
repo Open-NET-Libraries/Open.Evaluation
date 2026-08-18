@@ -62,7 +62,7 @@ public partial class Product<T> :
 		// Undefined poisons: any undefined factor makes the product undefined -- including
 		// alongside a zero constant (0 · (1/0) is not 0). Checked before any extraction, fold,
 		// or zero-collapse so nothing below can mask it.
-		if (children.Exists(static c => c is Undefined<T>))
+		if (children.Exists(static c => c is IUndefined))
 			return Catalog.GetUndefined();
 
 		// Phase 3: Try to extract common multiples...

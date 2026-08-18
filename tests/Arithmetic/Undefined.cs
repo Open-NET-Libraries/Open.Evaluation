@@ -128,6 +128,12 @@ public class UndefinedTests
 		u.IsUndefined().Should().BeTrue();
 		catalog.GetConstant(1d).IsUndefined().Should().BeFalse();
 
+		// Non-generic type check, like IParameter / IConstant, so callers that only hold an
+		// IEvaluate can recognize it without knowing T.
+		IEvaluate untyped = u;
+		(untyped is IUndefined).Should().BeTrue();
+		(untyped is IConstant).Should().BeFalse("Undefined must never be mistaken for a constant");
+
 		catalog.Parse("Undefined").Should().BeSameAs(u);
 		var parsedSum = catalog.Parse("(Undefined + {0})");
 		catalog.GetReduced(parsedSum).Should().BeSameAs(u, "the token composes with the operator grammar and poisons on reduction");
