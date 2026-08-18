@@ -6,7 +6,7 @@
 		<RootNamespace>Open.Evaluation</RootNamespace>
 		<Description>Foundational catalog, context, and evaluation abstractions for building and evaluating hierarchical formula structures. The base that Open.Evaluation.Arithmetic and Open.Evaluation.Boolean build their operators on.</Description>
 		<EnablePackageValidation>true</EnablePackageValidation>
-		<PackageValidationBaselineVersion>2.0.0-alpha02</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>2.0.0-alpha03</PackageValidationBaselineVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

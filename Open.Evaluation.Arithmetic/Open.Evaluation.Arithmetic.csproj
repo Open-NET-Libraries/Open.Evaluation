@@ -5,7 +5,7 @@
 	<PropertyGroup>
 		<Description>Sum, Product, and Exponent arithmetic operators over generic numeric types, plus catalog extensions for parsing, mutating, and varying arithmetic formula trees.</Description>
 		<EnablePackageValidation>true</EnablePackageValidation>
-		<PackageValidationBaselineVersion>2.0.0-alpha02</PackageValidationBaselineVersion>
+		<PackageValidationBaselineVersion>2.0.0-alpha03</PackageValidationBaselineVersion>
 	</PropertyGroup>
 
 	<ItemGroup>
