@@ -147,7 +147,11 @@ public abstract class OperatorBase<T>(
 		do { builder.Add(e.Current); }
 		while (e.MoveNext());
 
-		return transform(builder.MoveToImmutable());
+		// The builder is growable (default capacity), so Count will essentially never equal
+		// Capacity - MoveToImmutable() requires exact equality and throws otherwise. DrainToImmutable
+		// handles the growable case directly: it returns the builder's contents as an ImmutableArray
+		// without a defensive copy when Count==Capacity, and resets the builder for reuse either way.
+		return transform(builder.DrainToImmutable());
 	}
 
 	//internal static IEvaluate<TResult> ConditionalTransform(

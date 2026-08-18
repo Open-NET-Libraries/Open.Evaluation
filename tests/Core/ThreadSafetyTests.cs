@@ -115,28 +115,11 @@ public class ThreadSafetyTests
 	}
 
 	[TestMethod]
-	[Ignore("QUESTION FOR AUTHOR: Context.GetOrAdd's fast path reads `_registry.TryGetValue(key, ...)` " +
-		"(a plain, non-thread-safe Dictionary<IEvaluate, Lazy<...>>) WITHOUT holding `lock (_registry)`, " +
-		"while other threads may concurrently be INSIDE the lock inserting new entries (and .NET's " +
-		"Dictionary<TKey,TValue> is documented as unsafe for one thread to read while another " +
-		"structurally mutates it - a concurrent read during an internal bucket resize can corrupt the " +
-		"read enumeration and loop forever). Observed directly and highly reproducibly (hangs on the " +
-		"very first parallel iteration, every time it was tried): 16 concurrent workers each evaluating " +
-		"25 DISTINCT, not-yet-computed nodes (a shared base Sum plus 25 different Product wrappers) " +
-		"against ONE fresh Context - i.e. exactly the 'evaluate a freshly-parameterized population " +
-		"concurrently' usage pattern - hangs indefinitely (confirmed via dotnet test --blame-hang, which " +
-		"produced a hang dump with this test as the culprit, and via an isolated repro outside the test " +
-		"host that also hung on iteration 1 of a loop). By contrast, many threads racing over a SINGLE " +
-		"shared new key (see ConcurrentGetOrAdd_SameContextSingleSharedNewKey_FactoryInvokedExactlyOnce) " +
-		"never hangs, which is consistent with the diagnosis: it's specifically concurrent INSERTS of " +
-		"MULTIPLE DIFFERENT keys racing unsynchronized reads that triggers it, not contention on Lazy<T> " +
-		"itself. This looks like a genuine deadlock/livelock risk for exactly the scenario the library's " +
-		"population-scoped Context sharing is designed to enable (many roots, one shared context, " +
-		"evaluated for a population). Should the fast-path read also be inside `lock (_registry)`, or " +
-		"is there a different intended synchronization strategy for populating a Context from multiple " +
-		"threads concurrently?")]
-	public void ConcurrentEvaluation_ColdContext_ManyWorkersManyDistinctNewNodes_Hangs()
+	public void ConcurrentEvaluation_ColdContext_ManyWorkersManyDistinctNewNodes_CompletesWithConsistentResults()
 	{
+		// Formerly the #14 repro (issue: Context.GetOrAdd's unlocked Dictionary fast-path read raced
+		// locked inserts and hung reliably under this exact pattern). Fixed by switching the memo
+		// table to ConcurrentDictionary<IEvaluate, Lazy<IEvaluationResult>> - see Context.cs.
 		using var catalog = new EvaluationCatalog<double>();
 		const int paramCount = 8;
 		var parameters = Enumerable.Range(0, paramCount)
@@ -150,6 +133,10 @@ public class ThreadSafetyTests
 			.ToArray();
 
 		double[] values = [.. Enumerable.Range(0, paramCount).Select(i => (double)(i + 1))];
+		var expectedShared = values.Sum();
+		var expected = Enumerable.Range(0, rootCount)
+			.Select(i => expectedShared * (i + 1))
+			.ToArray();
 
 		using var context = new Context();
 		context.Init(catalog, (ReadOnlySpan<double>)values); // Only the 8 PARAMETER leaves are pre-populated.
@@ -161,8 +148,13 @@ public class ThreadSafetyTests
 			for (var i = 0; i < rootCount; i++)
 			{
 				var idx = (i + workerIndex) % rootCount;
-				roots[idx].Evaluate(context);
+				var result = roots[idx].Evaluate(context).Result;
+				result.Should().Be(expected[idx],
+					$"root {idx}, computed for the first time under concurrent population evaluation, must still be correct");
 			}
 		}), TimeSpan.FromSeconds(5));
+
+		context.TryGetResult<double>(shared, out var sharedResult).Should().BeTrue();
+		sharedResult.Result.Should().Be(expectedShared);
 	}
 }

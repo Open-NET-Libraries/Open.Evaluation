@@ -1,42 +1,43 @@
 ﻿using Open.Collections;
 using Open.Evaluation.Core;
 using System.Buffers;
+using System.Collections.Concurrent;
 
 namespace Open.Evaluation;
 
 public class Context : DisposableBase
 {
-	private readonly Dictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = [];
+	// A ConcurrentDictionary keyed to a SINGLE Lazy<IEvaluationResult> per entry preserves
+	// exactly-once evaluation under contention: concurrent GetOrAdd calls racing to populate the
+	// SAME new key may each construct their own throwaway Lazy wrapper (cheap - the wrapper's
+	// constructor does no evaluation work), but ConcurrentDictionary.GetOrAdd guarantees only ONE
+	// of those wrapper instances is ever stored; every caller - the winner and every loser alike -
+	// then reads THAT instance's .Value, and Lazy<T>'s default LazyThreadSafetyMode
+	// (ExecutionAndPublication) guarantees the wrapped factory itself runs exactly once while the
+	// other threads block and observe the winner's result. An "optimistic" GetOrAdd (storing the
+	// evaluation result directly, with no Lazy) would let every racing thread actually RUN the
+	// (potentially expensive, shared-branch) factory concurrently before discarding all but one
+	// result - see issue #14.
+	private readonly ConcurrentDictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = new();
 
 	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, Func<IEvaluate, EvaluationResult<T>> factory)
 		where T : notnull
 	{
+		// Preserve the original two-gate shape: an initial liveness check before the cheap fast-path
+		// read, and a second one immediately before the (now lock-free, but still not re-checked
+		// again past this point) slow-path population - see "Disposal ordering" in the PR notes.
 		AssertIsAlive();
 
-		IEvaluationResult result;
-		if (_registry.TryGetValue(key, out var lazy))
+		if (!_registry.TryGetValue(key, out var lazy))
 		{
-			result = lazy.Value;
-			goto resultAcquired;
+			AssertIsAlive();
+
+			lazy = _registry.GetOrAdd(key,
+				static (k, f) => new Lazy<IEvaluationResult>(() => f(k)),
+				factory);
 		}
 
-		AssertIsAlive();
-		Lazy<EvaluationResult<T>> tLazy;
-		lock (_registry)
-		{
-			if (_registry.TryGetValue(key, out lazy))
-			{
-				result = lazy.Value;
-				goto resultAcquired;
-			}
-
-			tLazy = Lazy.Create(() => factory(key));
-			_registry[key] = new Lazy<IEvaluationResult>(() => tLazy.Value);
-		}
-
-		return tLazy.Value;
-
-	resultAcquired:
+		var result = lazy.Value;
 		return result is EvaluationResult<T> r ? r
 			: throw new InvalidCastException($"Cannot coerce from {result.GetType()} to {typeof(T)}.");
 	}
@@ -46,31 +47,16 @@ public class Context : DisposableBase
 	{
 		AssertIsAlive();
 
-		IEvaluationResult result;
-		if (_registry.TryGetValue(key, out var lazy))
+		if (!_registry.TryGetValue(key, out var lazy))
 		{
-			result = lazy.Value;
-			goto resultAcquired;
+			AssertIsAlive();
+
+			lazy = _registry.GetOrAdd(key,
+				static (_, f) => new Lazy<IEvaluationResult>(() => f()),
+				factory);
 		}
 
-		AssertIsAlive();
-		Lazy<EvaluationResult<T>> tLazy;
-		lock (_registry)
-		{
-			if (_registry.TryGetValue(key, out lazy))
-			{
-				result = lazy.Value;
-				goto resultAcquired;
-			}
-
-			tLazy = Lazy.Create(factory);
-			_registry[key] = new Lazy<IEvaluationResult>(() => tLazy.Value);
-		}
-
-		return tLazy.Value;
-
-	resultAcquired:
-		return EvaluationResult<T>.Coerce(result);
+		return EvaluationResult<T>.Coerce(lazy.Value);
 	}
 
 	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, T value)
@@ -96,12 +82,20 @@ public class Context : DisposableBase
 		return false;
 	}
 
+	// Mirrors Dictionary<TKey,TValue>.Add's contract (throws on a duplicate key) even though the
+	// backing store is now a ConcurrentDictionary, whose own IDictionary<TKey,TValue>.Add is only
+	// reachable via an explicit interface cast.
+	private void AddCore(IEvaluate key, Lazy<IEvaluationResult> value)
+	{
+		if (!_registry.TryAdd(key, value))
+			throw new ArgumentException($"An entry with the same key has already been added. Key: {key}", nameof(key));
+	}
+
 	public Context Add(IEvaluate key, Lazy<IEvaluationResult> value)
 	{
 		AssertIsAlive();
 
-		lock (_registry)
-			_registry.Add(key, value);
+		AddCore(key, value);
 
 		return this;
 	}
@@ -110,8 +104,8 @@ public class Context : DisposableBase
 	{
 		AssertIsAlive();
 
-		lock (_registry)
-			_registry.AddRange(values);
+		foreach (var (key, value) in values)
+			AddCore(key, value);
 
 		return this;
 	}
@@ -120,11 +114,8 @@ public class Context : DisposableBase
 	{
 		AssertIsAlive();
 
-		lock (_registry)
-		{
-			foreach (var (key, value) in values)
-				_registry.Add(key, value);
-		}
+		foreach (var (key, value) in values)
+			AddCore(key, value);
 
 		return this;
 	}
@@ -164,15 +155,11 @@ public class Context : DisposableBase
 	{
 		AssertIsAlive();
 
-		lock (_registry)
-			_registry.Clear();
+		_registry.Clear();
 	}
 
 	protected override void OnDispose()
-	{
-		lock (_registry)
-			_registry.Clear();
-	}
+		=> _registry.Clear();
 
 	public class ContextPool : InterlockedArrayObjectPool<Context>
 	{
