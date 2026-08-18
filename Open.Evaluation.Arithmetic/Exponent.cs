@@ -313,19 +313,36 @@ public static partial class Exponent
 	public static bool IsSquareRoot<T>(this Exponent<T> exponent)
 		where T : notnull, INumber<T>
 	{
-		var pow = exponent.Power;
-		if (exponent.Catalog.TryGetItem<IEvaluate<T>>("0.5", out var point5) && pow == point5)
-			return true;
+		// Square roots only exist for floating-point-capable types. For integer T the
+		// interned symbolic (1/2) still EXISTS as a node (construction is unrestricted), so
+		// an integer x^(2^-1) would match it by reference below and answer "true" without
+		// this gate. (NOT about x^0: for non-float T the reduction machinery refuses the
+		// half division and keeps (1/2) symbolic -- it never truncates to a constant 0.)
+		if (!Value<T>.IsFloatingPoint)
+			return false;
 
+		var power = exponent.Power;
+
+		// Constant arm, zero catalog machinery: value + value == 1 identifies one half
+		// exactly (doubling is exact for binary floats and for decimal; no division, so
+		// integer truncation cannot manufacture a false positive on this arm even without
+		// the gate above). Value comparison also correctly accepts equal-valued constants
+		// interned under different renderings (e.g. decimal "0.5" vs "0.500").
+		if (power is Constant<T> constant)
+			return constant.Value + constant.Value == T.One;
+
+		// Symbolic arm: the UNREDUCED exponent 2^-1, which renders exactly "(1/2)", is
+		// deliberately interned in the catalog under its own honest key, so anything that
+		// looks up "(1/2)" finds it. Register is find-or-create: after the first call the
+		// hit path is a pure lookup, and interning makes this a single reference compare.
+		// Deliberately NEVER GetReduced(Power): reducing an arbitrary subtree can THROW on
+		// degenerate trees (a 0^negative anywhere inside -> "cannot divide by zero"), and a
+		// predicate on the mutation path must answer, not throw. The cost of that safety:
+		// an exotic power that merely REDUCES to one half (without being the constant or
+		// the symbolic) answers false -- same as every prior version of this method.
 		var half = exponent.Catalog.Register("(1/2)", static (_, c) =>
-		{
-			var b = c.GetConstant(Value<T>.Two);
-			var p = c.GetConstant(-T.One);
-			var h = c.GetExponent(b, p);
-			return h.GetReduction();
-		});
-
-		return exponent.Power == half;
+			c.GetExponent(c.GetConstant(Value<T>.Two), c.GetConstant(-T.One)));
+		return power == half;
 	}
 
 	internal static T Pow<T>(this T baseValue, T exponent)

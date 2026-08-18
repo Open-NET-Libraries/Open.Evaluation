@@ -223,7 +223,7 @@ public class PowSquaringEquivalence
         // "Type must be capable of division.") fired incorrectly, because dividing 1 by -1
         // an even number of times legitimately lands back on 1 (the mathematically correct
         // answer), which the assert wrongly treated as proof the type can't divide. Fixed
-        // (issue #7) by checking the assert's canary condition only after the FIRST
+        // by checking the assert's canary condition only after the FIRST
         // division in the loop -- the point where an incapable-division type would
         // actually reveal itself, since base is never 0 or 1 there (both short-circuit
         // earlier, above). Now exercised here (previously excluded with this same note).

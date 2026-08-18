@@ -97,18 +97,16 @@ public static partial class CatalogExtensions
 			return MultiplyNode(catalog, sourceNode, delta + T.One);
 
         Constant<T> multiple = catalog.GetMultiple(p);
-		return multiple.Value switch
-		{
-			1 => catalog.MultiplyNode(sourceNode, delta + T.One),
-			_ => catalog.ApplyClone(sourceNode, newNode =>
+		return multiple.Value == T.MultiplicativeIdentity
+			? catalog.MultiplyNode(sourceNode, delta + T.One)
+			: catalog.ApplyClone(sourceNode, newNode =>
 			{
                 Node<IEvaluate<T>>[] constantNodes = newNode.Children.Where(s => s.Value is IConstant<T>).ToArray();
 				constantNodes[0].Value = catalog.SumOfConstants(delta, multiple);
 
 				for (int i = 1; i < constantNodes.Length; i++)
 					newNode.Remove(constantNodes[i]);
-			})
-		};
+			});
 	}
 
 	public static IEvaluate<T> AdjustNodeMultipleOfDescendant<T>(

@@ -17,7 +17,7 @@ public class Context : DisposableBase
 	// other threads block and observe the winner's result. An "optimistic" GetOrAdd (storing the
 	// evaluation result directly, with no Lazy) would let every racing thread actually RUN the
 	// (potentially expensive, shared-branch) factory concurrently before discarding all but one
-	// result - see issue #14.
+	// result.
 	private readonly ConcurrentDictionary<IEvaluate, Lazy<IEvaluationResult>> _registry = new();
 
 	public EvaluationResult<T> GetOrAdd<T>(IEvaluate key, Func<IEvaluate, EvaluationResult<T>> factory)

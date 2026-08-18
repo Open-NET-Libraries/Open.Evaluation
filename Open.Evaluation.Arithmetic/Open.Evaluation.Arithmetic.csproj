@@ -5,8 +5,7 @@
 	<PropertyGroup>
 		<Description>Sum, Product, and Exponent arithmetic operators over generic numeric types, plus catalog extensions for parsing, mutating, and varying arithmetic formula trees.</Description>
 		<EnablePackageValidation>true</EnablePackageValidation>
-		<!-- Baseline validation resumes once the first net10-targeted version (2.0.0-alpha02) is published:
-		     the net9.0-built alpha01 baseline cannot be resolved by the net10 SDK ApiCompat (PKV006). -->
+		<PackageValidationBaselineVersion>2.0.0-alpha02</PackageValidationBaselineVersion>
 	</PropertyGroup>
 
 	<ItemGroup>

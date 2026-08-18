@@ -163,6 +163,14 @@ public class ArithmeticRegistry
 		}
 	}
 
+	// Author-approved intent flip: GetRandomFunction previously dispatched every
+	// draw through the non-float GetFunction, which always throws NotSupportedException for
+	// SquareRoot regardless of T -- so SquareRoot could never actually be produced by
+	// GetRandomFunction for ANY T, including float-capable ones like double. The fix computes
+	// the half-exponent directly for float-capable T instead of delegating to the throwing
+	// GetFunction, so this now asserts SUCCESS: excluding Square and Invert from a 3-glyph set
+	// deterministically lands on SquareRoot, which for double now produces Exponent(x, 0.5)
+	// rather than throwing.
 	[TestMethod]
 	public void GetRandomFunction_ExceptSquareAndInvert_AlwaysProducesSquareRoot()
 	{
@@ -170,10 +178,33 @@ public class ArithmeticRegistry
 		IEvaluate<double>[] one = [catalog.GetParameter(0)];
 		for (var i = 0; i < 20; i++)
 		{
-			Action act = () => Open.Evaluation.Arithmetic.Registry.GetRandomFunction(catalog, one, Glyphs.Square, Glyphs.Invert);
-			// SquareRoot via the non-float GetFunction path throws NotSupportedException - this
-			// confirms the random-selection *did* land on SquareRoot rather than the excluded glyphs.
-			act.Should().Throw<NotSupportedException>();
+			IEvaluate<double>? fn = null;
+			Action act = () => fn = Open.Evaluation.Arithmetic.Registry.GetRandomFunction(catalog, one, Glyphs.Square, Glyphs.Invert);
+
+			act.Should().NotThrow();
+			var exponent = fn.Should().BeOfType<Exponent<double>>().Which;
+			ReferenceEquals(exponent.Power, catalog.GetConstant(0.5d)).Should().BeTrue();
+		}
+	}
+
+	// Companion coverage for the same fix: for a non-floating-point T, SquareRoot must never be
+	// drawn at all (its power, T.One/(T.One+T.One), would truncate to zero under integer
+	// division), so only Square (power 2) or Invert (power -1) should ever be produced.
+	[TestMethod]
+	public void GetRandomFunction_IntType_NeverDrawsSquareRoot_NoTruncationToZeroPower()
+	{
+		var catalog = new EvaluationCatalog<int>();
+		IEvaluate<int>[] one = [catalog.GetParameter(0)];
+		for (var i = 0; i < 50; i++)
+		{
+			var fn = Open.Evaluation.Arithmetic.Registry.GetRandomFunction(catalog, one);
+
+			var power = fn.Should().BeOfType<Exponent<int>>().Which.Power;
+			power.Should().BeOfType<Constant<int>>();
+			var value = ((Constant<int>)power).Value;
+			(value == 2 || value == -1).Should().BeTrue(
+				"Square (power 2) or Invert (power -1) are the only int-safe function powers; " +
+				"SquareRoot (which would truncate 1/2 to 0) must never be drawn.");
 		}
 	}
 
@@ -188,5 +219,34 @@ public class ArithmeticRegistry
 			fn.Should().BeOfType<Exponent<double>>();
 			ReferenceEquals(((Exponent<double>)fn).Power, catalog.GetConstant(2d)).Should().BeTrue();
 		}
+	}
+
+	// The two exhaustion contracts are ASYMMETRIC by design (nullable vs non-nullable
+	// return): the children+except overload signals "nothing left to draw" with null,
+	// while the single-child overload's non-nullable return has no way to signal absence
+	// and throws descriptively instead. Both contracts pinned so neither drifts silently.
+	[TestMethod]
+	public void GetRandomFunction_MultiChildOverload_ExhaustedExclusions_ReturnsNull()
+	{
+		var catalog = new EvaluationCatalog<double>();
+		IEvaluate<double>[] one = [catalog.GetParameter(0)];
+
+		var fn = Open.Evaluation.Arithmetic.Registry.GetRandomFunction(
+			catalog, one, Glyphs.Square, Glyphs.Invert, Glyphs.SquareRoot);
+
+		fn.Should().BeNull("excluding every available function glyph leaves nothing to draw");
+	}
+
+	[TestMethod]
+	public void GetRandomFunction_SingleChildOverload_ExhaustedExclusions_ThrowsDescriptively()
+	{
+		var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0);
+
+		Action act = () => Open.Evaluation.Arithmetic.Registry.GetRandomFunction(
+			catalog, p0, Glyphs.Square, Glyphs.Invert, Glyphs.SquareRoot);
+
+		act.Should().Throw<InvalidOperationException>()
+			.WithMessage("*eliminates every available function*");
 	}
 }

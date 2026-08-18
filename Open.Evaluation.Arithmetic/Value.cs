@@ -5,6 +5,11 @@ internal static class Value<T> where T
 	public static readonly T Two = T.One + T.One;
 	public static readonly T Three = Two + T.One;
 
+	// NOTE: deliberately NO Half here. A named half in INumber space is an attractive
+	// nuisance -- it truncates to zero for integer T. ValueFloat<T>.Half (IFloatingPoint-
+	// constrained) is the only named half; sites that provably gate on IsFloatingPoint
+	// compute the value inline at the point of use instead of importing a name.
+
 	[Pure]
 	static bool CheckFloat()
 	{

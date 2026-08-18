@@ -169,9 +169,29 @@ public static class Registry
 		catalog.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		return GetFunction(catalog, Functions.RandomSelectOne(), children);
+		char op;
+		if (Value<T>.IsFloatingPoint)
+		{
+			op = Functions.RandomSelectOne();
+		}
+		else
+		{
+			// Non-float T can't represent the SquareRoot power (T.One/(T.One+T.One) would
+			// truncate to zero), so it must never be drawn as a candidate for T.
+			bool selected = Functions.TryRandomSelectOneExcept(out op, Glyphs.SquareRoot);
+			Debug.Assert(selected, "Excluding one glyph from a 3-element set must always succeed.");
+		}
+
+		// GetFunction can never produce a SquareRoot (it always throws NotSupportedException,
+		// regardless of T -- only GetFloatFunction can), so compute it directly here whenever
+		// it's drawn. Only reachable when T is floating-point capable (see above), so the
+		// division below is provably safe.
+		return op == Glyphs.SquareRoot && children.Count == 1
+			? catalog.GetExponent(children[0], T.One / (T.One + T.One))
+			: GetFunction(catalog, op, children);
 	}
 
+	[SuppressMessage("Style", "IDE0046:Convert to conditional expression", Justification = "Preferred verbosity")]
 	public static IEvaluate<T>? GetRandomFunction<T>(
 		ICatalog<IEvaluate<T>> catalog,
 		IReadOnlyList<IEvaluate<T>> children,
@@ -189,9 +209,14 @@ public static class Registry
 #endif
 		hs.Add(except);
 		foreach (char e in moreExcept) hs.Add(e);
-		return Functions.TryRandomSelectOne(out char op, hs)
-			? GetFunction(catalog, op, children)
-			: null;
+		if (!Value<T>.IsFloatingPoint) hs.Add(Glyphs.SquareRoot);
+
+		if (!Functions.TryRandomSelectOne(out char op, hs))
+			return null;
+
+		return op == Glyphs.SquareRoot && children.Count == 1
+			? catalog.GetExponent(children[0], T.One / (T.One + T.One))
+			: GetFunction(catalog, op, children);
 	}
 
 	public static IEvaluate<T>? GetRandomFunction<T>(
@@ -220,13 +245,30 @@ public static class Registry
 		child.ThrowIfNull();
 		Contract.EndContractBlock();
 
-		char op;
-		if (except is null || except.Length == 0)
-			op = Functions.RandomSelectOne();
-		else
-			Functions.TryRandomSelectOne(out op, new HashSet<char>(except));
+		// Non-float T can't represent the SquareRoot power (T.One/(T.One+T.One) would truncate
+		// to zero), so it must never be drawn as a candidate for T.
+		bool excludeSquareRoot = !Value<T>.IsFloatingPoint;
 
-		return GetFunction(catalog, op, child);
+		char op;
+		if (!excludeSquareRoot && (except is null || except.Length == 0))
+		{
+			op = Functions.RandomSelectOne();
+		}
+		else
+		{
+			HashSet<char> hs = except is null ? [] : new HashSet<char>(except);
+			if (excludeSquareRoot) hs.Add(Glyphs.SquareRoot);
+			if (!Functions.TryRandomSelectOne(out op, hs))
+				throw new InvalidOperationException("The exclusion set eliminates every available function for this T.");
+		}
+
+		// GetFunction can never produce a SquareRoot (it always throws NotSupportedException,
+		// regardless of T -- only GetFloatFunction can), so compute it directly here whenever
+		// it's drawn. Only reachable when T is floating-point capable (see above), so the
+		// division below is provably safe.
+		return op == Glyphs.SquareRoot
+			? catalog.GetExponent(child, T.One / (T.One + T.One))
+			: GetFunction(catalog, op, child);
 	}
 
 	public static IEvaluate<T> GetRandomFunction<T>(

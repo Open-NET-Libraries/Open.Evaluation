@@ -38,9 +38,9 @@ public class ImmutabilityTests
 	[TestMethod]
 	public void NewWithIndexReplaced_OnSum_ReturnsNewExpression_OriginalStillEvaluatesUnchanged()
 	{
-		// Formerly the #12 repro (issue: OperatorBase<T>.ConditionalTransform built its replacement
+		// Regression repro: OperatorBase<T>.ConditionalTransform built its replacement
 		// children via a growable ImmutableArray.Builder and then called MoveToImmutable(), which
-		// requires Count==Capacity exactly and so threw for any 2+-child transform). Fixed by
+		// requires Count==Capacity exactly and so threw for any 2+-child transform. Fixed by
 		// switching to DrainToImmutable() - see OperatorBase.cs.
 		using var catalog = new EvaluationCatalog<double>();
 		var p0 = catalog.GetParameter(0);
@@ -63,7 +63,7 @@ public class ImmutabilityTests
 	[TestMethod]
 	public void NewWithAppended_OnSum_ReturnsNewExpression_OriginalStillEvaluatesUnchanged()
 	{
-		// Same #12 repro shape as NewWithIndexReplaced above (ConditionalTransform via
+		// Same repro shape as NewWithIndexReplaced above (ConditionalTransform via
 		// DrainToImmutable), but for the append path: a 3-child Sum<double> growing to 4 children.
 		using var catalog = new EvaluationCatalog<double>();
 		var p0 = catalog.GetParameter(0);

@@ -1,4 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
 using Open.Evaluation.Arithmetic;
+using Open.Hierarchy;
 
 namespace Open.Evaluation.Tests.Arithmetic;
 
@@ -186,5 +188,95 @@ public class Multiply
 		{
 			node.Recycle();
 		}
+	}
+
+	// AdjustNodeMultiple used `multiple.Value switch { 1 => ..., _ => ... }`, a
+	// constant pattern that the compiler lowers to boxed object.Equals against a boxed
+	// System.Int32(1) -- which never equals a boxed System.Double(1.0) (or any other T). So for
+	// T=double the switch always took the "_" branch, even when the combined constant multiple
+	// genuinely equalled the multiplicative identity -- most commonly a Product with zero
+	// constant children at all (e.g. a duplicate-parameter product like {1}*{1}). That branch
+	// then indexed constantNodes[0] with an empty array, throwing IndexOutOfRangeException.
+	// Fixed by comparing against T.MultiplicativeIdentity directly, mirroring MultiplyNode's own
+	// idiom earlier in this file.
+	[TestMethod]
+	public void AdjustNodeMultiple_OnProductWithNoConstantChildren_DoesNotThrow()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p1 = catalog.GetParameter(1);
+		var dup = catalog.ProductOf(p1, p1);
+
+		var node = catalog.Factory.Map(dup);
+		try
+		{
+			IEvaluate<double>? result = null;
+			Action act = () => result = catalog.AdjustNodeMultiple(node, 1d);
+
+			act.Should().NotThrow();
+			result!.Description.Value.Should().Be("(2 * {1} * {1})");
+		}
+		finally
+		{
+			node.Recycle();
+		}
+	}
+
+	// Bounded port of the plan's stress re-run (same seed/shape generator that found 323
+	// crashes pre-fix with 2000 trials): builds random Sum/Product trees over a few parameters
+	// and constants, then repeatedly calls AdjustNodeMultiple on a random descendant. Trimmed to
+	// 300 trials to stay cheap while still exercising the no-constant-children path many times.
+	[TestMethod]
+	[SuppressMessage("Design", "CA1031:Do not catch general exception types",
+		Justification = "Deliberately catching any exception to count crashes across a randomized stress run.")]
+	public void AdjustNodeMultiple_RandomTreesRepeatedAdjustment_NeverThrows()
+	{
+		var rnd = new Random(999);
+		int crashes = 0;
+
+		for (int trial = 0; trial < 300; trial++)
+		{
+			using var catalog = new EvaluationCatalog<double>();
+			int nParams = rnd.Next(1, 4);
+			var parts = Enumerable.Range(0, nParams).Select(i => (IEvaluate<double>)catalog.GetParameter(i)).ToArray();
+
+			IEvaluate<double> BuildRandom(int depth)
+			{
+				if (depth <= 0 || rnd.Next(3) == 0)
+					return rnd.Next(2) == 0
+						? parts[rnd.Next(parts.Length)]
+						: catalog.GetConstant(rnd.Next(1, 6));
+
+				int nChildren = rnd.Next(2, 4);
+				var children = Enumerable.Range(0, nChildren).Select(_ => BuildRandom(depth - 1)).ToArray();
+				return rnd.Next(2) == 0
+					? catalog.SumOf(children)
+					: catalog.ProductOf(children);
+			}
+
+			IEvaluate<double> root = BuildRandom(3);
+
+			for (int gen = 0; gen < 10; gen++)
+			{
+				var tree = catalog.Factory.Map(root);
+				var descendants = tree.GetDescendantsOfType().ToArray();
+				if (descendants.Length == 0) { tree.Recycle(); break; }
+				var target = descendants[rnd.Next(descendants.Length)];
+				double delta = rnd.Next(2) == 0 ? -1d : 1d;
+				try
+				{
+					root = catalog.AdjustNodeMultiple(target, delta);
+				}
+				catch (Exception)
+				{
+					crashes++;
+					tree.Recycle();
+					goto nextTrial;
+				}
+				tree.Recycle();
+			}
+			nextTrial: ;
+		}
+
+		crashes.Should().Be(0);
 	}
 }

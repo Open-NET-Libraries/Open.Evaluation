@@ -85,6 +85,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 				$"Catalog identity collision: key '{id}' is registered as {result.GetType()} but {typeof(TItem)} was requested.");
 	}
 
+	[SuppressMessage("Style", "IDE0046:Convert to conditional expression",
+		Justification = "The hit arm must remain a separate statement so the miss arm's closure allocation is visibly excluded from it.")]
 	public TItem Register<TItem>(
 		string id, Func<string, ICatalog<T>, TItem> factory)
 		where TItem : notnull, T
@@ -94,6 +96,18 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		Contract.EndContractBlock();
 
 		id = GetPooledId(id);
+		// Hit path first, WITHOUT touching GetOrAdd: the inline capturing lambda below
+		// forces Roslyn to allocate its closure on EVERY call, even guaranteed hits. This
+		// method sits on hot predicate paths (e.g. IsSquareRoot), so the found case must be
+		// allocation-free; the closure is only constructed on an actual miss.
+		if (Registry.TryGetValue(id, out T? found))
+		{
+			return found is TItem typedFound
+				? typedFound
+				: throw new InvalidOperationException(
+					$"Catalog identity collision: key '{id}' is registered as {found.GetType()} but {typeof(TItem)} was requested.");
+		}
+
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
 			TItem? e = factory(k, this);
@@ -108,6 +122,8 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	}
 
 	[return: NotNull]
+	[SuppressMessage("Style", "IDE0046:Convert to conditional expression",
+		Justification = "The hit arm must remain a separate statement so the miss arm's closure allocation is visibly excluded from it.")]
 	public TItem Register<TItem, TParam>(string id, TParam param, Func<string, ICatalog<T>, TParam, TItem> factory)
 		where TItem : notnull, T
 	{
@@ -116,6 +132,15 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		Contract.EndContractBlock();
 
 		id = GetPooledId(id);
+		// Hit path without closure allocation -- see the note in the sibling overload.
+		if (Registry.TryGetValue(id, out T? found))
+		{
+			return found is TItem typedFound
+				? typedFound
+				: throw new InvalidOperationException(
+					$"Catalog identity collision: key '{id}' is registered as {found.GetType()} but {typeof(TItem)} was requested.");
+		}
+
 		return (TItem)Registry.GetOrAdd(id, k =>
 		{
 			TItem? e = factory(k, this, param);
@@ -129,7 +154,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 		});
 	}
 
-	public bool TryGetItem<TItem>(string id, [NotNullWhen(true)] out TItem item)
+	public bool TryGetItem<TItem>(string id, [MaybeNullWhen(false)] out TItem item)
 		where TItem : notnull, T
 	{
 		id.ThrowIfNull();
@@ -137,10 +162,26 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 
 		id = GetPooledId(id);
 		bool result = Registry.TryGetValue(id, out T? e);
-		Debug.Assert(e is not null);
-		Debug.Assert(e.Catalog == this);
-		item = (TItem)e;
-		return result;
+		if (result && e is not null)
+		{
+			Debug.Assert(e.Catalog == this);
+			// A found entry of the wrong TItem type is a catalog identity collision --
+			// stay loud (matching Register), but descriptive instead of a blind cast.
+			if (e is not TItem typed)
+			{
+				throw new InvalidOperationException(
+					$"Catalog identity collision: key '{id}' is registered as {e.GetType()} but {typeof(TItem)} was requested.");
+			}
+
+			item = typed;
+			return true;
+		}
+
+		// A not-found result is a legitimate outcome of the Try-pattern, not a bug.
+		// Register guarantees a successful lookup never yields null:
+		Debug.Assert(!result, "a successful lookup must never yield a null entry");
+		item = default;
+		return false;
 	}
 
 	public Node<T>.Factory Factory { get; } = new Node<T>.Factory();
@@ -151,8 +192,16 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 	public T GetReduced([DisallowNull] T source)
 	{
 		T src = Register(source);
-		return src is IReducibleEvaluation<T> s
-			? Reductions.GetValue(s, _ =>
+		if (src is not IReducibleEvaluation<T> s)
+			return src;
+
+		// Hit path without closure allocation: the inline lambda below captures src, so
+		// Roslyn allocates its closure on every call -- even when the reduction is already
+		// cached (the steady state on evaluation/mutation paths). Look up first.
+		if (Reductions.TryGetValue(s, out T? cached))
+			return cached;
+
+		return Reductions.GetValue(s, _ =>
 			{
 				int count = 0;
 				T result = src;
@@ -172,8 +221,7 @@ public class Catalog<T> : DisposableBase, ICatalog<T>
 				}
 
 				return Register(result);
-			})
-			: src;
+			});
 	}
 
 	public bool TryGetReduced(

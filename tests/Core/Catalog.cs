@@ -1,6 +1,6 @@
 namespace Open.Evaluation.Tests.Core;
 
-// Issue #6(c): Catalog.Register interns purely by ToString()/Describe(), with no type
+// Catalog.Register interns purely by ToString()/Describe(), with no type
 // disambiguation. On an interning HIT (the key already maps to a registered instance),
 // the old code blindly cast that instance to the requested TItem, throwing an unhelpful
 // InvalidCastException if the types didn't match (as happened for Exponent(x,1) colliding
@@ -36,6 +36,22 @@ public class Catalog
 		// InvalidCastException does not derive from InvalidOperationException, so this
 		// assertion alone already excludes the old blind-cast failure mode; asserting the
 		// new, descriptive exception type is the whole point of the guardrail.
+		act.Should().Throw<InvalidOperationException>()
+			.WithMessage("*Catalog identity collision*");
+	}
+
+	// TryGetItem shares Register's identity-collision hazard (same string-keyed registry,
+	// same blind-cast history) -- pinned to the same descriptive guardrail so the two
+	// members can't drift apart again.
+	[TestMethod]
+	public void TryGetItem_TypeMismatchOnFoundEntry_ThrowsDescriptiveExceptionNotInvalidCast()
+	{
+		using var catalog = new EvaluationCatalog<double>();
+		var p0 = catalog.GetParameter(0); // registers key "{0}" as a Parameter<double>.
+		string key = p0.Description.Value;
+
+		Action act = () => catalog.TryGetItem<Constant<double>>(key, out _);
+
 		act.Should().Throw<InvalidOperationException>()
 			.WithMessage("*Catalog identity collision*");
 	}
