@@ -62,7 +62,7 @@ public class ConditionalHierarchy
 		var target = edited.Children.Cast<Node<IEvaluate<bool>>>().First(n => n.Value == p1);
 		edited.Replace(target, edited.Source.Map(p3));
 		var rebuilt = catalog.FixHierarchy(edited).Recycle();
-		rebuilt.Description.Value.Should().Be("{0} ? {2} : {3}");
+		rebuilt.Description.Value.Should().Be("({0} ? {2} : {3})");
 		tree.Recycle();
 	}
 
@@ -84,7 +84,7 @@ public class ConditionalHierarchy
 		var target = edited.Children.Cast<Node<IEvaluate<double>>>().First(n => n.Value == b);
 		edited.Replace(target, edited.Source.Map(c));
 		var rebuilt = doubles.FixHierarchy(edited).Recycle();
-		rebuilt.Description.Value.Should().Be("{0} ? {1} : {3}", "the condition is recovered from the untyped view");
+		rebuilt.Description.Value.Should().Be("({0} ? {1} : {3})", "the condition is recovered from the untyped view");
 		tree.Recycle();
 	}
 }

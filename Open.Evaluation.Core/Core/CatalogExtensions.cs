@@ -119,6 +119,13 @@ public static class CatalogExtensions
 					break;
 				}
 
+				// Single-child functions (e.g. boolean Not).
+				case IReproducable<IEvaluate<T>, IEvaluate<T>> single:
+					if (fixedChildren.Length != 1)
+						throw new InvalidOperationException($"Single-child rebuild of {value.GetType().Name} found {fixedChildren.Length} typed children: {value.Description.Value} (root: {target.Root.Value.Description.Value})");
+					node = target.Source.Map(single.NewUsing(catalog, fixedChildren[0]));
+					break;
+
 				default:
 					throw new NotSupportedException("Unknown IParent / IReproducable.");
 			}

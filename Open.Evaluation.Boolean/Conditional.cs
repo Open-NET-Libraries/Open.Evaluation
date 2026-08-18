@@ -53,7 +53,10 @@ public sealed class Conditional<T>
 	IReadOnlyList<IEvaluate<T>> IParent<IEvaluate<T>>.Children => _typedChildren;
 
 	private static string Format(object condition, object ifTrue, object ifFalse)
-		=> $"{condition} ? {ifTrue} : {ifFalse}";
+		// Parenthesized: interning is keyed by rendering, and a bare ternary is ambiguous next to
+		// a prefix operator -- "!{0} ? {2} : {1}" would be both Not(Conditional(...)) and
+		// Conditional(Not(...), ...), which collided in the catalog under one key.
+		=> $"({condition} ? {ifTrue} : {ifFalse})";
 
 	protected override string Describe()
 		=> Conditional<T>.Format(
