@@ -49,7 +49,7 @@ public class Conditional
 		var ifFalse = catalog.GetParameter(1);
 
 		var conditional = catalog.Conditional((cond, ifTrue, ifFalse));
-		conditional.Description.Value.Should().Be("{0} ? {0} : {1}");
+		conditional.Description.Value.Should().Be("({0} ? {0} : {1})", "parenthesized: a bare ternary is ambiguous under a prefix operator and collided in the catalog");
 	}
 
 	[TestMethod]
