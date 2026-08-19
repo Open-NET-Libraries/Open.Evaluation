@@ -7,7 +7,7 @@ using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public sealed class Conditional<T>
+public sealed partial class Conditional<T>
 	: OperationBase<T>,
 		IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>,
 		IParent<IEvaluate<T>>

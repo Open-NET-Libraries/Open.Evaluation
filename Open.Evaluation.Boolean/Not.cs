@@ -3,7 +3,7 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Open.Evaluation.Boolean;
 
-public sealed class Not : OperatorBase<bool>,
+public sealed partial class Not : OperatorBase<bool>,
 	IReproducable<IEvaluate<bool>, IEvaluate<bool>>
 {
 	internal Not(ICatalog<IEvaluate<bool>> catalog, IEvaluate<bool> contents)
