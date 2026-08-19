@@ -107,15 +107,13 @@ public class Reductions
 	}
 
 	static IEvaluate<bool> RandomTree(EvaluationCatalog<bool> c, Random r, int depth)
-	{
-		if (depth == 0 || r.Next(4) == 0)
-			return r.Next(6) == 0 ? c.GetConstant(r.Next(2) == 0) : c.GetParameter((ushort)r.Next(3));
-		return r.Next(4) switch
-		{
-			0 => c.Not(RandomTree(c, r, depth - 1)),
-			1 => c.And([RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1)]),
-			2 => c.Or([RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1)]),
-			_ => c.Conditional((RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1))),
-		};
-	}
+		=> depth == 0 || r.Next(4) == 0
+			? r.Next(6) == 0 ? c.GetConstant(r.Next(2) == 0) : c.GetParameter((ushort)r.Next(3))
+			: r.Next(4) switch
+			{
+				0 => c.Not(RandomTree(c, r, depth - 1)),
+				1 => c.And([RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1)]),
+				2 => c.Or([RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1)]),
+				_ => c.Conditional((RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1), RandomTree(c, r, depth - 1))),
+			};
 }
