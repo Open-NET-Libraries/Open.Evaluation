@@ -150,6 +150,15 @@ public class Context : DisposableBase
 		return AddRange(pairs);
 	}
 
+	/// <summary>
+	/// The number of distinct evaluations this context has memoized -- i.e. how many nodes (parameters
+	/// bound via AddParam included) were actually evaluated to produce the results so far. Because
+	/// And/Or short-circuit and Conditional evaluates only the taken branch, this is the dynamic
+	/// WORK of an evaluation, not the size of the tree: the natural efficiency measure for a
+	/// solution (how many steps it took), as distinct from how long it is.
+	/// </summary>
+	public int EvaluatedCount => _registry.Count;
+
 	// Allows for re-use.
 	public void Clear()
 	{
