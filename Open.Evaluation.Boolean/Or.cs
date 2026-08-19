@@ -6,7 +6,7 @@ using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public sealed class Or : OperatorBase<bool>,
+public sealed partial class Or : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
 	private Or(ICatalog<IEvaluate<bool>> catalog, IEnumerable<IEvaluate<bool>> children)

@@ -5,7 +5,7 @@ using Throw;
 
 namespace Open.Evaluation.Boolean;
 
-public sealed class And : OperatorBase<bool>,
+public sealed partial class And : OperatorBase<bool>,
 	IReproducable<IEnumerable<IEvaluate<bool>>, IEvaluate<bool>>
 {
 	private And(ICatalog<IEvaluate<bool>> catalog, IEnumerable<IEvaluate<bool>> children)
