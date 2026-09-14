@@ -160,4 +160,60 @@ public class BooleanRegistry
 		op.Should().NotBeNull();
 		(op is And or Or).Should().BeTrue();
 	}
+
+	[TestMethod]
+	public void Comparisons_ContainsGreaterThanAndLessThan_Only()
+	{
+		Open.Evaluation.Boolean.Registry.Comparisons.Should().BeEquivalentTo([Glyphs.GreaterThan, Glyphs.LessThan]);
+	}
+
+	[TestMethod]
+	public void GetComparison_GreaterThan_ProducesGreaterThanNode()
+	{
+		var doubles = new EvaluationCatalog<double>();
+		var (catalog, _) = Setup();
+		var left = doubles.GetParameter(0);
+		var right = doubles.GetParameter(1);
+
+		var op = Open.Evaluation.Boolean.Registry.GetComparison(catalog, Glyphs.GreaterThan, left, right);
+
+		op.Should().BeOfType<GreaterThan<double>>();
+
+		using var lease = Context.Rent();
+		var context = lease.Item;
+		context.AddParam(doubles, 0, 2d);
+		context.AddParam(doubles, 1, 1d);
+		op.Evaluate(context).Result.Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void GetComparison_LessThan_ProducesLessThanNode()
+	{
+		var doubles = new EvaluationCatalog<double>();
+		var (catalog, _) = Setup();
+		var left = doubles.GetParameter(0);
+		var right = doubles.GetParameter(1);
+
+		var op = Open.Evaluation.Boolean.Registry.GetComparison(catalog, Glyphs.LessThan, left, right);
+
+		op.Should().BeOfType<LessThan<double>>();
+
+		using var lease = Context.Rent();
+		var context = lease.Item;
+		context.AddParam(doubles, 0, 1d);
+		context.AddParam(doubles, 1, 2d);
+		op.Evaluate(context).Result.Should().BeTrue();
+	}
+
+	[TestMethod]
+	public void GetComparison_InvalidGlyph_Throws()
+	{
+		var doubles = new EvaluationCatalog<double>();
+		var (catalog, _) = Setup();
+		var left = doubles.GetParameter(0);
+		var right = doubles.GetParameter(1);
+
+		Action act = () => Open.Evaluation.Boolean.Registry.GetComparison(catalog, '%', left, right);
+		act.Should().Throw<ArgumentException>();
+	}
 }

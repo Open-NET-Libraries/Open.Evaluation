@@ -27,6 +27,10 @@ namespace Open.Evaluation.Boolean;
 // Conditional (bool):   c ? c : b → c | b;   c ? a : c → c & a;
 //                       c ? true : b → c | b;  c ? false : b → !c & b;
 //                       c ? a : true → !c | a;  c ? a : false → c & a
+// GreaterThan/LessThan (any T : IComparisonOperators<T,T,bool>):
+//       x > x → false (same instance -- already false for NaN under IEEE, but true for every
+//       other T too);  both operands Constant<T> → fold;  LessThan(a, b) → GreaterThan(b, a),
+//       so GreaterThan is the only shape either operator ever settles on
 
 public sealed partial class Not
 {
@@ -194,4 +198,39 @@ public sealed partial class Conditional<T>
 			? this
 			: Catalog.Conditional((condition, ifTrue, ifFalse));
 	}
+}
+
+public sealed partial class GreaterThan<T>
+{
+	public override IEvaluate<bool> GetReduction()
+	{
+		IEvaluate<T> left = Left.Catalog.GetReduced(Left);
+		IEvaluate<T> right = Right.Catalog.GetReduced(Right);
+
+		return (left, right) switch
+		{
+			// Same interned instance on both sides: x > x is false for every T. NaN is already
+			// false either way under IEEE, but this identity check is what makes it false for
+			// every OTHER T too, none of which have a NaN case to fall back on.
+			_ when left == right => Catalog.GetConstant(false),
+
+			(IConstant<T> lc, IConstant<T> rc) => Catalog.GetConstant(lc.Value > rc.Value),
+
+			_ when left == Left && right == Right => this,
+
+			_ => Catalog.GreaterThan((left, right)),
+		};
+	}
+}
+
+public sealed partial class LessThan<T>
+{
+	// a < b and b > a are the same comparison under IComparisonOperators, including for NaN
+	// (both directions come out false), so canonicalizing to GreaterThan here means interning
+	// and every downstream reduction only ever has to recognize the one ordered-comparison
+	// shape. The freshly built GreaterThan is handed back unreduced -- the catalog's own
+	// reduction loop calls GetReduction on it next, so the identity/constant-fold rules above
+	// never need to be duplicated here.
+	public override IEvaluate<bool> GetReduction()
+		=> Catalog.GreaterThan((Right, Left));
 }

@@ -8,6 +8,8 @@ public static class Symbols
 	public static readonly Symbol Or = new(Glyphs.Or, true);
 	public static readonly Symbol Not = new(Glyphs.Not);
 	public static readonly Symbol Conditional = new(Glyphs.Conditional, true);
+	public static readonly Symbol GreaterThan = new(Glyphs.GreaterThan, true);
+	public static readonly Symbol LessThan = new(Glyphs.LessThan, true);
 }
 
 public static class Glyphs
@@ -17,4 +19,6 @@ public static class Glyphs
 	public const char Or = '|';
 	public const char Not = '!';
 	public const char Conditional = '?';
+	public const char GreaterThan = '>';
+	public const char LessThan = '<';
 }
