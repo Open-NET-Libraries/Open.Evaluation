@@ -394,6 +394,34 @@ public static partial class Exponent
 		return power == half;
 	}
 
+	// Cached once per closed generic T, using the same reflection-over-realized-interfaces
+	// technique as Value<T>.IsBinaryInteger (see Value.cs), and for the identical reason:
+	// IFloatingPoint<TSelf> constrains TSelf : IFloatingPoint<TSelf>, so testing via
+	// IFloatingPoint<>.MakeGenericType(typeof(T)).IsAssignableFrom(...) throws for any T that
+	// does not already satisfy that constraint -- permanently poisoning the cache for that T.
+	// Deliberately NOT Value<T>.IsFloatingPoint: that is a BEHAVIORAL probe (does 3/2 round to
+	// 1.5, or truncate to 1?) that a future EXACT type -- a Fraction<T> that represents 1.5
+	// precisely, with no rounding -- would also pass. IFloatingPoint<T> is the BCL's own marker
+	// for a type that actually ROUNDS (double, float, Half, NFloat, decimal); only such a type
+	// may be routed through Math.Pow's double round-trip below without silently trading an
+	// exact result for an approximate one. A binary integer T can never implement it, so this
+	// check alone already excludes IsBinaryInteger without needing to say so separately.
+	private static class FloatingPointCap<T> where T : notnull, INumber<T>
+	{
+		public static readonly bool Applies = Array.Exists(
+			typeof(T).GetInterfaces(),
+			static i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IFloatingPoint<>));
+	}
+
+	// Above this many sequential multiplications/divisions, the per-call cost stops being
+	// negligible and starts being unbounded: repeated Square/AdjustExponent mutations can
+	// compound exponents into the hundreds of trillions, at which point the loop does not run
+	// slowly -- it does not finish. At or below the cap, the loop's cost is nothing worth
+	// avoiding, and keeping it is what makes results bit-identical to today's for the exponents
+	// that occur without mutation pressure (single digits, a double-digit count at most) --
+	// Math.Pow does not even agree with a sequential product at exponent 2, let alone 64.
+	private const int SequentialLoopCap = 64;
+
 	internal static T Pow<T>(this T baseValue, T exponent)
 		where T : notnull, INumber<T>
 	{
@@ -410,8 +438,19 @@ public static partial class Exponent
 			T result;
 			if (exponent < T.Zero)
 			{
+				T magnitude = -exponent;
+
+				// Bail to Math.Pow before overwriting exponent with its magnitude: Math.Pow
+				// needs the ORIGINAL (negative) exponent to take the reciprocal path, not the
+				// magnitude computed above. Only IFloatingPoint<T> takes this path -- see
+				// FloatingPointCap<T> above; a binary integer T can never satisfy that check, so
+				// its division loop stays uncapped here (a separate, still-open question --
+				// exact integer evaluation -- left untouched by this change).
+				if (FloatingPointCap<T>.Applies && magnitude > T.CreateSaturating(SequentialLoopCap))
+					return T.CreateSaturating(Math.Pow(double.CreateSaturating(baseValue), double.CreateSaturating(exponent)));
+
 				result = T.One;
-				exponent = -exponent;
+				exponent = magnitude;
 				// Division.
 				for (T i = T.One; i <= exponent; i++)
 				{
@@ -441,10 +480,15 @@ public static partial class Exponent
 				// makes this loop's result bit-identical to the sequential loop below, just
 				// computed in fewer multiplications. This does NOT hold for floating-point T
 				// (double/float/decimal): float multiplication is not associative under
-				// rounding, so a different grouping can produce a different result. Those
-				// types must keep taking the sequential-loop path (the final `else` below) --
-				// deliberately left untouched here; author decision pending on whether to
-				// adopt squaring there too (rounding-path reproducibility trade-off).
+				// rounding, so a different grouping can produce a different result -- squaring
+				// would already disagree with the sequential loop by exponent 4. DECISION
+				// (2026-09-24): those types keep the sequential loop (the final `else` below)
+				// rather than adopt squaring, but only up to SequentialLoopCap; past it that
+				// `else` falls back to Math.Pow instead (see FloatingPointCap<T> above and the
+				// non-integer path further below -- same saturating conversions). decimal takes
+				// that same Math.Pow fallback above the cap: it loses precision past 15-17
+				// significant digits and saturates instead of throwing OverflowException, the
+				// same rule the non-integer path below already applies to decimal.
 				T two = Value<T>.Two;
 				T e = exponent;
 				T b = baseValue;
@@ -459,6 +503,13 @@ public static partial class Exponent
 			}
 			else
 			{
+				// Same bail-out as the negative branch above, and for the same reason: only
+				// IFloatingPoint<T> takes it (see FloatingPointCap<T> above). Any T that is
+				// neither a binary integer nor IFloatingPoint -- none exist in the BCL today --
+				// keeps this loop uncapped, exactly as before.
+				if (FloatingPointCap<T>.Applies && exponent > T.CreateSaturating(SequentialLoopCap))
+					return T.CreateSaturating(Math.Pow(double.CreateSaturating(baseValue), double.CreateSaturating(exponent)));
+
 				result = baseValue;
 				// Multiplication.
 				for (T i = T.One; i < exponent; i++)
