@@ -101,14 +101,20 @@ public static class CatalogExtensions
 				// Conditionals: (condition, ifTrue, ifFalse). When T is bool the condition is a
 				// typed child too (three mapped children); otherwise only the two branches are
 				// typed and the condition -- untouched by a typed rebuild -- is recovered from
-				// the untyped view.
+				// the untyped view. The arity is fixed by the node's own shape (2, or 3 when T is
+				// bool); anything else means a child was added or removed underneath it and must
+				// not be silently reinterpreted (that used to drop the true branch for a bool
+				// conditional whose rebuilt count came out at 4 instead of 3).
 				case IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>> c:
 				{
-					IEvaluate<bool>? condition = fixedChildren.Length == 3
+					int expectedArity = ((IParent<IEvaluate<T>>)value).Children.Count;
+					if (fixedChildren.Length != expectedArity)
+						throw new NotSupportedException($"Conditional node with {fixedChildren.Length} typed children; expected {expectedArity}.");
+
+					IEvaluate<bool> condition = (expectedArity == 3
 						? fixedChildren[0] as IEvaluate<bool>
-						: (value as IParent)?.Children[0] as IEvaluate<bool>;
-					if (condition is null || fixedChildren.Length < 2)
-						throw new NotSupportedException("Conditional node without a recoverable condition and two branches.");
+						: (value as IParent)?.Children[0] as IEvaluate<bool>)
+						?? throw new NotSupportedException("Conditional node without a recoverable condition.");
 
 					node = target.Source.Map(
 						c.NewUsing(
@@ -365,11 +371,16 @@ public static class CatalogExtensions
 		this ICatalog<IEvaluate<T>> catalog,
 		Node<IEvaluate<T>> sourceNode, T value)
 		where T : notnull, IEquatable<T>, IComparable<T>
-		=> sourceNode.Value is IParent<IEvaluate<T>>
-			? catalog.ApplyClone(
-				sourceNode,
-				newNode => newNode.Add(sourceNode.Source.Map(catalog.GetConstant(value))))
-			: null;
+		// Fixed arity: appending a constant child to a conditional leaves FixHierarchy either
+		// unable to recover the shape (T != bool) or, worse, silently reinterpreting the extra
+		// child and dropping the true branch (T == bool -- see FixHierarchy's conditional case).
+		=> sourceNode.Value is IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>
+			? null
+			: sourceNode.Value is IParent<IEvaluate<T>>
+				? catalog.ApplyClone(
+					sourceNode,
+					newNode => newNode.Add(sourceNode.Source.Map(catalog.GetConstant(value))))
+				: null;
 
 	[OverloadResolutionPriority(1)]
 	[MethodImpl(MethodImplOptions.AggressiveInlining)]
