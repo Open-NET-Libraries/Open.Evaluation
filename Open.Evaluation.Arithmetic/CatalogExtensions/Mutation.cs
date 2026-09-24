@@ -142,6 +142,11 @@ public static partial class CatalogExtensions
 		{
 			Exponent<double> _ => null,
 
+			// Fixed arity: a conditional's typed children are always just its branches (plus the
+			// condition when T is bool) -- appending a parameter leaves FixHierarchy unable to
+			// recover the shape.
+			IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>> _ => null,
+
 			IParent p => catalog.Catalog.ApplyClone(node,
 				newNode => newNode.AddValue(catalog.Catalog.GetParameter(
 					Randomizer.Random.Next(

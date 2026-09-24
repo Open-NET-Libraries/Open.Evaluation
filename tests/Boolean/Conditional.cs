@@ -116,4 +116,29 @@ public class Conditional
 
 		ReferenceEquals(a, b).Should().BeTrue();
 	}
+
+	[TestMethod]
+	public void NewUsing_ExplicitInterface_WithSecondCatalog_RegistersInThatCatalog()
+	{
+		// The explicit IReproducable<...>.NewUsing(catalog, param) overload used to ignore the
+		// passed-in catalog and rebuild through the instance's own Catalog instead -- every other
+		// operator (And, Or, Not, Exponent, GreaterThan, LessThan) forwards the passed catalog; this
+		// pins the same contract for Conditional.
+		using var catalog1 = new EvaluationCatalog<double>();
+		using var catalog2 = new EvaluationCatalog<double>();
+		using var boolCatalog = new EvaluationCatalog<bool>();
+		var cond = boolCatalog.GetParameter(0);
+		var ifTrue = catalog1.GetConstant(1d);
+		var ifFalse = catalog1.GetConstant(2d);
+
+		var original = (global::Open.Evaluation.Boolean.Conditional<double>)catalog1.Conditional((cond, ifTrue, ifFalse));
+		IReproducable<(IEvaluate<bool>, IEvaluate<double>, IEvaluate<double>), IEvaluate<double>> reproducable = original;
+
+		var rebuilt = (global::Open.Evaluation.Boolean.Conditional<double>)reproducable.NewUsing(catalog2, (cond, ifTrue, ifFalse));
+
+		rebuilt.Catalog.Should().BeSameAs(catalog2,
+			"the explicit interface overload must register the rebuilt node in the CALLER's catalog, not the original instance's own");
+		ReferenceEquals(rebuilt, catalog2.Conditional((cond, ifTrue, ifFalse))).Should().BeTrue(
+			"the rebuilt node should be interned in catalog2's own registry, not catalog1's");
+	}
 }

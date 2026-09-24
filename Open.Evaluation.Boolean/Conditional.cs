@@ -93,7 +93,7 @@ public sealed partial class Conditional<T>
 		=> NewUsing(Catalog, param);
 
 	IEvaluate<T> IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>.NewUsing(ICatalog<IEvaluate<T>> catalog, (IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
-		=> NewUsing(Catalog, param);
+		=> NewUsing(catalog, param);
 
 	IEvaluate<T> IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>>.NewUsing((IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>) param)
 		=> NewUsing(param);

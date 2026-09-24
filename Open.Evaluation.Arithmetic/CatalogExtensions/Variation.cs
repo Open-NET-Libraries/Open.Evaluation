@@ -14,6 +14,10 @@ public static partial class CatalogExtensions
 		{
 			case OperatorBase<T> _ when parent.Count < 2:
 			case Exponent<T> _:
+			// A conditional's children are fixed in number -- both branches, plus the condition
+			// itself when T is bool -- so removing one leaves FixHierarchy unable to recover the
+			// shape.
+			case IReproducable<(IEvaluate<bool>, IEvaluate<T>, IEvaluate<T>), IEvaluate<T>> _:
 				return false;
 		}
 

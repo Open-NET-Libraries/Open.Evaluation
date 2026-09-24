@@ -76,6 +76,66 @@ public class Reductions
 		doubles.GetReduced(conditional).Description.Value.Should().Be("({0} ? {1} : {2})");
 	}
 
+	// A branch that reduces to Undefined poisons the whole conditional -- containment, exactly like
+	// Sum/Product/Exponent (see tests\Arithmetic\Undefined.cs). Checked BEFORE any fold, so a
+	// constant condition that would otherwise select the defined branch does not save it.
+	[TestMethod]
+	public void NumericConditional_UndefinedTrueBranch_PoisonsToUndefined()
+	{
+		using var bools = new EvaluationCatalog<bool>();
+		using var doubles = new EvaluationCatalog<double>();
+		var condition = bools.GreaterThan((doubles.GetParameter(0), doubles.GetParameter(1)));
+		var zeroInverse = doubles.GetExponent(doubles.GetConstant(0d), doubles.GetConstant(-1d));
+		var conditional = doubles.Conditional((condition, zeroInverse, doubles.GetParameter(1)));
+
+		doubles.GetReduced(conditional).Should().BeSameAs(doubles.GetUndefined());
+		doubles.IsValid(conditional).Should().BeFalse();
+	}
+
+	[TestMethod]
+	public void NumericConditional_UndefinedFalseBranch_PoisonsToUndefined()
+	{
+		using var bools = new EvaluationCatalog<bool>();
+		using var doubles = new EvaluationCatalog<double>();
+		var condition = bools.GreaterThan((doubles.GetParameter(0), doubles.GetParameter(1)));
+		var zeroInverse = doubles.GetExponent(doubles.GetConstant(0d), doubles.GetConstant(-1d));
+		var conditional = doubles.Conditional((condition, doubles.GetParameter(0), zeroInverse));
+
+		doubles.GetReduced(conditional).Should().BeSameAs(doubles.GetUndefined());
+		doubles.IsValid(conditional).Should().BeFalse();
+	}
+
+	[TestMethod]
+	public void NumericConditional_ConstantConditionSelectsDefinedBranch_StillPoisonedByTheOtherBranch()
+	{
+		using var bools = new EvaluationCatalog<bool>();
+		using var doubles = new EvaluationCatalog<double>();
+		var x = doubles.GetParameter(0);
+		var zeroInverse = doubles.GetExponent(doubles.GetConstant(0d), doubles.GetConstant(-1d));
+		// true ? x : (0^-1): the condition selects x, which is perfectly defined -- but poisoning is
+		// checked before the constant-condition fold, so this is Undefined, not x.
+		var conditional = doubles.Conditional((bools.GetConstant(true), x, zeroInverse));
+
+		doubles.GetReduced(conditional).Should().BeSameAs(doubles.GetUndefined());
+	}
+
+	[TestMethod]
+	public void NumericConditional_PointwiseUndefinedBranch_StaysValid()
+	{
+		using var bools = new EvaluationCatalog<bool>();
+		using var doubles = new EvaluationCatalog<double>();
+		var p0 = doubles.GetParameter(0);
+		var p1 = doubles.GetParameter(1);
+		var condition = bools.GreaterThan((p0, p1));
+		// 1/p0 is undefined only at p0 = 0 -- a pole, not an invalid expression (see
+		// tests\Arithmetic\Undefined.cs's PointwiseUndefined_StaysValid) -- so it must not poison.
+		var oneOverP0 = doubles.GetExponent(p0, doubles.GetConstant(-1d));
+		var conditional = doubles.Conditional((condition, oneOverP0, p1));
+
+		doubles.IsValid(conditional).Should().BeTrue();
+		doubles.GetReduced(conditional).Should().NotBeSameAs(doubles.GetUndefined());
+	}
+
 	// The property that makes reductions trustworthy as a validity/identity detector: for random
 	// trees over three variables, the reduction must agree with the source on all 8 input rows.
 	[TestMethod]
