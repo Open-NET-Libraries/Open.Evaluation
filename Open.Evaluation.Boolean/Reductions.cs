@@ -160,6 +160,26 @@ public sealed partial class Conditional<T>
 	{
 		IEvaluate<T> ifTrue = Catalog.GetReduced(IfTrue);
 		IEvaluate<T> ifFalse = Catalog.GetReduced(IfFalse);
+
+		// Undefined poisons: a branch that reduces to Undefined makes the whole conditional
+		// Undefined. Checked before every fold below -- including the constant-condition and
+		// identical-branch folds further down -- so nothing can mask it, matching Sum/Product/
+		// Exponent's rule that undefined containment poisons before any fold (see Sum.cs,
+		// Product.cs, Exponent.cs). So "true ? x : (0^-1)" is Undefined, not x: the condition
+		// provably selecting the OTHER, defined branch does not save it, because containment (an
+		// unconditionally undefined branch exists in the tree at all) is judged independently of
+		// which branch would actually run. Each branch here is already the very IEvaluate<T>
+		// instance that IS Open.Evaluation's Undefined singleton when the check is true, so it is
+		// returned directly -- no Undefined<T> needs constructing (Catalog.GetUndefined requires
+		// INumber<T>, but T here is only IEquatable<T>/IComparable<T> so that Conditional<bool> can
+		// exist too; the branch itself already carries whatever unconstrained type is needed).
+		// This is containment, not domain: a POINTWISE-undefined branch such as 1/p0 -- defined
+		// everywhere except p0 = 0 -- reduces to an ordinary IEvaluate<T>, not Undefined, and stays
+		// valid; only a branch that is structurally, unconditionally undefined (like the literal
+		// 0^-1) poisons the conditional built around it.
+		if (ifTrue is IUndefined) return ifTrue;
+		if (ifFalse is IUndefined) return ifFalse;
+
 		// The condition lives in a bool catalog (the same catalog when T is bool); reduce it there.
 		IEvaluate<bool> condition = Condition is IReducibleEvaluation<IEvaluate<bool>> rc && rc.TryGetReduced(out IEvaluate<bool>? reducedCondition)
 			? reducedCondition
