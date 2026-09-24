@@ -14,7 +14,7 @@ public static class Registry
 	public static readonly ImmutableArray<string> CountingFunctions = [nameof(AtLeast), nameof(AtMost), nameof(Exactly)];
 
 	// Kept separate from Operators/Functions: those two lists drive the homogeneous
-	// IEvaluate<bool>-children factories (GetOperator, GetRandomOperator, and the Solve-side
+	// IEvaluate<bool>-children factories (GetOperator, GetRandomOperator, and any consumer's
 	// generators built on them), and a comparison's children are IEvaluate<T> for some numeric T,
 	// not IEvaluate<bool>. Folding the glyphs in there would let an untyped factory draw a
 	// comparison with the wrong child type; GetComparison is the only door in.
